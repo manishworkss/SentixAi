@@ -72,12 +72,12 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
       <div className="w-full max-w-5xl flex flex-col md:flex-row bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[600px] border border-gray-100 z-10">
         
         {/* Left Side - Dark */}
-        <div className="w-full md:w-[45%] bg-gradient-to-br from-[#1c1333] to-[#0f0a1c] p-10 sm:p-12 flex flex-col justify-center text-white relative">
-          <div className="mb-10 flex justify-center w-full">
+        <div className="w-full md:w-[45%] bg-gradient-to-br from-[#2a1d4d] to-[#18112e] p-10 sm:p-12 flex flex-col text-white relative">
+          <div className="mb-8 flex justify-center w-full">
             <Logo variant="large" theme="dark" />
           </div>
           
-          <div className="flex flex-col text-center md:text-left">
+          <div className="flex-grow flex flex-col justify-start pt-4 text-center md:text-left">
             <h1 className="text-4xl font-bold mb-4 tracking-tight">Welcome Back</h1>
             <p className="text-gray-400 leading-relaxed text-base">
               Access your centralized movie intelligence platform. Streamline your reviews and analytics with SentixAI.
