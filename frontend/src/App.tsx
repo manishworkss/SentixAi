@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { 
-  BarChart3, 
-  Upload, 
-  Settings, 
-  LogOut, 
-  Film, 
-  CheckCircle2, 
+import {
+  BarChart3,
+  Upload,
+  Settings,
+  LogOut,
+  Film,
+  CheckCircle2,
   AlertTriangle,
   FileText,
   User,
@@ -23,17 +23,17 @@ export default function App() {
   }
 
   return (
-    <DashboardShell 
-      activeTab={activeTab} 
+    <DashboardShell
+      activeTab={activeTab}
       setActiveTab={setActiveTab}
-      onLogout={() => setIsAuthenticated(false)} 
+      onLogout={() => setIsAuthenticated(false)}
     />
   );
 }
 
 function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'small', theme?: 'light' | 'dark' }) {
   const isLarge = variant === 'large';
-  const iconClass = isLarge ? 'h-32 mb-4' : 'h-10 mr-3';
+  const iconClass = isLarge ? 'h-32 -mb-2' : 'h-28 -mb-4';
   const textSize = isLarge ? 'text-5xl' : 'text-2xl';
   const textColor = theme === 'light' ? 'text-[#1A365D]' : 'text-white';
   const subtextColor = theme === 'light' ? 'text-gray-500' : 'text-gray-400';
@@ -45,9 +45,9 @@ function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'sma
   );
 
   return (
-    <div className={`flex ${isLarge ? 'flex-col items-center text-center' : 'flex-row items-center'} font-sans`}>
+    <div className="flex flex-col items-center text-center font-sans">
       <img src="/logo.png" alt="SentixAI Logo" className={`${iconClass} object-contain`} />
-      <div className={isLarge ? '' : 'flex flex-col'}>
+      <div className="flex flex-col">
         <div className={`${textSize} font-extrabold tracking-tight leading-none`}>
           <span className={textColor}>Sentix</span><span className="text-[#00B4D8] font-light">[Ai]</span>
         </div>
@@ -59,7 +59,8 @@ function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'sma
 
 function LoginLayout({ onLogin }: { onLogin: () => void }) {
   const [showPassword, setShowPassword] = useState(false);
-  
+  const [isSignUp, setIsSignUp] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onLogin();
@@ -67,30 +68,68 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGcgc3Ryb2tlPSJyZ2JhKDE1NiwxNjMsMTc1LDAuMDUpIiBmaWxsPSJub25lIj48cGF0aCBkPSJNMCA0MGg0MFYwSDB6Ii8+PC9nPjwvc3ZnPg==')] bg-gray-50 font-sans text-gray-900 p-4 sm:p-8 relative">
-      
+
       {/* Split Login Card */}
       <div className="w-full max-w-5xl flex flex-col md:flex-row bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[600px] border border-gray-100 z-10">
-        
+
         {/* Left Side - Dark */}
         <div className="w-full md:w-[45%] bg-gradient-to-br from-[#2a1d4d] to-[#18112e] p-10 sm:p-12 flex flex-col text-white relative">
           <div className="mb-8 flex justify-center w-full">
             <Logo variant="large" theme="dark" />
           </div>
-          
+
           <div className="flex-grow flex flex-col justify-start pt-4 text-center md:text-left">
-            <h1 className="text-4xl font-bold mb-4 tracking-tight">Welcome Back</h1>
-            <p className="text-gray-400 leading-relaxed text-base">
-              Access your centralized movie intelligence platform. Streamline your reviews and analytics with SentixAI.
-            </p>
+            <h1 className="text-4xl font-bold mb-4 tracking-tight">
+              {isSignUp ? "Join SentixAI" : "Welcome Back"}
+            </h1>
+
+            {isSignUp ? (
+              <div className="space-y-4 text-gray-400 leading-relaxed text-base text-left">
+                <p>
+                  Unlock the full potential of your studio's data with our advanced AI-driven movie intelligence platform.
+                </p>
+                <ul className="space-y-2 mt-6 text-sm text-gray-300">
+                  <li className="flex items-center"><span className="text-cyan-500 mr-3 text-lg">✓</span> AI-Powered Sentiment Analysis</li>
+                  <li className="flex items-center"><span className="text-cyan-500 mr-3 text-lg">✓</span> Predictive Audience Metrics</li>
+                  <li className="flex items-center"><span className="text-cyan-500 mr-3 text-lg">✓</span> Centralized Studio Dashboard</li>
+                  <li className="flex items-center"><span className="text-cyan-500 mr-3 text-lg">✓</span> Automated Script Breakdowns</li>
+                </ul>
+              </div>
+            ) : (
+              <div className="space-y-4 text-gray-400 leading-relaxed text-base text-left">
+                <p>
+                  Access your centralized movie intelligence platform. Streamline your reviews and analytics with SentixAI.
+                </p>
+                <ul className="space-y-2 mt-6 text-sm text-gray-300">
+                  <li className="flex items-center"><span className="text-cyan-500 mr-3 text-lg">✓</span> Track Real-Time Audience Sentiments</li>
+                  <li className="flex items-center"><span className="text-cyan-500 mr-3 text-lg">✓</span> Review Automated Script Breakdowns</li>
+                  <li className="flex items-center"><span className="text-cyan-500 mr-3 text-lg">✓</span> Generate Predictive Box Office Reports</li>
+                </ul>
+              </div>
+            )}
           </div>
         </div>
 
         {/* Right Side - Form */}
         <div className="w-full md:w-[55%] p-10 sm:p-16 flex flex-col justify-center bg-white">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Sign In to Your Account</h2>
-          
+          <h2 className="text-2xl font-bold text-gray-900 mb-8">
+            {isSignUp ? "Create Your Account" : "Sign In to Your Account"}
+          </h2>
+
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
+            {isSignUp && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors shadow-sm placeholder-gray-400"
+                  placeholder="John Doe"
+                />
+              </div>
+            )}
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
               <input
@@ -115,7 +154,7 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors shadow-sm placeholder-gray-400 pr-10"
                   placeholder="Enter your password"
                 />
-                <button 
+                <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
@@ -130,7 +169,7 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
                 type="submit"
                 className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl shadow-sm font-semibold text-white bg-[#1c1333] hover:bg-[#2d1e52] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1c1333] transition-colors"
               >
-                Sign In
+                {isSignUp ? "Sign Up" : "Sign In"}
               </button>
             </div>
           </form>
@@ -155,13 +194,21 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
                 <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
                 </svg>
-                Sign In with Google
+                {isSignUp ? "Sign Up with Google" : "Sign In with Google"}
               </button>
             </div>
           </div>
-          
+
           <p className="mt-10 text-center text-sm text-gray-600">
-            Don't have an account? <a href="#" className="font-semibold text-gray-900 hover:underline">Contact your administrator.</a>
+            {isSignUp ? (
+              <>
+                Already have an account? <button type="button" onClick={() => setIsSignUp(false)} className="font-semibold text-cyan-600 hover:text-cyan-500 hover:underline">Sign in</button>
+              </>
+            ) : (
+              <>
+                Don't have an account? <button type="button" onClick={() => setIsSignUp(true)} className="font-semibold text-cyan-600 hover:text-cyan-500 hover:underline">Create one now</button>
+              </>
+            )}
           </p>
         </div>
       </div>
@@ -177,24 +224,24 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
         <div className="h-32 flex flex-col justify-center px-6 border-b border-gray-200">
           <Logo variant="small" />
         </div>
-        
+
         <div className="flex-1 overflow-y-auto py-4">
           <nav className="px-4 space-y-2">
-            <button 
+            <button
               onClick={() => setActiveTab('dashboard')}
               className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'dashboard' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <BarChart3 className="mr-3 h-5 w-5" />
               Analytics Dashboard
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('upload')}
               className={`w-full flex items-center px-4 py-2 text-sm font-medium rounded-md ${activeTab === 'upload' ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-gray-50'}`}
             >
               <Upload className="mr-3 h-5 w-5" />
               Upload Data
             </button>
-            <button 
+            <button
               className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50"
             >
               <FileText className="mr-3 h-5 w-5" />
@@ -202,15 +249,15 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
             </button>
           </nav>
         </div>
-        
+
         <div className="p-4 border-t border-gray-200">
-          <button 
+          <button
             className="w-full flex items-center px-4 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50"
           >
             <Settings className="mr-3 h-5 w-5" />
             Settings
           </button>
-          <button 
+          <button
             onClick={onLogout}
             className="w-full mt-2 flex items-center px-4 py-2 text-sm font-medium rounded-md text-red-600 hover:bg-red-50"
           >
@@ -249,7 +296,7 @@ function UploadForm() {
     <div className="max-w-3xl mx-auto">
       <div className="bg-white shadow rounded-lg p-6">
         <h2 className="text-lg font-medium text-gray-900 mb-4">Ingest Movie Reviews</h2>
-        
+
         <form className="space-y-6">
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
@@ -418,7 +465,7 @@ function AnalyticsDashboard() {
 
       {/* Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* Aspect Scores */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white shadow rounded-lg p-6">
