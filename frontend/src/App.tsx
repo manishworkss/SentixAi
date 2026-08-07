@@ -47,11 +47,11 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
         
         {/* Header Section */}
         <div className="mb-10">
-          <div className="flex items-center space-x-2 mb-12">
-            <div className="bg-gradient-to-r from-blue-600 to-cyan-500 p-2 rounded-lg">
-              <Film className="h-6 w-6 text-white" />
-            </div>
-            <span className="text-xl font-bold text-gray-900">SentixAI</span>
+          <div className="flex flex-col items-start mb-12">
+            <img src="/logo.png" alt="SentixAI Logo" className="h-20 object-contain mb-3" />
+            <span className="text-3xl font-black text-gray-900 tracking-tight">
+              Sentix<span className="text-cyan-500 font-medium">[Ai]</span>
+            </span>
           </div>
           
           <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Welcome back</h1>
@@ -204,10 +204,14 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-white shadow-md flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <Film className="h-6 w-6 text-blue-600 mr-2" />
-          <span className="text-xl font-bold text-gray-800">SentixAI</span>
+      <div className="w-64 bg-white shadow-md flex flex-col z-20 relative">
+        <div className="h-24 flex flex-col justify-center px-6 border-b border-gray-200">
+          <div className="flex flex-col items-start">
+            <img src="/logo.png" alt="SentixAI Logo" className="h-10 object-contain mb-1" />
+            <span className="text-xl font-black text-gray-900 tracking-tight">
+              Sentix<span className="text-cyan-500 font-medium">[Ai]</span>
+            </span>
+          </div>
         </div>
         
         <div className="flex-1 overflow-y-auto py-4">
