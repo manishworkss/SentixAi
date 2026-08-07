@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .toggle-checkbox:checked {
+    right: 0;
+    border-color: #0093A9;
+  }
+  .toggle-checkbox:checked + .toggle-label {
+    background-color: #0093A9;
+  }
+  .toggle-checkbox:checked {
+    right: 0 !important;
+  }
+}
+
+body {
+  margin: 0;
+  background-color: #f9fafb;
+}

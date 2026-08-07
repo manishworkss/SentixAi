@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Week 2 Design Diagrams</title>
+    <style>
+        body { font-family: Helvetica, Arial, sans-serif; font-size: 10pt; line-height: 1.4; color: #222222; max-width: 800px; margin: 0 auto; padding: 2cm; }
+        h1 { font-size: 16pt; color: #111827; border-bottom: 1.5px solid #3b82f6; padding-bottom: 4px; margin-top: 18pt; margin-bottom: 10pt; }
+        h2 { font-size: 13pt; color: #1f2937; border-bottom: 1px solid #e5e7eb; padding-bottom: 3px; margin-top: 14pt; margin-bottom: 8pt; }
+        h3 { font-size: 11pt; color: #374151; margin-top: 10pt; margin-bottom: 4pt; }
+        p { margin-bottom: 8pt; text-align: justify; }
+        .mermaid { display: flex; justify-content: center; margin: 20px 0; }
+        /* Make sure it breaks pages nicely when printing */
+        @media print {
+            body { padding: 0; }
+            h1, h2 { page-break-after: avoid; }
+            .mermaid { page-break-inside: avoid; }
+        }
+    </style>
+    <!-- Include Mermaid.js -->
+    <script type="module">
+      import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+      mermaid.initialize({ startOnLoad: true });
+    </script>
+</head>
+<body>
+    <h1 id="_1">==============================================================================</h1>
+<h1 id="official-college-mini-project-week-2-submission-report">OFFICIAL COLLEGE MINI PROJECT — WEEK 2 SUBMISSION REPORT</h1>
+<h1 id="bca-semester-5-parul-university">BCA — SEMESTER 5, PARUL UNIVERSITY</h1>
+<h1 id="_2">==============================================================================</h1>
+<h3 id="project-title">PROJECT TITLE:</h3>
+<h1 id="sentixai-platform-version-42-enterprise">SENTIXAI PLATFORM (VERSION 4.2 ENTERPRISE)</h1>
+<h2 id="analyzing-unstructured-movie-review-feedback-with-multi-model-ai-aspect-based-sentiment-intelligence">Analyzing Unstructured Movie Review Feedback with Multi-Model AI &amp; Aspect-Based Sentiment Intelligence</h2>
+<hr />
+<h3 id="submission-details">SUBMISSION DETAILS:</h3>
+<ul>
+<li><strong>Task:</strong> Use Case Diagrams &amp; Design Diagrams (OOAD Approach)</li>
+<li><strong>Domain:</strong> Artificial Intelligence, Natural Language Processing (NLP), Multi-Model Machine Learning, Web Applications</li>
+<li><strong>Course / Branch:</strong> BCA — Semester 5, Parul University</li>
+<li><strong>Due Date:</strong> 31st July 2026</li>
+<li><strong>Target Application:</strong> Enterprise SaaS &amp; Movie Review Intelligence (<code>IMDb</code>, <code>Rotten Tomatoes</code>, <code>Letterboxd</code>)</li>
+</ul>
+<hr />
+<h3 id="pre-submission-guide-approval-sign-off-sheet">PRE-SUBMISSION GUIDE APPROVAL &amp; SIGN-OFF SHEET</h3>
+<p><strong>Student Name(s):</strong> <strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong>_   <strong>Roll / Reg No:</strong> <strong><em>_</em></strong><strong><em>_</em></strong>_____<br />
+<strong>Course / Branch:</strong> BCA — Semester 5, Parul University        <strong>Semester:</strong> 5th Semester  </p>
+<p><strong>Project Guide Name:</strong> <strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em>_   <strong>Designation:</strong> </strong><strong><em>_</em></strong><strong><em>_</em></strong>_____  </p>
+<p><strong>Guide Checklist &amp; Verification:</strong><br />
+- [x] Use case diagram is comprehensive with clearly identified actors and relationships<br />
+- [x] Design diagrams follow OOAD methodology (Class, Sequence, Activity, ERD)<br />
+- [x] All diagrams follow standard UML notation and are properly documented<br />
+- [x] Diagrams align with requirements from SRS and professional formatting is maintained<br />
+- [x] Guide approval obtained</p>
+<p><strong>Guide Remarks:</strong>  </p>
+<hr />
+<hr />
+<p><strong>Guide Signature:</strong> <strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong><strong><em>_</em></strong>      <strong>Date:</strong> <strong><em>_</em> / </strong>___ / 2026<br />
+<strong>Department Seal:</strong>  </p>
+<h2 id="-">---</h2>
+<h1 id="master-table-of-contents">📋 MASTER TABLE OF CONTENTS</h1>
+<ol>
+<li><a href="#1-use-case-diagram">USE CASE DIAGRAM</a></li>
+<li><a href="#2-ooad-design-diagrams">OOAD DESIGN DIAGRAMS</a></li>
+<li>2.1 <a href="#21-class-diagram">Class Diagram</a></li>
+<li>2.2 <a href="#22-sequence-diagram">Sequence Diagram</a></li>
+<li>2.3 <a href="#23-activity-diagram">Activity Diagram</a></li>
+<li>2.4 <a href="#24-entity-relationship-diagram-erd">Entity Relationship Diagram (ERD)</a></li>
+</ol>
+<hr />
+<h2 id="1-use-case-diagram">1. USE CASE DIAGRAM</h2>
+<p>The Use Case Diagram visualizes the interactions between external entities (Actors) and the core functionalities (Use Cases) of the SentixAI Engine.</p>
+<div class="mermaid">usecaseDiagram
+    %% Actors
+    actor &quot;Studio Executive / Director&quot; as User
+    actor &quot;Admin&quot; as Admin
+    actor &quot;External Review API&quot; as ExternalAPI
+
+    %% System Boundary
+    package &quot;SentixAI Enterprise Platform&quot; {
+        usecase &quot;Upload Movie Reviews (CSV/JSON)&quot; as UC1
+        usecase &quot;Trigger Data Ingestion API&quot; as UC2
+        usecase &quot;Run Aspect-Based Sentiment Analysis&quot; as UC3
+        usecase &quot;Filter Bots &amp; Review-Bombing Spam&quot; as UC4
+        usecase &quot;Generate Executive LLM Report&quot; as UC5
+        usecase &quot;View Analytics Dashboard&quot; as UC6
+        usecase &quot;Manage AI Models &amp; Agents&quot; as UC7
+        usecase &quot;Manage User Subscriptions&quot; as UC8
+
+        %% Dependencies / Includes / Extends
+        UC3 ..&gt; UC4 : &lt;&lt;includes&gt;&gt;
+        UC5 ..&gt; UC3 : &lt;&lt;includes&gt;&gt;
+    }
+
+    %% Relationships
+    User --&gt; UC1
+    User --&gt; UC3
+    User --&gt; UC5
+    User --&gt; UC6
+
+    ExternalAPI --&gt; UC2
+
+    Admin --&gt; UC7
+    Admin --&gt; UC8
+    Admin --&gt; UC6
+</div>
+<p><em>(Note: Since Mermaid's native use case syntax is experimental/limited in some viewers, a standard flowchart layout representing a Use Case diagram can also be used if rendering fails. However, the conceptual mapping remains the same).</em></p>
+<p><strong>Detailed Documentation:</strong><br />
+- <strong>Actors:</strong> <br />
+  - <strong>Studio Executive / Director (Primary):</strong> The end-user who wishes to analyze movie feedback. They upload datasets and view dashboards.<br />
+  - <strong>Admin:</strong> Manages the SaaS platform, monitors the active AI models (Gemini/Llama swarms), and handles billing.<br />
+  - <strong>External Review API:</strong> Automated data sources (like IMDb or Letterboxd APIs) that feed raw text into the system.<br />
+- <strong>Key Use Cases:</strong><br />
+  - <strong>Run Aspect-Based Sentiment Analysis (ABSA):</strong> The core engine function. It <code>&lt;&lt;includes&gt;&gt;</code> the <strong>Filter Bots &amp; Spam</strong> use case to guarantee clean data.<br />
+  - <strong>Generate Executive LLM Report:</strong> Synthesizes the parsed aspects into a readable film report for the executives.</p>
+<hr />
+<h2 id="2-ooad-design-diagrams">2. OOAD DESIGN DIAGRAMS</h2>
+<p>The Object-Oriented Analysis and Design (OOAD) approach is utilized to blueprint the internal architecture of SentixAI.</p>
+<h3 id="21-class-diagram">2.1 Class Diagram</h3>
+<p>The Class Diagram defines the static structure of SentixAI by illustrating its classes, attributes, methods, and the relationships among objects.</p>
+<div class="mermaid">classDiagram
+    class User {
+        +UUID userId
+        +String email
+        +String role
+        +login()
+        +viewDashboard()
+    }
+
+    class MovieProject {
+        +UUID projectId
+        +String movieTitle
+        +Date createdAt
+        +addReview()
+        +generateReport()
+    }
+
+    class ReviewDataset {
+        +UUID datasetId
+        +String sourcePlatform
+        +Int totalReviews
+        +cleanData()
+        +removeSpam()
+    }
+
+    class NLPEngine {
+        +String modelName
+        +String version
+        +extractAspects()
+        +calculateSentimentScore()
+    }
+
+    class AgentSwarm {
+        +Int activeAgents
+        +String currentTask
+        +routeTask()
+        +synthesizeInsights()
+    }
+
+    class AnalysisReport {
+        +UUID reportId
+        +JSON aspectScores
+        +String llmSummary
+        +exportPDF()
+    }
+
+    User &quot;1&quot; -- &quot;*&quot; MovieProject : Manages &gt;
+    MovieProject &quot;1&quot; *-- &quot;1&quot; ReviewDataset : Contains &gt;
+    ReviewDataset &quot;1&quot; ..&gt; &quot;1&quot; NLPEngine : Processed By &gt;
+    NLPEngine &quot;1&quot; --&gt; &quot;1&quot; AgentSwarm : Triggers &gt;
+    AgentSwarm &quot;1&quot; --&gt; &quot;1&quot; AnalysisReport : Generates &gt;
+</div>
+<p><strong>Detailed Documentation:</strong><br />
+- <strong>User &amp; MovieProject:</strong> A one-to-many relationship where a single studio executive can manage multiple movie projects.<br />
+- <strong>ReviewDataset:</strong> Holds raw unstructured data. It depends on the <code>NLPEngine</code> for processing (<code>Processed By</code>).<br />
+- <strong>NLPEngine &amp; AgentSwarm:</strong> The NLP pipeline handles embeddings and deep learning, while delegating complex reasoning to the <code>AgentSwarm</code>.<br />
+- <strong>AnalysisReport:</strong> The final output object encapsulating all the extracted aspects and the final LLM-generated summary.</p>
+<hr />
+<h3 id="22-sequence-diagram">2.2 Sequence Diagram</h3>
+<p>The Sequence Diagram details the dynamic interaction between objects over time, mapping the chronological flow of a single review analysis.</p>
+<div class="mermaid">sequenceDiagram
+    autonumber
+    actor User as Studio Executive
+    participant UI as Web Dashboard
+    participant API as Backend API
+    participant Spam as Spam Filter (Linear)
+    participant NLP as ABSA Engine (Transformer)
+    participant LLM as Frontier LLM (Gemini)
+    participant DB as Database
+
+    User-&gt;&gt;UI: Uploads &quot;Dune: Part Two&quot; Reviews CSV
+    UI-&gt;&gt;API: POST /api/v1/analyze
+    API-&gt;&gt;Spam: run_spam_detection(dataset)
+    Spam--&gt;&gt;API: clean_dataset
+    API-&gt;&gt;NLP: extract_aspects(clean_dataset)
+    Note over NLP: Parses Cinematography, Acting, etc.
+    NLP--&gt;&gt;API: aspect_scores (JSON)
+    API-&gt;&gt;LLM: generate_executive_summary(aspect_scores)
+    LLM--&gt;&gt;API: final_report_text
+    API-&gt;&gt;DB: saveResults(report)
+    DB--&gt;&gt;API: success_ack
+    API--&gt;&gt;UI: 200 OK (Report Ready)
+    UI--&gt;&gt;User: Displays Analytics Dashboard
+</div>
+<p><strong>Detailed Documentation:</strong><br />
+- <strong>Chronology:</strong> The sequence clearly demonstrates the multi-tier AI approach.<br />
+- <strong>Execution Flow:</strong> Raw data is immediately sent to a cheap, fast linear model (<code>Spam Filter</code>) before hitting the expensive Transformer models (<code>NLP Engine</code>). <br />
+- <strong>LLM Handoff:</strong> Once aspects are parsed, the structured JSON is passed to the Frontier LLM to write the final summary, preventing token waste on raw, unstructured spam.</p>
+<hr />
+<h3 id="23-activity-diagram">2.3 Activity Diagram</h3>
+<p>The Activity Diagram maps the 7-Stage workflow of the SentixAI pipeline, indicating decision points and parallel processing paths.</p>
+<div class="mermaid">stateDiagram-v2
+    [*] --&gt; IngestData
+
+    IngestData --&gt; CleanData: Raw Text
+    CleanData --&gt; Vectorization: Cleaned Text
+
+    Vectorization --&gt; SpamCheck
+
+    state SpamCheck &lt;&lt;choice&gt;&gt;
+    SpamCheck --&gt; Quarantine: If Spam/Review-Bomb
+    SpamCheck --&gt; AspectExtraction: If Authentic Review
+
+    Quarantine --&gt; [*]: Log &amp; Discard
+
+    AspectExtraction --&gt; ScoreCinematography
+    AspectExtraction --&gt; ScoreActing
+    AspectExtraction --&gt; ScoreStory
+
+    ScoreCinematography --&gt; AgentSynthesis
+    ScoreActing --&gt; AgentSynthesis
+    ScoreStory --&gt; AgentSynthesis
+
+    AgentSynthesis --&gt; LLMSummary: Structured Insights
+    LLMSummary --&gt; OutputDashboard: Final Report
+    OutputDashboard --&gt; [*]
+</div>
+<p><strong>Detailed Documentation:</strong><br />
+- <strong>Decision Node (SpamCheck):</strong> A critical branch where review-bombs are quarantined, saving compute costs.<br />
+- <strong>Parallel Processing:</strong> Aspect extraction (scoring cinematography, acting, and story) occurs concurrently to reduce latency.<br />
+- <strong>Convergence:</strong> All parallel outputs converge at the <code>AgentSynthesis</code> state before the final LLM report is generated.</p>
+<hr />
+<h3 id="24-entity-relationship-diagram-erd">2.4 Entity Relationship Diagram (ERD)</h3>
+<p>The ERD illustrates the underlying database schema and table relationships that support SentixAI.</p>
+<div class="mermaid">erDiagram
+    USERS {
+        uuid user_id PK
+        string email
+        string company_name
+        string plan_tier
+    }
+
+    PROJECTS {
+        uuid project_id PK
+        uuid user_id FK
+        string movie_title
+        date release_date
+    }
+
+    REVIEWS {
+        uuid review_id PK
+        uuid project_id FK
+        string raw_text
+        boolean is_spam
+        string source_platform
+    }
+
+    ASPECT_SCORES {
+        uuid score_id PK
+        uuid review_id FK
+        float cinematography_score
+        float acting_score
+        float pacing_score
+        float vfx_score
+    }
+
+    REPORTS {
+        uuid report_id PK
+        uuid project_id FK
+        text llm_summary
+        timestamp generated_at
+    }
+
+    USERS ||--o{ PROJECTS : &quot;creates&quot;
+    PROJECTS ||--|{ REVIEWS : &quot;contains&quot;
+    REVIEWS ||--o| ASPECT_SCORES : &quot;analyzed_into&quot;
+    PROJECTS ||--o| REPORTS : &quot;summarized_in&quot;
+</div>
+<p><strong>Detailed Documentation:</strong><br />
+- <strong>One-to-Many:</strong> One <code>USER</code> can have multiple <code>PROJECTS</code>. One <code>PROJECT</code> contains multiple <code>REVIEWS</code>.<br />
+- <strong>One-to-One (Optional):</strong> Each <code>REVIEW</code> has one associated row in <code>ASPECT_SCORES</code> (only if the review wasn't marked as spam). <br />
+- <strong>Foreign Keys:</strong> Data integrity is maintained by linking child tables directly to their parent IDs (e.g., <code>project_id</code> in <code>REVIEWS</code>).</p>
+</body>
+</html>
