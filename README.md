@@ -13,7 +13,7 @@ SentixAI is a modern, full-stack executive analytics platform designed for film 
 
 ## 🏗️ Architecture
 
-The project is split into two main directories:
+The project is split into two main directories: 
 
 ### 1. Frontend (`/frontend`)
 - **Framework**: React + Vite + TypeScript
