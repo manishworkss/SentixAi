@@ -4,29 +4,36 @@ import {
   Upload,
   Settings,
   LogOut,
-  Film,
   CheckCircle2,
   AlertTriangle,
   FileText,
   User,
-  Eye,
-  ArrowRight,
-  BrainCircuit
+  Eye
 } from 'lucide-react';
 
-export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'upload'
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 
-  if (!isAuthenticated) {
-    return <LoginLayout onLogin={() => setIsAuthenticated(true)} />;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const { currentUser, logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+
+  if (!currentUser) {
+    return <LoginLayout />;
   }
 
   return (
     <DashboardShell
       activeTab={activeTab}
       setActiveTab={setActiveTab}
-      onLogout={() => setIsAuthenticated(false)}
+      onLogout={logout}
     />
   );
 }
@@ -57,13 +64,40 @@ function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'sma
   );
 }
 
-function LoginLayout({ onLogin }: { onLogin: () => void }) {
+function LoginLayout() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
+  const { login, signup, loginWithGoogle } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onLogin();
+    setError('');
+    setIsLoading(true);
+    try {
+      if (isSignUp) {
+        await signup(email, password);
+      } else {
+        await login(email, password);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to authenticate');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setError('');
+      await loginWithGoogle();
+    } catch (err: any) {
+      setError(err.message || 'Failed to authenticate with Google');
+    }
   };
 
   return (
@@ -118,12 +152,20 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
 
           <form onSubmit={handleSubmit} className="space-y-6">
 
+            {error && (
+              <div className="p-3 bg-red-50 text-red-700 text-sm rounded-lg border border-red-200">
+                {error}
+              </div>
+            )}
+
             {isSignUp && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
                 <input
                   type="text"
                   required
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors shadow-sm placeholder-gray-400"
                   placeholder="John Doe"
                 />
@@ -135,7 +177,8 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
               <input
                 type="email"
                 required
-                defaultValue="executive@studio.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors shadow-sm placeholder-gray-400"
                 placeholder="name@company.com"
               />
@@ -150,7 +193,8 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
-                  defaultValue="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-colors shadow-sm placeholder-gray-400 pr-10"
                   placeholder="Enter your password"
                 />
@@ -167,9 +211,10 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl shadow-sm font-semibold text-white bg-[#1c1333] hover:bg-[#2d1e52] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1c1333] transition-colors"
+                disabled={isLoading}
+                className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl shadow-sm font-semibold text-white bg-[#1c1333] hover:bg-[#2d1e52] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1c1333] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSignUp ? "Sign Up" : "Sign In"}
+                {isLoading ? 'Processing...' : (isSignUp ? "Sign Up" : "Sign In")}
               </button>
             </div>
           </form>
@@ -189,7 +234,9 @@ function LoginLayout({ onLogin }: { onLogin: () => void }) {
             <div className="mt-8">
               <button
                 type="button"
-                className="w-full flex justify-center items-center py-3.5 px-4 border border-gray-300 rounded-xl shadow-sm bg-white font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+                className="w-full flex justify-center items-center py-3.5 px-4 border border-gray-300 rounded-xl shadow-sm bg-white font-semibold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
                 <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
