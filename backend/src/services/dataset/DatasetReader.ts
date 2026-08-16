@@ -29,7 +29,7 @@ export class DatasetReader {
         .pipe(parser())
         .pipe(StreamArray.withParser());
 
-      pipeline.on('data', async (data) => {
+      pipeline.on('data', async (data: any) => {
         // data comes in the format { key: number, value: any }
         const record = data.value;
         currentBatch.push(record);
@@ -82,7 +82,7 @@ export class DatasetReader {
         }
       });
 
-      pipeline.on('error', (err) => {
+      pipeline.on('error', (err: any) => {
         if (!hasEnded) {
           logger.error({ error: err.message }, 'Stream pipeline error');
           reject(err);
