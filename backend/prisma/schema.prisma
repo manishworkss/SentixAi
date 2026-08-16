@@ -87,6 +87,8 @@ model IngestionJob {
   status           String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
   totalReviews     Int      @default(0)
   processedReviews Int      @default(0)
+  insertedReviews  Int      @default(0)
+  skippedReviews   Int      @default(0)
   errorMessage     String?  @db.Text
   startedAt        DateTime?
   completedAt      DateTime?
