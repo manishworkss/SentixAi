@@ -7,6 +7,10 @@ const router = Router();
 
 // Step 8: Current User Endpoint
 router.get('/me', requireAuth, (req, res) => {
+  if (!req.dbUser) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+
   res.json({
     success: true,
     data: {
