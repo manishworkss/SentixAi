@@ -11,7 +11,14 @@ const sentimentService = new SentimentService();
 router.post('/analyze', requireAuth, async (req, res) => {
   try {
     // Start background processing loop (non-blocking)
-    sentimentService.startBackgroundProcessing(50);
+    const started = sentimentService.startBackgroundProcessing(50);
+
+    if (!started) {
+      return res.status(409).json({
+        success: false,
+        message: "Sentiment processing is already running"
+      });
+    }
 
     res.json({
       success: true,
@@ -26,28 +33,69 @@ router.post('/analyze', requireAuth, async (req, res) => {
 // Step 5: Progress Statistics Endpoint
 router.get('/stats', requireAuth, async (req, res) => {
   try {
-    // Fetch total reviews and analyzed reviews to calculate progress
-    const totalReviews = await db.review.count();
-    const analyzedReviews = await db.sentimentAnalysis.count({
-      where: { modelProvider: 'local-distilbert' }
-    });
-
-    const pendingReviews = totalReviews - analyzedReviews;
-    const progressPercentage = totalReviews === 0 ? 0 : Math.round((analyzedReviews / totalReviews) * 100);
+    const stats = await sentimentService.getStats();
 
     res.json({
       success: true,
-      data: {
-        totalReviews,
-        analyzedReviews,
-        pendingReviews,
-        progressPercentage,
-        isComplete: pendingReviews === 0
-      }
+      data: stats
     });
 
   } catch (error: any) {
     logger.error({ error: error.message }, 'Failed to fetch sentiment stats');
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// Step 6: Sentiment Retrieval API - by Movie
+router.get('/movies/:movieId', requireAuth, async (req, res) => {
+  try {
+    const movieId = req.params.movieId as string;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 50;
+    const skip = (page - 1) * limit;
+
+    const sentiments = await db.sentimentAnalysis.findMany({
+      where: { review: { movieId } },
+      include: { review: { select: { reviewText: true, rating: true, externalReviewId: true } } },
+      skip,
+      take: limit,
+      orderBy: { analyzedAt: 'desc' }
+    });
+
+    const total = await db.sentimentAnalysis.count({
+      where: { review: { movieId } }
+    });
+
+    res.json({
+      success: true,
+      data: sentiments,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to fetch movie sentiments');
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// Step 6: Sentiment Retrieval API - by Review
+router.get('/reviews/:reviewId', requireAuth, async (req, res) => {
+  try {
+    const reviewId = req.params.reviewId as string;
+    const sentiments = await db.sentimentAnalysis.findMany({
+      where: { reviewId }
+    });
+
+    res.json({
+      success: true,
+      data: sentiments
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to fetch review sentiments');
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });

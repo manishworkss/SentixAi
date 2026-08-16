@@ -6,6 +6,8 @@ export class SentimentService {
   private provider = TransformersProvider.getInstance();
   private readonly providerName = 'local-distilbert';
 
+  private isProcessing = false;
+
   /**
    * Processes a limited batch of reviews that have not yet been analyzed by the current provider.
    * @param limit The maximum number of reviews to fetch and analyze in this pass.
@@ -79,15 +81,22 @@ export class SentimentService {
   /**
    * Starts a continuous background loop to process all pending reviews.
    * Runs non-blockingly.
+   * @returns true if started, false if already running
    */
-  public async startBackgroundProcessing(batchSize: number = 50) {
+  public startBackgroundProcessing(batchSize: number = 50): boolean {
+    if (this.isProcessing) {
+      logger.info('Sentiment processing is already running. Ignoring start request.');
+      return false;
+    }
+
+    this.isProcessing = true;
     logger.info('Starting background sentiment analysis...');
     
     // Run asynchronously
     setImmediate(async () => {
-      let isRunning = true;
-      while (isRunning) {
-        try {
+      try {
+        let isRunning = true;
+        while (isRunning) {
           const result = await this.processPendingReviews(batchSize);
           
           if (result.processed === 0) {
@@ -98,11 +107,54 @@ export class SentimentService {
           
           // Yield the event loop to allow other HTTP requests to be handled
           await new Promise(resolve => setTimeout(resolve, 100));
-        } catch (error: any) {
-          logger.error({ error: error.message }, 'Fatal error in background sentiment processing loop. Halting.');
-          isRunning = false;
         }
+      } catch (error: any) {
+        logger.error({ error: error.message }, 'Fatal error in background sentiment processing loop. Halting.');
+      } finally {
+        this.isProcessing = false;
+        logger.info('Background sentiment processing lock released.');
       }
     });
+
+    return true;
+  }
+
+  /**
+   * Fetches the current sentiment analysis statistics.
+   */
+  public async getStats() {
+    const totalReviews = await db.review.count();
+    
+    const analyzedReviews = await db.sentimentAnalysis.count({
+      where: { modelProvider: this.providerName }
+    });
+
+    const positiveCount = await db.sentimentAnalysis.count({
+      where: { modelProvider: this.providerName, sentiment: 'POSITIVE' }
+    });
+
+    const negativeCount = await db.sentimentAnalysis.count({
+      where: { modelProvider: this.providerName, sentiment: 'NEGATIVE' }
+    });
+
+    const scoreStats = await db.sentimentAnalysis.aggregate({
+      where: { modelProvider: this.providerName },
+      _avg: { score: true }
+    });
+
+    const pendingReviews = totalReviews - analyzedReviews;
+    const progressPercentage = totalReviews === 0 ? 0 : Math.round((analyzedReviews / totalReviews) * 100);
+
+    return {
+      totalReviews,
+      analyzedReviews,
+      pendingReviews,
+      positiveCount,
+      negativeCount,
+      averageSentimentScore: scoreStats._avg.score || 0,
+      progressPercentage,
+      isComplete: pendingReviews === 0 && totalReviews > 0,
+      isProcessing: this.isProcessing
+    };
   }
 }
