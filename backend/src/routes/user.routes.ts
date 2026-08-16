@@ -23,7 +23,7 @@ router.get('/me', requireAuth, (req, res) => {
 
 router.patch('/:id/role', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const validatedData = updateRoleSchema.parse(req.body);
 
     const updatedUser = await db.user.update({
@@ -49,7 +49,7 @@ router.patch('/:id/role', requireAuth, requireRole(['ADMIN']), async (req, res) 
 
 router.patch('/:id/status', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const validatedData = updateStatusSchema.parse(req.body);
 
     const updatedUser = await db.user.update({
