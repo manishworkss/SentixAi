@@ -88,9 +88,11 @@ model IngestionJob {
   movie            Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
   status           String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
   totalReviews     Int      @default(0)
-  processedReviews Int      @default(0)
+  processedRecords Int      @default(0)
   insertedReviews  Int      @default(0)
-  skippedReviews   Int      @default(0)
+  duplicateReviews Int      @default(0)
+  invalidReviews   Int      @default(0)
+  moviesCreated    Int      @default(0)
   errorMessage     String?  @db.Text
   startedAt        DateTime?
   completedAt      DateTime?

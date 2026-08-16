@@ -2,10 +2,30 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/auth';
 import { db } from '../utils/db';
 import { logger } from '../utils/logger';
+import { DatasetService } from '../services/dataset/DatasetService';
 
 const router = Router();
 
-// Step 8 — Ingestion Status API
+// Step 14 — Ingestion API
+router.post('/imdb', requireAuth, async (req, res) => {
+  try {
+    const { maxRecords } = req.body;
+    
+    // Trigger dataset ingestion in the background
+    const job = await DatasetService.startIngestion(maxRecords ? parseInt(maxRecords) : 50000);
+
+    res.json({
+      success: true,
+      message: 'Dataset ingestion job started successfully',
+      data: { jobId: job.id, status: job.status }
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to start ingestion');
+    res.status(500).json({ success: false, message: 'Failed to start ingestion' });
+  }
+});
+
+// Step 15 — Ingestion Status
 router.get('/:jobId', requireAuth, async (req, res) => {
   try {
     const jobId = req.params.jobId as string;
@@ -28,10 +48,12 @@ router.get('/:jobId', requireAuth, async (req, res) => {
         jobId: job.id,
         movieId: job.movieId,
         status: job.status,
-        totalReviews: job.totalReviews,
-        processedReviews: job.processedReviews,
+        totalRecords: job.totalReviews, // Keep for legacy UI compat if needed, or update DB schema
+        processedRecords: job.processedRecords,
         insertedReviews: job.insertedReviews,
-        skippedReviews: job.skippedReviews,
+        duplicateReviews: job.duplicateReviews,
+        invalidReviews: job.invalidReviews,
+        moviesCreated: job.moviesCreated,
         errorMessage: job.errorMessage,
         startedAt: job.startedAt,
         completedAt: job.completedAt
