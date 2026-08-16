@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import nodemailer from 'nodemailer';
+import crypto from 'crypto';
+import { db } from '../utils/db';
 
 const router = Router();
 
@@ -7,16 +9,18 @@ const router = Router();
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'bcawithmanish0008@gmail.com',
+    user: 'bcawithmanish0008@gmail.com', // TODO: Move to env vars
     pass: 'ysnm ounx gckp cjaz'
   }
 });
 
-// ─── In-Memory OTP Store ──────────────────────────────────────────────
-const otpStore = new Map();
-
+// ─── Secure OTP Helpers ───────────────────────────────────────────────
 function generateOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return crypto.randomInt(100000, 999999).toString();
+}
+
+function hashOTP(otp: string) {
+  return crypto.createHash('sha256').update(otp).digest('hex');
 }
 
 // ─── POST /api/send-otp ──────────────────────────────────────────────
@@ -27,21 +31,24 @@ router.post('/send-otp', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Email is required' });
   }
 
-  const otp = generateOTP();
-  const expiresAt = Date.now() + 5 * 60 * 1000; // 5 minutes
-
-  // Store the OTP
-  otpStore.set(email, { otp, expiresAt });
-
-  // Auto-cleanup after expiry
-  setTimeout(() => {
-    const stored = otpStore.get(email);
-    if (stored && stored.otp === otp) {
-      otpStore.delete(email);
-    }
-  }, 5 * 60 * 1000);
-
   try {
+    // Basic rate limit: block if an OTP was requested less than 1 minute ago
+    const existingOtp = await db.otpVerification.findUnique({ where: { email } });
+    if (existingOtp && existingOtp.createdAt > new Date(Date.now() - 60 * 1000)) {
+      return res.status(429).json({ success: false, message: 'Please wait before requesting another OTP.' });
+    }
+
+    const otp = generateOTP();
+    const otpHash = hashOTP(otp);
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Store the OTP securely in the database
+    await db.otpVerification.upsert({
+      where: { email },
+      update: { otpHash, expiresAt, attempts: 0, createdAt: new Date() },
+      create: { email, otpHash, expiresAt }
+    });
+
     await transporter.sendMail({
       from: '"SentixAI Platform" <bcawithmanish0008@gmail.com>',
       to: email,
@@ -68,7 +75,7 @@ router.post('/send-otp', async (req, res) => {
       `
     });
 
-    console.log(`✅ OTP ${otp} sent to ${email}`);
+    console.log(`✅ OTP sent to ${email}`);
     res.json({ success: true, message: 'OTP sent successfully' });
 
   } catch (error) {
@@ -78,32 +85,48 @@ router.post('/send-otp', async (req, res) => {
 });
 
 // ─── POST /api/verify-otp ────────────────────────────────────────────
-router.post('/verify-otp', (req, res) => {
+router.post('/verify-otp', async (req, res) => {
   const { email, otp } = req.body;
 
   if (!email || !otp) {
     return res.status(400).json({ success: false, message: 'Email and OTP are required' });
   }
 
-  const stored = otpStore.get(email);
+  try {
+    const stored = await db.otpVerification.findUnique({ where: { email } });
 
-  if (!stored) {
-    return res.status(400).json({ success: false, message: 'OTP expired or not found. Please request a new one.' });
+    if (!stored) {
+      return res.status(400).json({ success: false, message: 'OTP expired or not found. Please request a new one.' });
+    }
+
+    if (stored.attempts >= 3) {
+      await db.otpVerification.delete({ where: { email } });
+      return res.status(403).json({ success: false, message: 'Too many failed attempts. Please request a new OTP.' });
+    }
+
+    if (new Date() > stored.expiresAt) {
+      await db.otpVerification.delete({ where: { email } });
+      return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
+    }
+
+    const otpHash = hashOTP(otp);
+    if (stored.otpHash !== otpHash) {
+      await db.otpVerification.update({
+        where: { email },
+        data: { attempts: { increment: 1 } }
+      });
+      return res.status(400).json({ success: false, message: 'Invalid OTP. Please check and try again.' });
+    }
+
+    // OTP is valid — remove it so it can't be reused
+    await db.otpVerification.delete({ where: { email } });
+    console.log(`✅ OTP verified for ${email}`);
+    res.json({ success: true, message: 'OTP verified successfully' });
+
+  } catch (error) {
+    console.error('❌ OTP verification failed:', error);
+    res.status(500).json({ success: false, message: 'Failed to verify OTP.' });
   }
-
-  if (Date.now() > stored.expiresAt) {
-    otpStore.delete(email);
-    return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new one.' });
-  }
-
-  if (stored.otp !== otp) {
-    return res.status(400).json({ success: false, message: 'Invalid OTP. Please check and try again.' });
-  }
-
-  // OTP is valid — remove it so it can't be reused
-  otpStore.delete(email);
-  console.log(`✅ OTP verified for ${email}`);
-  res.json({ success: true, message: 'OTP verified successfully' });
 });
 
 // ─── POST /api/ingest/imdb ───────────────────────────────────────────
