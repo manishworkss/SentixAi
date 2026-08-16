@@ -1,13 +1,95 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(uuid())
+  firebaseUid String   @unique
+  email       String   @unique
+  name        String?
+  role        String   @default("USER") // USER, ADMIN
+  status      String   @default("ACTIVE") // ACTIVE, SUSPENDED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Movie {
+  id            String   @id @default(uuid())
+  imdbId        String   @unique
+  title         String
+  releaseDate   DateTime?
+  posterUrl     String?
+  metadata      Json?    // Stores extra info (e.g. genre, plot summary)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  reviews       Review[]
+  ingestionJobs IngestionJob[]
+}
+
+model Review {
+  id              String   @id @default(uuid())
+  movieId         String
+  movie           Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  externalReviewId String? // ID from IMDb or other source
+  reviewText      String   @db.Text
+  rating          Int?
+  reviewDate      DateTime?
+  source          String   @default("IMDB") // IMDB, METACRITIC
+  createdAt       DateTime @default(now())
+
+  sentiment       SentimentAnalysis?
+  aspectSentiments AspectSentiment[]
+
+  // Ensures we don't ingest the exact same review from the same source twice
+  @@unique([source, externalReviewId]) 
+}
+
+model SentimentAnalysis {
+  id         String   @id @default(uuid())
+  reviewId   String   @unique
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  sentiment  String   // POSITIVE, NEGATIVE, NEUTRAL
+  score      Float    // AI confidence score (e.g. 0.95)
+  analyzedAt DateTime @default(now())
+}
+
+model Aspect {
+  id         String   @id @default(uuid())
+  name       String   @unique // Acting, Story, Direction, etc.
+  createdAt  DateTime @default(now())
+
+  sentiments AspectSentiment[]
+}
+
+model AspectSentiment {
+  id         String   @id @default(uuid())
+  reviewId   String
+  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  aspectId   String
+  aspect     Aspect   @relation(fields: [aspectId], references: [id], onDelete: Cascade)
+  sentiment  String   // POSITIVE, NEGATIVE, NEUTRAL
+  score      Float
+  analyzedAt DateTime @default(now())
+
+  // A review should only have one analyzed sentiment per aspect
+  @@unique([reviewId, aspectId]) 
+}
+
+model IngestionJob {
+  id               String   @id @default(uuid())
+  movieId          String
+  movie            Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  status           String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  totalReviews     Int      @default(0)
+  processedReviews Int      @default(0)
+  errorMessage     String?  @db.Text
+  startedAt        DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime @default(now())
 }
