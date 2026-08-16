@@ -7,6 +7,7 @@ import { errorHandler } from './middleware/errorHandler';
 import healthRoutes from './routes/health.routes';
 import legacyRoutes from './routes/legacy.routes';
 import userRoutes from './routes/user.routes';
+import movieRoutes from './routes/movie.routes';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use(pinoHttp({ logger }));
 // API Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/movies', movieRoutes);
 app.use('/api', legacyRoutes);
 
 // Unknown route handler (404)
