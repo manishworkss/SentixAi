@@ -8,7 +8,7 @@ const router = Router();
 // Step 8 — Ingestion Status API
 router.get('/:jobId', requireAuth, async (req, res) => {
   try {
-    const { jobId } = req.params;
+    const jobId = req.params.jobId as string;
 
     const job = await db.ingestionJob.findUnique({
       where: { id: jobId }
