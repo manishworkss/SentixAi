@@ -8,7 +8,7 @@ const router = Router();
 // ─── GET /api/movies/:imdbId ──────────────────────────────────────────────
 router.get('/:imdbId', async (req, res) => {
   try {
-    const { imdbId } = req.params;
+    const imdbId = req.params.imdbId as string;
     const movie = await MovieService.findByImdbId(imdbId);
 
     if (!movie) {
@@ -29,7 +29,7 @@ router.get('/:imdbId', async (req, res) => {
 // ─── POST /api/movies/:imdbId/ingest ──────────────────────────────────────
 router.post('/:imdbId/ingest', requireAuth, async (req, res) => {
   try {
-    const { imdbId } = req.params;
+    const imdbId = req.params.imdbId as string;
     const { title } = req.body; // Optional title from frontend
     
     // Step 2: Ensure the movie exists in the database
