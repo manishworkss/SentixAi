@@ -26,8 +26,8 @@ export class DatasetReader {
       let hasEnded = false;
 
       const pipeline = fs.createReadStream(filePath)
-        .pipe(parser())
-        .pipe(StreamArray.withParser());
+        .pipe(parser() as any)
+        .pipe(StreamArray.withParser() as any);
 
       pipeline.on('data', async (data: any) => {
         // data comes in the format { key: number, value: any }
