@@ -16,6 +16,7 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
+  REVIEW_DATASET_PATH: z.string().default('../data/part-01.json'),
 });
 
 const parsedEnv = envSchema.safeParse(process.env);
