@@ -19,7 +19,7 @@ model User {
 
 model Movie {
   id            String   @id @default(uuid())
-  imdbId        String   @unique
+  imdbId        String?  @unique
   title         String
   releaseDate   DateTime?
   posterUrl     String?
@@ -29,6 +29,8 @@ model Movie {
 
   reviews       Review[]
   ingestionJobs IngestionJob[]
+
+  @@index([title])
 }
 
 model Review {
@@ -82,8 +84,8 @@ model AspectSentiment {
 
 model IngestionJob {
   id               String   @id @default(uuid())
-  movieId          String
-  movie            Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId          String?
+  movie            Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
   status           String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
   totalReviews     Int      @default(0)
   processedReviews Int      @default(0)
