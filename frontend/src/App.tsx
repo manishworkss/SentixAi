@@ -4,14 +4,15 @@ import {
   Upload,
   Settings,
   LogOut,
-  CheckCircle2,
-  AlertTriangle,
   FileText,
-  User,
-  Eye
+  Eye,
+  Film
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AnalyticsDashboard } from './components/AnalyticsDashboard';
+import { MoviesExplorer } from './components/MoviesExplorer';
+import { MovieAnalytics } from './components/MovieAnalytics';
 
 
 // ─── CENTRALIZED THEME CONFIGURATION ───────────────────────────
@@ -516,12 +517,12 @@ function LoginLayout() {
 function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (tab: string) => void, onLogout: () => void }) {
   const { currentUser } = useAuth();
   const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
-  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [selectedMovie, setSelectedMovie] = useState<string | null>(null);
 
   return (
     <div className={`flex h-screen ${Theme.bgApp}`}>
       {/* Sidebar */}
-      <div className={`w-72 flex flex-col ${Theme.bgCard} border-r ${Theme.border} z-10`}>
+      <div className={`w-72 flex flex-col ${Theme.bgCard} border-r ${Theme.border} z-10 shrink-0`}>
         <div className={`h-24 flex flex-col justify-center px-8 border-b ${Theme.borderLight}`}>
           <Logo variant="small" theme="light" />
         </div>
@@ -532,21 +533,28 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
           </div>
           <nav className="px-4 space-y-1">
             <button
-              onClick={() => setActiveTab('dashboard')}
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === 'dashboard' ? '${Theme.primary} ${Theme.textInverse} shadow-md' : '${Theme.textSecondary} hover:bg-slate-50 hover:${Theme.textPrimary}'}`}
+              onClick={() => { setActiveTab('dashboard'); setSelectedMovie(null); }}
+              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === 'dashboard' ? `${Theme.primary} ${Theme.textInverse} shadow-md` : `${Theme.textSecondary} hover:bg-slate-50 hover:${Theme.textPrimary}`}`}
             >
               <BarChart3 className="mr-3 h-[18px] w-[18px]" />
               Analytics
             </button>
             <button
-              onClick={() => setActiveTab('upload')}
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === 'upload' ? '${Theme.primary} ${Theme.textInverse} shadow-md' : '${Theme.textSecondary} hover:bg-slate-50 hover:${Theme.textPrimary}'}`}
+              onClick={() => { setActiveTab('movies'); setSelectedMovie(null); }}
+              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === 'movies' ? `${Theme.primary} ${Theme.textInverse} shadow-md` : `${Theme.textSecondary} hover:bg-slate-50 hover:${Theme.textPrimary}`}`}
+            >
+              <Film className="mr-3 h-[18px] w-[18px]" />
+              Movies
+            </button>
+            <button
+              onClick={() => { setActiveTab('upload'); setSelectedMovie(null); }}
+              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === 'upload' ? `${Theme.primary} ${Theme.textInverse} shadow-md` : `${Theme.textSecondary} hover:bg-slate-50 hover:${Theme.textPrimary}`}`}
             >
               <Upload className="mr-3 h-[18px] w-[18px]" />
               Ingest Data
             </button>
             <button
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${Theme.textSecondary} hover:${Theme.bgInput} hover:${Theme.textPrimary}`}
+              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${Theme.textSecondary} hover:bg-white/50 hover:${Theme.textPrimary}`}
             >
               <FileText className="mr-3 h-[18px] w-[18px]" />
               Projects
@@ -554,8 +562,8 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
           </nav>
         </div>
 
-        <div className="p-4 border-t border-slate-100">
-          <button className={`w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${Theme.textSecondary} hover:${Theme.bgInput} hover:${Theme.textPrimary}`}>
+        <div className="p-4 border-t border-slate-200">
+          <button className={`w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${Theme.textSecondary} hover:bg-white/50 hover:${Theme.textPrimary}`}>
             <Settings className="mr-3 h-[18px] w-[18px]" />
             Settings
           </button>
@@ -570,45 +578,58 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Bar */}
-        <header className="h-[96px] flex items-center justify-between px-10 shrink-0 ${Theme.bgApp}">
-          <div>
-            <h1 className="text-2xl font-bold ${Theme.textPrimary} tracking-tight">
-              {activeTab === 'dashboard' ? 'Executive Analytics' : 'Data Ingestion'}
-            </h1>
-            <p className="text-sm mt-1 ${Theme.textSecondary} font-medium">
-              {activeTab === 'dashboard' ? 'Real-time sentiment intelligence overview' : 'Upload and process review datasets'}
-            </p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-3 ${Theme.bgCard} px-4 py-2 rounded-2xl border ${Theme.border} shadow-sm`}>
-              <div className="h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold ${Theme.primary} ${Theme.textInverse}">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <div className="text-sm font-bold ${Theme.textPrimary}">{displayName}</div>
-                <div className="text-xs ${Theme.textSecondary} font-medium">Studio Executive</div>
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        
+        {/* Top Bar (Optional if we want standard header for legacy views, but new views have their own headers) */}
+        {(activeTab === 'upload') && (
+          <header className={`h-[96px] flex items-center justify-between px-10 shrink-0 ${Theme.bgApp}`}>
+            <div>
+              <h1 className={`text-2xl font-bold ${Theme.textPrimary} tracking-tight`}>
+                Data Ingestion
+              </h1>
+              <p className={`text-sm mt-1 ${Theme.textSecondary} font-medium`}>
+                Upload and process review datasets
+              </p>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className={`flex items-center gap-3 ${Theme.bgCard} px-4 py-2 rounded-2xl border ${Theme.border} shadow-sm`}>
+                <div className={`h-9 w-9 rounded-full flex items-center justify-center text-sm font-bold ${Theme.primary} ${Theme.textInverse}`}>
+                  {displayName.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <div className={`text-sm font-bold ${Theme.textPrimary}`}>{displayName}</div>
+                  <div className={`text-xs ${Theme.textSecondary} font-medium`}>Studio Executive</div>
+                </div>
               </div>
             </div>
-          </div>
-        </header>
+          </header>
+        )}
 
-        <main className="flex-1 overflow-y-auto px-10 pb-10">
-          {activeTab === 'dashboard' ? <AnalyticsDashboard data={analyticsData} /> : <UploadForm onSuccess={(data) => { setAnalyticsData(data); setActiveTab('dashboard'); }} />}
+        {/* Content Area */}
+        <main className="flex-1 overflow-y-auto">
+          {activeTab === 'dashboard' && <AnalyticsDashboard />}
+          {activeTab === 'movies' && !selectedMovie && <MoviesExplorer onSelectMovie={setSelectedMovie} />}
+          {activeTab === 'movies' && selectedMovie && <MovieAnalytics movieId={selectedMovie} onBack={() => setSelectedMovie(null)} />}
+          {activeTab === 'upload' && (
+            <div className="px-10 pb-10 max-w-7xl mx-auto space-y-8 mt-10">
+              <UploadForm onSuccess={() => setActiveTab('dashboard')} />
+            </div>
+          )}
+
         </main>
       </div>
     </div>
   );
 }
 
-function UploadForm() {
+function UploadForm({ onSuccess }: { onSuccess: (data: any) => void }) {
+  const [loading, setLoading] = useState(false);
   return (
     <div className="max-w-3xl mx-auto mt-4">
-      <div className="rounded-3xl p-10 ${Theme.bgCard} border ${Theme.border} shadow-sm">
-        <h2 className="text-xl font-bold mb-8 ${Theme.textPrimary}">Ingest Movie Reviews</h2>
+      <div className={`rounded-3xl p-10 ${Theme.bgCard} border ${Theme.border} shadow-sm`}>
+        <h2 className={`text-xl font-bold mb-8 ${Theme.textPrimary}`}>Ingest Movie Reviews</h2>
 
-        <form className="space-y-8">
+        <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); setLoading(true); setTimeout(() => { setLoading(false); onSuccess({}); }, 1000); }}>
           <div className="grid grid-cols-1 gap-y-8 gap-x-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="block text-sm font-semibold mb-2 text-slate-700">Project / Movie Title</label>
@@ -639,19 +660,19 @@ function UploadForm() {
                   <Upload className="h-7 w-7 text-slate-600" />
                 </div>
                 <div className="flex text-sm justify-center text-slate-600 font-medium mt-4">
-                  <label htmlFor="file-upload" className="cursor-pointer font-bold ${Theme.accentText} ${Theme.accentTextHover}">
+                  <label htmlFor="file-upload" className={`cursor-pointer font-bold ${Theme.accentText} ${Theme.accentTextHover}`}>
                     <span>Click to upload</span>
                     <input id="file-upload" type="file" className="sr-only" />
                   </label>
                   <p className="pl-1">or drag and drop</p>
                 </div>
-                <p className="text-xs ${Theme.textSecondary} font-medium">CSV, JSON up to 50MB</p>
+                <p className={`text-xs ${Theme.textSecondary} font-medium`}>CSV, JSON up to 50MB</p>
               </div>
             </div>
           </div>
 
           <div className="flex justify-end gap-4 pt-4">
-            <button type="button" className={`py-3.5 px-6 rounded-2xl text-sm font-bold text-slate-600 ${Theme.bgCard} border ${Theme.border} hover:${Theme.bgInput} transition-all`}>Cancel</button>
+            <button type="button" className={`py-3.5 px-6 rounded-2xl text-sm font-bold text-slate-600 ${Theme.bgCard} border ${Theme.border} hover:bg-slate-100 transition-all`}>Cancel</button>
             <button type="submit" disabled={loading} className={`py-3.5 px-8 rounded-2xl text-sm font-bold ${Theme.textInverse} ${Theme.primary} ${Theme.primaryHover} shadow-md transition-all disabled:opacity-50`}>
               {loading ? "Scraping IMDb..." : "Trigger Ingestion"}
             </button>
@@ -662,158 +683,5 @@ function UploadForm() {
   );
 }
 
-function AnalyticsDashboard({ data }: { data?: any }) {
-  const isMock = !data;
-  const total = data?.totalReviews || "1,245,892";
-  const pos = data?.positiveCount || "712,400";
-  const neg = data?.negativeCount || "389,102";
-  const posPct = data ? ((data.positiveCount / data.totalReviews) * 100).toFixed(1) + "%" : "57.1%";
-  const negPct = data ? ((data.negativeCount / data.totalReviews) * 100).toFixed(1) + "%" : "31.2%";
-  const title = data?.movieId || "Dune: Part Two";
 
-  return (
-    <div className="space-y-8 mt-2">
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard
-          icon={<FileText className="h-5 w-5" />}
-          label="Reviews Processed"
-          value={total.toString()}
-          change="+12.4%"
-          changeType="up"
-          accentColor="text-indigo-600"
-          accentBg="bg-indigo-50"
-        />
-        <KpiCard
-          icon={<CheckCircle2 className="h-5 w-5" />}
-          label="Positive Sentiment"
-          value={pos.toString()}
-          change={`${posPct} share`}
-          changeType="up"
-          accentColor="text-emerald-600"
-          accentBg="bg-emerald-50"
-        />
-        <KpiCard
-          icon={<AlertTriangle className="h-5 w-5" />}
-          label="Negative Sentiment"
-          value={neg.toString()}
-          change={`${negPct} share`}
-          changeType="down"
-          accentColor="text-rose-600"
-          accentBg="bg-rose-50"
-        />
-        <KpiCard
-          icon={<AlertTriangle className="h-5 w-5" />}
-          label="Spam Quarantined"
-          value="4.2%"
-          change="Bots filtered"
-          changeType="neutral"
-          accentColor="text-slate-600"
-          accentBg="bg-slate-100"
-        />
-      </div>
-
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Aspect Scores */}
-        <div className="lg:col-span-1">
-          <div className="rounded-3xl p-8 ${Theme.bgCard} border ${Theme.border} shadow-sm h-full">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-lg font-bold ${Theme.textPrimary}">Aspect Sentiments</h3>
-              <span className={`text-[10px] uppercase tracking-widest font-bold px-3 py-1.5 rounded-lg bg-indigo-50 ${Theme.accentText}`}>ABSA</span>
-            </div>
-            <div className="space-y-6">
-              <AspectScore label="Cinematography" score={88} color="bg-emerald-500" />
-              <AspectScore label="Acting Quality" score={75} color="bg-emerald-400" />
-              <AspectScore label="Storyline" score={42} color="bg-amber-400" />
-              <AspectScore label="Pacing" score={35} color="bg-rose-500" />
-              <AspectScore label="VFX & CGI" score={91} color="bg-indigo-500" />
-              <AspectScore label="Sound Design" score={68} color="bg-indigo-400" />
-            </div>
-          </div>
-        </div>
-
-        {/* LLM Report Card */}
-        <div className="lg:col-span-2">
-          <div className="rounded-3xl p-8 ${Theme.bgCard} border ${Theme.border} shadow-sm h-full relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-lg font-bold ${Theme.textPrimary}">Executive Summary</h3>
-              <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-bold ${Theme.primary} ${Theme.textInverse} shadow-sm">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
-                Gemini Pro
-              </span>
-            </div>
-            
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <span className="text-base font-bold text-slate-800">{title}</span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600">Analysis Complete</span>
-              </div>
-              
-              <div className="space-y-4">
-                <p className="text-sm font-medium leading-relaxed text-slate-600">
-                  The target audience highly appreciates the <span className="text-emerald-600 font-bold bg-emerald-50 px-1 rounded">cinematography</span> and raw imagery (88% positive sentiment), citing it as a "visual masterpiece." Performances by the main cast are also viewed very favorably (75% positive).
-                </p>
-                <p className="text-sm font-medium leading-relaxed text-slate-600">
-                  However, SentixAI detected significant negative feedback regarding structural <span className="text-rose-600 font-bold bg-rose-50 px-1 rounded">storyline cohesion</span> and <span className="text-rose-600 font-bold bg-rose-50 px-1 rounded">pacing</span>. Many authentic reviewers noted a "dragging mid-section" that hindered the overall experience.
-                </p>
-              </div>
-
-              <div className={`mt-8 p-6 rounded-2xl ${Theme.bgInput} border border-slate-100`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="h-6 w-6 rounded-full bg-indigo-100 flex items-center justify-center">
-                    <span className={`${Theme.accentText} text-xs`}>✨</span>
-                  </div>
-                  <h4 className="text-sm font-bold ${Theme.textPrimary}">Actionable Studio Insight</h4>
-                </div>
-                <p className="text-sm font-medium leading-relaxed text-slate-600 pl-8">
-                  For future extended cuts or similar sci-fi epics, maintain the high budget allocation for VFX/Cinematography, but strongly consider tighter editing in the second act to address pacing criticisms.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function KpiCard({ icon, label, value, change, changeType, accentColor, accentBg }: {
-  icon: React.ReactNode, label: string, value: string, change: string, changeType: 'up' | 'down' | 'neutral', accentColor: string, accentBg: string
-}) {
-  return (
-    <div className="rounded-3xl p-6 ${Theme.bgCard} border ${Theme.border} shadow-sm hover:shadow-md transition-all duration-300">
-      <div className="flex items-start justify-between mb-6">
-        <div className={`p-3 rounded-2xl ${accentBg} ${accentColor}`}>
-          {icon}
-        </div>
-      </div>
-      <div className="text-3xl font-black tracking-tight ${Theme.textPrimary} mb-2">{value}</div>
-      <div className="text-sm font-bold ${Theme.textSecondary} mb-4">{label}</div>
-      <div className="flex items-center gap-2">
-        <span className={`text-xs font-bold px-2 py-1 rounded-lg ${changeType === 'up' ? 'bg-emerald-50 text-emerald-700' : changeType === 'down' ? 'bg-rose-50 text-rose-700' : 'bg-slate-100 text-slate-700'}`}>
-          {changeType === 'up' ? '↑' : changeType === 'down' ? '↓' : '•'} {change}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function AspectScore({ label, score, color }: { label: string, score: number, color: string }) {
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-sm font-bold text-slate-700">{label}</span>
-        <span className="text-sm font-black ${Theme.textPrimary} tabular-nums">{score}%</span>
-      </div>
-      <div className="w-full h-3 rounded-full bg-slate-100 overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all duration-1000 ease-out ${color}`}
-          style={{ width: `${score}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-}
 

@@ -4,6 +4,40 @@ import { logger } from '../utils/logger';
 
 const router = Router();
 
+// ─── GET /api/movies ────────────────────────────────────────────────────────
+router.get('/', async (req, res) => {
+  try {
+    const title = req.query.title as string | undefined;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const where: any = {};
+    if (title) {
+      // Support searching by either imdbId (if it starts with tt) or title
+      if (title.startsWith('tt')) {
+        where.imdbId = title;
+      } else {
+        where.title = { contains: title }; // MySQL is case-insensitive by default
+      }
+    }
+
+    const [movies, total] = await Promise.all([
+      db.movie.findMany({ where, skip, take: limit, orderBy: { title: 'asc' } }),
+      db.movie.count({ where })
+    ]);
+
+    res.json({
+      success: true,
+      data: movies,
+      meta: { total, page, limit, totalPages: Math.ceil(total / limit) }
+    });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to search movies');
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
 // ─── GET /api/movies/:id ──────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
