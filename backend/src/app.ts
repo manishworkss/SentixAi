@@ -6,16 +6,21 @@ import { logger } from './utils/logger';
 import { errorHandler } from './middleware/errorHandler';
 import healthRoutes from './routes/health.routes';
 import legacyRoutes from './routes/legacy.routes';
+import userRoutes from './routes/user.routes';
 
 const app = express();
 
+// Security and utility middleware
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+// Request logging middleware
 app.use(pinoHttp({ logger }));
 
-// Routes
+// API Routes
 app.use('/api/health', healthRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api', legacyRoutes);
 
 // Unknown route handler (404)
