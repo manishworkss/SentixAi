@@ -18,14 +18,14 @@ model User {
 }
 
 model Movie {
-  id            String   @id @default(uuid())
-  imdbId        String?  @unique
-  title         String
-  releaseDate   DateTime?
-  posterUrl     String?
-  metadata      Json?    // Stores extra info (e.g. genre, plot summary)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String    @id @default(uuid())
+  imdbId      String?   @unique
+  title       String
+  releaseDate DateTime?
+  posterUrl   String?
+  metadata    Json? // Stores extra info (e.g. genre, plot summary)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   reviews       Review[]
   ingestionJobs IngestionJob[]
@@ -34,36 +34,40 @@ model Movie {
 }
 
 model Review {
-  id              String   @id @default(uuid())
-  movieId         String
-  movie           Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  id               String    @id @default(uuid())
+  movieId          String
+  movie            Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
   externalReviewId String? // ID from IMDb or other source
-  reviewText      String   @db.Text
-  rating          Int?
-  reviewDate      DateTime?
-  source          String   @default("IMDB") // IMDB, METACRITIC
-  createdAt       DateTime @default(now())
+  reviewText       String    @db.Text
+  rating           Int?
+  reviewDate       DateTime?
+  source           String    @default("IMDB") // IMDB, METACRITIC
+  createdAt        DateTime  @default(now())
 
-  sentiment       SentimentAnalysis?
+  sentiments       SentimentAnalysis[]
   aspectSentiments AspectSentiment[]
 
   // Ensures we don't ingest the exact same review from the same source twice
-  @@unique([source, externalReviewId]) 
+  @@unique([source, externalReviewId])
 }
 
 model SentimentAnalysis {
-  id         String   @id @default(uuid())
-  reviewId   String   @unique
-  review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  sentiment  String   // POSITIVE, NEGATIVE, NEUTRAL
-  score      Float    // AI confidence score (e.g. 0.95)
-  analyzedAt DateTime @default(now())
+  id            String   @id @default(uuid())
+  reviewId      String
+  review        Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+  sentiment     String // POSITIVE, NEGATIVE, NEUTRAL
+  score         Float // Raw sentiment score (e.g. -1.0 to 1.0)
+  confidence    Float? // AI confidence score (e.g. 0.95)
+  modelProvider String // Which model analyzed this (e.g., 'local-distilbert')
+  analyzedAt    DateTime @default(now())
+
+  @@unique([reviewId, modelProvider])
 }
 
 model Aspect {
-  id         String   @id @default(uuid())
-  name       String   @unique // Acting, Story, Direction, etc.
-  createdAt  DateTime @default(now())
+  id        String   @id @default(uuid())
+  name      String   @unique // Acting, Story, Direction, etc.
+  createdAt DateTime @default(now())
 
   sentiments AspectSentiment[]
 }
@@ -74,29 +78,29 @@ model AspectSentiment {
   review     Review   @relation(fields: [reviewId], references: [id], onDelete: Cascade)
   aspectId   String
   aspect     Aspect   @relation(fields: [aspectId], references: [id], onDelete: Cascade)
-  sentiment  String   // POSITIVE, NEGATIVE, NEUTRAL
+  sentiment  String // POSITIVE, NEGATIVE, NEUTRAL
   score      Float
   analyzedAt DateTime @default(now())
 
   // A review should only have one analyzed sentiment per aspect
-  @@unique([reviewId, aspectId]) 
+  @@unique([reviewId, aspectId])
 }
 
 model IngestionJob {
-  id               String   @id @default(uuid())
+  id               String    @id @default(uuid())
   movieId          String?
-  movie            Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  status           String   @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
-  totalReviews     Int      @default(0)
-  processedRecords Int      @default(0)
-  insertedReviews  Int      @default(0)
-  duplicateReviews Int      @default(0)
-  invalidReviews   Int      @default(0)
-  moviesCreated    Int      @default(0)
-  errorMessage     String?  @db.Text
+  movie            Movie?    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  status           String    @default("PENDING") // PENDING, PROCESSING, COMPLETED, FAILED
+  totalReviews     Int       @default(0)
+  processedRecords Int       @default(0)
+  insertedReviews  Int       @default(0)
+  duplicateReviews Int       @default(0)
+  invalidReviews   Int       @default(0)
+  moviesCreated    Int       @default(0)
+  errorMessage     String?   @db.Text
   startedAt        DateTime?
   completedAt      DateTime?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime  @default(now())
 }
 
 model OtpVerification {

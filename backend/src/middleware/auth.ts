@@ -1,43 +1,24 @@
 import { Request, Response, NextFunction } from 'express';
-import { firebaseAuth } from '../config/firebase';
-import { logger } from '../utils/logger';
 import { db } from '../utils/db';
+import { logger } from '../utils/logger';
 
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({
-      success: false,
-      message: 'Unauthorized: Missing or malformed Authorization header',
-      error: 'UNAUTHORIZED'
-    });
-  }
-
-  const token = authHeader.split('Bearer ')[1];
-
   try {
-    const decodedToken = await firebaseAuth.verifyIdToken(token);
-    req.user = decodedToken;
-
-    // Step 4: User Synchronization
-    // Look up or create the user in our MySQL database based on firebaseUid
-    let dbUser = await db.user.findUnique({
-      where: { firebaseUid: decodedToken.uid }
-    });
-
+    // MOCK: Firebase is removed for now, we just pass a mock user or find the first user
+    let dbUser = await db.user.findFirst();
+    
+    // If no user exists, create a dummy one for testing
     if (!dbUser) {
       dbUser = await db.user.create({
         data: {
-          firebaseUid: decodedToken.uid,
-          email: decodedToken.email || '',
-          name: decodedToken.name || null,
+          firebaseUid: 'mock-uid-' + Date.now(),
+          email: 'mock@example.com',
+          name: 'Mock User',
         }
       });
-      logger.info({ userId: dbUser.id }, 'New user synchronized from Firebase');
+      logger.info({ userId: dbUser.id }, 'Created mock user for development');
     }
 
-    // Step 6: User Status check
     if (dbUser.status === 'INACTIVE') {
       return res.status(403).json({
         success: false,
@@ -51,12 +32,12 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     
     next();
   } catch (error: any) {
-    logger.warn({ error: error.message }, 'Firebase token verification failed');
+    logger.warn({ error: error.message }, 'Mock auth failed');
     
-    return res.status(401).json({
+    return res.status(500).json({
       success: false,
-      message: 'Unauthorized: Invalid or expired token',
-      error: 'INVALID_TOKEN'
+      message: 'Internal server error during mock auth',
+      error: 'AUTH_ERROR'
     });
   }
 };

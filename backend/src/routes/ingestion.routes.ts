@@ -39,7 +39,7 @@ router.get('/stats', requireAuth, async (req, res) => {
         averageRating: ratingStats._avg.rating,
         earliestReviewDate: ratingStats._min.reviewDate,
         latestReviewDate: ratingStats._max.reviewDate,
-        ratingDistribution: distribution.map(d => ({ rating: d.rating, count: d._count.rating }))
+        ratingDistribution: distribution.map((d: any) => ({ rating: d.rating, count: d._count.rating }))
       }
     });
 
@@ -64,7 +64,7 @@ router.post('/imdb', requireAuth, async (req, res) => {
     });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Failed to start ingestion');
-    res.status(500).json({ success: false, message: 'Failed to start ingestion' });
+    res.status(500).json({ success: false, message: error.message || 'Failed to start ingestion' });
   }
 });
 

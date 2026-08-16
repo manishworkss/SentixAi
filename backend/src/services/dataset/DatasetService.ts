@@ -95,14 +95,27 @@ export class DatasetService {
       logger.info({ jobId, totalProcessed, totalInserted }, 'Ingestion job completed successfully');
 
     } catch (error: any) {
-      await db.ingestionJob.update({
-        where: { id: jobId },
-        data: {
-          status: 'FAILED',
-          errorMessage: error.message || 'Unknown error occurred during streaming dataset read',
-          completedAt: new Date()
-        }
-      });
+      // 1. Log the original detailed error to the console
+      logger.error({ error: error.message, stack: error.stack, jobId }, 'Ingestion processing failed');
+
+      // 2. Truncate the error message to fit safely within the DB column limits
+      let safeErrorMsg = error.message || 'Unknown error occurred during streaming dataset read';
+      if (safeErrorMsg.length > 1000) {
+        safeErrorMsg = safeErrorMsg.substring(0, 1000) + '... [TRUNCATED]';
+      }
+
+      try {
+        await db.ingestionJob.update({
+          where: { id: jobId },
+          data: {
+            status: 'FAILED',
+            errorMessage: safeErrorMsg,
+            completedAt: new Date()
+          }
+        });
+      } catch (updateError: any) {
+        logger.error({ error: updateError.message, jobId }, 'Failed to update ingestion job status to FAILED');
+      }
     }
   }
 }

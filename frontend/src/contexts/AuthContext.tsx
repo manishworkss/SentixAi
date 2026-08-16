@@ -1,13 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { 
-  type User, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  signInWithPopup
-} from 'firebase/auth';
-import { auth, googleProvider } from '../lib/firebase';
+
+// Mock User interface to match Firebase's minimal expected shape
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+}
 
 interface AuthContextType {
   currentUser: User | null;
@@ -27,31 +26,32 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Start with a dummy user for development
+  const [currentUser, setCurrentUser] = useState<User | null>({
+    uid: 'mock-uid-12345',
+    email: 'mock@example.com',
+    displayName: 'Mock User',
+    photoURL: null,
+  });
+  
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // If the firebase config is a placeholder, it will throw an error immediately,
-    // so we catch it to prevent crashing the whole app, and just set loading to false.
-    try {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setCurrentUser(user);
-        setLoading(false);
-      }, (error) => {
-        console.error("Firebase auth error (likely using placeholder config):", error);
-        setLoading(false);
-      });
-      return unsubscribe;
-    } catch (e) {
-      console.warn("Auth initialization failed. Ensure firebase is configured.", e);
-      setLoading(false);
-    }
-  }, []);
-
-  const login = (email: string, pass: string) => signInWithEmailAndPassword(auth, email, pass);
-  const signup = (email: string, pass: string) => createUserWithEmailAndPassword(auth, email, pass);
-  const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
-  const logout = () => signOut(auth);
+  // Mock functions that just resolve immediately
+  const login = async (email: string, pass: string) => {
+    setCurrentUser({ uid: 'mock-uid-' + Date.now(), email, displayName: 'Mock User', photoURL: null });
+  };
+  
+  const signup = async (email: string, pass: string) => {
+    setCurrentUser({ uid: 'mock-uid-' + Date.now(), email, displayName: 'Mock User', photoURL: null });
+  };
+  
+  const loginWithGoogle = async () => {
+    setCurrentUser({ uid: 'mock-uid-google', email: 'google@example.com', displayName: 'Google User', photoURL: null });
+  };
+  
+  const logout = async () => {
+    setCurrentUser(null);
+  };
 
   const value = {
     currentUser,
