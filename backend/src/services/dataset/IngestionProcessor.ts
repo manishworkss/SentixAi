@@ -66,9 +66,7 @@ export class IngestionProcessor {
           reviewText: r.text,
           rating: r.rating,
           reviewDate: r.reviewDate,
-          source: r.source,
-          author: r.reviewer,
-          title: r.summary
+          source: r.source
         });
       }
     }

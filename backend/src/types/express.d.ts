@@ -1,10 +1,9 @@
-import { DecodedIdToken } from 'firebase-admin/auth';
+import { User } from '@prisma/client';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: DecodedIdToken;
-      dbUser?: any; // Will be typed when Prisma model is integrated
+      dbUser?: User;
     }
   }
 }

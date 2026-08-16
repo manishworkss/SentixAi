@@ -1,6 +1,7 @@
 import fs from 'fs';
-import StreamArray from 'stream-json/streamers/StreamArray';
+import StreamArray from 'stream-json/streamers/stream-array.js';
 import { parser } from 'stream-json';
+import { chain } from 'stream-chain';
 import { logger } from '../../utils/logger';
 
 export class DatasetReader {
@@ -25,9 +26,11 @@ export class DatasetReader {
       let isPaused = false;
       let hasEnded = false;
 
-      const pipeline = fs.createReadStream(filePath)
-        .pipe(parser() as any)
-        .pipe(StreamArray.withParser() as any);
+      const pipeline = chain([
+        fs.createReadStream(filePath),
+        parser(),
+        StreamArray()
+      ]);
 
       pipeline.on('data', async (data: any) => {
         // data comes in the format { key: number, value: any }
