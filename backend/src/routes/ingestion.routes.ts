@@ -6,6 +6,49 @@ import { DatasetService } from '../services/dataset/DatasetService';
 
 const router = Router();
 
+// Step 18 — Dataset Statistics
+router.get('/stats', requireAuth, async (req, res) => {
+  try {
+    const totalReviews = await db.review.count();
+    const totalMovies = await db.movie.count();
+    
+    const ratingStats = await db.review.aggregate({
+      _avg: { rating: true },
+      _min: { reviewDate: true },
+      _max: { reviewDate: true },
+    });
+
+    const reviewsWithRatings = await db.review.count({ where: { rating: { not: null } } });
+    const reviewsWithoutRatings = totalReviews - reviewsWithRatings;
+
+    // Rating distribution
+    const distribution = await db.review.groupBy({
+      by: ['rating'],
+      _count: { rating: true },
+      where: { rating: { not: null } },
+      orderBy: { rating: 'asc' }
+    });
+
+    res.json({
+      success: true,
+      data: {
+        totalReviews,
+        totalMovies,
+        reviewsWithRatings,
+        reviewsWithoutRatings,
+        averageRating: ratingStats._avg.rating,
+        earliestReviewDate: ratingStats._min.reviewDate,
+        latestReviewDate: ratingStats._max.reviewDate,
+        ratingDistribution: distribution.map(d => ({ rating: d.rating, count: d._count.rating }))
+      }
+    });
+
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to fetch dataset stats');
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
 // Step 14 — Ingestion API
 router.post('/imdb', requireAuth, async (req, res) => {
   try {
