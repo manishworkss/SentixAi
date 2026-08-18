@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+
 import { env } from '../config/env';
 import { logger } from './logger';
 
@@ -7,8 +8,8 @@ import { logger } from './logger';
 // due to hot reloading (which can exhaust database connections)
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-// Initialize Mariadb adapter
-const adapter = new PrismaMariaDb(env.DATABASE_URL!);
+const connectionString = env.DATABASE_URL!.replace(/^mysql:\/\//, 'mariadb://');
+const adapter = new PrismaMariaDb(connectionString);
 
 export const db =
   globalForPrisma.prisma ||
