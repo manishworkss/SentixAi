@@ -21,8 +21,8 @@ export const Theme = {
   fontFamily: "font-sans",
   
   // Backgrounds
-  bgApp: "bg-[#EAE4D9]",     // Deeper beige for the main background
-  bgCard: "bg-[#F3EFE7]",    // Lighter beige for the cards/sidebar
+  bgApp: "bg-white",     // Main background
+  bgCard: "bg-white",    // Card background
   bgDarkPanel: "bg-[#2C2925]", // Warm dark brown/charcoal instead of slate
   bgInput: "bg-white/50",    // Semi-transparent for inputs
   
