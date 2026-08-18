@@ -3,7 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -38,7 +39,7 @@ model Review {
   movieId          String
   movie            Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
   externalReviewId String? // ID from IMDb or other source
-  reviewText       String    @db.Text
+  reviewText       String
   rating           Int?
   reviewDate       DateTime?
   source           String    @default("IMDB") // IMDB, METACRITIC
@@ -97,7 +98,7 @@ model IngestionJob {
   duplicateReviews Int       @default(0)
   invalidReviews   Int       @default(0)
   moviesCreated    Int       @default(0)
-  errorMessage     String?   @db.Text
+  errorMessage     String?
   startedAt        DateTime?
   completedAt      DateTime?
   createdAt        DateTime  @default(now())
