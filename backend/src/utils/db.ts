@@ -1,15 +1,16 @@
 import { PrismaClient } from '@prisma/client';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-
+import { PrismaLibSql } from '@prisma/adapter-libsql';
+import { createClient } from '@libsql/client';
 import { env } from '../config/env';
 import { logger } from './logger';
+
+const dbUrl = process.env.DATABASE_URL || 'file:./dev.db';
+const libsql = createClient({ url: dbUrl });
+const adapter = new PrismaLibSql(libsql);
 
 // Prevent multiple instances of Prisma Client in development
 // due to hot reloading (which can exhaust database connections)
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-const connectionString = env.DATABASE_URL!.replace(/^mysql:\/\//, 'mariadb://');
-const adapter = new PrismaMariaDb(connectionString);
 
 export const db =
   globalForPrisma.prisma ||
