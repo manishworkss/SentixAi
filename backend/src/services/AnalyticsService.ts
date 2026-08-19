@@ -117,7 +117,7 @@ export class AnalyticsService {
 
     const query = Prisma.sql`
       SELECT 
-        DATE_FORMAT(r.reviewDate, ${dateFormat}) as period,
+        strftime(${dateFormat}, r.reviewDate / 1000, 'unixepoch') as period,
         COUNT(r.id) as totalReviews,
         SUM(CASE WHEN s.sentiment = 'POSITIVE' THEN 1 ELSE 0 END) as positive,
         SUM(CASE WHEN s.sentiment = 'NEGATIVE' THEN 1 ELSE 0 END) as negative,
