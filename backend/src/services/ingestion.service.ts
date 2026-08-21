@@ -69,9 +69,7 @@ export class IngestionService {
               reviewText: review.text,
               rating: review.rating,
               reviewDate: review.reviewDate,
-              source: review.source,
-              author: review.author,
-              title: review.title
+              source: review.source
             }
           });
           inserted++;
@@ -88,9 +86,9 @@ export class IngestionService {
         data: {
           status: 'COMPLETED',
           totalReviews: reviews.length,
-          processedReviews: processed,
+          processedRecords: processed,
           insertedReviews: inserted,
-          skippedReviews: skipped,
+          invalidReviews: skipped,
           completedAt: new Date(),
           errorMessage: null
         }
