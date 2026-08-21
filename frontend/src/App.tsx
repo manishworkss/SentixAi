@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BarChart3,
   Upload,
@@ -6,7 +6,9 @@ import {
   LogOut,
   FileText,
   Eye,
-  Film
+  Film,
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -553,12 +555,6 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
               <Upload className="mr-3 h-[18px] w-[18px]" />
               Ingest Data
             </button>
-            <button
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${Theme.textSecondary} hover:bg-white/50 hover:${Theme.textPrimary}`}
-            >
-              <FileText className="mr-3 h-[18px] w-[18px]" />
-              Projects
-            </button>
           </nav>
         </div>
 
@@ -622,62 +618,133 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
   );
 }
 
+import { IngestionAPI } from './api';
+
 function UploadForm({ onSuccess }: { onSuccess: (data: any) => void }) {
   const [loading, setLoading] = useState(false);
+  const [maxRecords, setMaxRecords] = useState(50000);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobStatus, setJobStatus] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const startIngestion = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await IngestionAPI.startImdbIngestion(maxRecords);
+      setJobId(res.jobId);
+    } catch (err: any) {
+      setError(err.message || 'Failed to start ingestion');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>;
+    if (jobId && jobStatus?.status !== 'COMPLETED' && jobStatus?.status !== 'FAILED') {
+      interval = setInterval(async () => {
+        try {
+          const status = await IngestionAPI.getJobStatus(jobId);
+          setJobStatus(status);
+          if (status.status === 'COMPLETED' || status.status === 'FAILED') {
+            clearInterval(interval);
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      }, 2000);
+    }
+    return () => clearInterval(interval);
+  }, [jobId, jobStatus?.status]);
+
   return (
     <div className="max-w-3xl mx-auto mt-4">
       <div className={`rounded-3xl p-10 ${Theme.bgCard} border ${Theme.border} shadow-sm`}>
-        <h2 className={`text-xl font-bold mb-8 ${Theme.textPrimary}`}>Ingest Movie Reviews</h2>
+        <h2 className={`text-xl font-bold mb-8 ${Theme.textPrimary}`}>IMDb Dataset Ingestion</h2>
 
-        <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); setLoading(true); setTimeout(() => { setLoading(false); onSuccess({}); }, 1000); }}>
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center">
+            <AlertTriangle className="h-5 w-5 mr-3 shrink-0" />
+            <p className="text-sm">{error}</p>
+          </div>
+        )}
+
+        <form className="space-y-8" onSubmit={startIngestion}>
           <div className="grid grid-cols-1 gap-y-8 gap-x-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="block text-sm font-semibold mb-2 text-slate-700">Project / Movie Title</label>
+              <label className="block text-sm font-semibold mb-2 text-slate-700">Dataset Source</label>
               <input
                 type="text"
-                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all placeholder:text-slate-400`}
-                placeholder="e.g. tt15398776"
+                disabled
+                value="IMDb Reviews Dataset (Local)"
+                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} text-slate-500 opacity-70`}
               />
             </div>
-            <div>
-              <label className="block text-sm font-semibold mb-2 text-slate-700">Source Platform</label>
-              <select
-                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all text-slate-700`}
-              >
-                <option>IMDb</option>
-                <option>Rotten Tomatoes</option>
-                <option>Letterboxd</option>
-                <option>Custom JSON/CSV</option>
-              </select>
+            <div className="sm:col-span-2">
+              <label className="block text-sm font-semibold mb-2 text-slate-700">Maximum Records</label>
+              <input
+                type="number"
+                value={maxRecords}
+                onChange={(e) => setMaxRecords(Number(e.target.value))}
+                min={1}
+                max={50000}
+                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all`}
+              />
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-700">Upload Dataset</label>
-            <div className={`flex justify-center px-6 pt-10 pb-10 rounded-3xl border-2 border-dashed ${Theme.border} ${Theme.bgInput} hover:bg-slate-100 transition-colors`}>
-              <div className="space-y-3 text-center">
-                <div className={`w-16 h-16 ${Theme.bgCard} rounded-full flex items-center justify-center mx-auto shadow-sm border border-slate-100`}>
-                  <Upload className="h-7 w-7 text-slate-600" />
-                </div>
-                <div className="flex text-sm justify-center text-slate-600 font-medium mt-4">
-                  <label htmlFor="file-upload" className={`cursor-pointer font-bold ${Theme.accentText} ${Theme.accentTextHover}`}>
-                    <span>Click to upload</span>
-                    <input id="file-upload" type="file" className="sr-only" />
-                  </label>
-                  <p className="pl-1">or drag and drop</p>
-                </div>
-                <p className={`text-xs ${Theme.textSecondary} font-medium`}>CSV, JSON up to 50MB</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-4 pt-4">
-            <button type="button" className={`py-3.5 px-6 rounded-2xl text-sm font-bold text-slate-600 ${Theme.bgCard} border ${Theme.border} hover:bg-slate-100 transition-all`}>Cancel</button>
-            <button type="submit" disabled={loading} className={`py-3.5 px-8 rounded-2xl text-sm font-bold ${Theme.textInverse} ${Theme.primary} ${Theme.primaryHover} shadow-md transition-all disabled:opacity-50`}>
-              {loading ? "Scraping IMDb..." : "Trigger Ingestion"}
+          <div className="flex justify-end gap-4 pt-4 border-b border-slate-200 pb-8">
+            <button type="submit" disabled={loading || (!!jobId && jobStatus?.status === 'PROCESSING')} className={`py-3.5 px-8 rounded-2xl text-sm font-bold ${Theme.textInverse} ${Theme.primary} ${Theme.primaryHover} shadow-md transition-all disabled:opacity-50 flex items-center`}>
+              {loading || (!!jobId && jobStatus?.status === 'PROCESSING') ? (
+                <>
+                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
+                  Processing...
+                </>
+              ) : "Start Ingestion"}
             </button>
           </div>
         </form>
+
+        {jobId && (
+          <div className="mt-8 space-y-6">
+            <h3 className="text-lg font-bold text-slate-800">Job Status: {jobStatus ? jobStatus.status : 'INITIALIZING'}</h3>
+            
+            {jobStatus && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <div className="text-xs font-semibold text-slate-500 mb-1">Progress</div>
+                  <div className="text-2xl font-bold text-slate-800">{jobStatus.processedRecords.toLocaleString()} / {jobStatus.totalRecords.toLocaleString()}</div>
+                </div>
+                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <div className="text-xs font-semibold text-slate-500 mb-1">Inserted Reviews</div>
+                  <div className="text-2xl font-bold text-emerald-600">{jobStatus.insertedReviews.toLocaleString()}</div>
+                </div>
+                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <div className="text-xs font-semibold text-slate-500 mb-1">Movies Created</div>
+                  <div className="text-2xl font-bold text-indigo-600">{jobStatus.moviesCreated.toLocaleString()}</div>
+                </div>
+                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+                  <div className="text-xs font-semibold text-slate-500 mb-1">Invalid / Duplicates</div>
+                  <div className="text-2xl font-bold text-amber-600">{jobStatus.invalidRecords.toLocaleString()} / {jobStatus.duplicateReviews.toLocaleString()}</div>
+                </div>
+                
+                {jobStatus.error && (
+                  <div className="col-span-2 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
+                    <span className="font-bold">Error:</span> {jobStatus.error}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {jobStatus?.status === 'COMPLETED' && (
+              <div className="flex justify-end pt-4">
+                 <button onClick={() => onSuccess(jobStatus)} className="text-indigo-600 font-bold text-sm hover:text-indigo-800">Go to Dashboard &rarr;</button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
