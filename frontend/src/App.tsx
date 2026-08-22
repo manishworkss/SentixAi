@@ -105,21 +105,86 @@ function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'sma
   );
 }
 
+const GlowingCard = ({ children, className, gradient, glow, animDelay }: { children: React.ReactNode, className: string, gradient: string, glow: string, animDelay: string }) => (
+  <div className={`absolute ${className} animate-pulse`} style={{ animationDuration: '8s', animationDelay: animDelay }}>
+    {/* Glow effect behind the card */}
+    <div className={`absolute inset-0 rounded-[2.5rem] ${glow} blur-2xl opacity-30`} />
+    {/* The gradient border wrapper */}
+    <div className={`relative w-full h-full rounded-[2.5rem] ${gradient} p-[2px] shadow-2xl`}>
+      {/* The inner dark card */}
+      <div className="w-full h-full rounded-[2.5rem] bg-[#110E0E] flex items-center justify-center backdrop-blur-sm">
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
 function AnimatedBackground() {
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Dark overlay to ensure the login card stands out against the video */}
-      <div className="absolute inset-0 bg-slate-900/30 z-10 backdrop-blur-[2px]"></div>
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 bg-[#0B0A0A]">
+      {/* Subtle ambient light in the background */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vh] bg-indigo-500/5 rounded-full blur-[120px]" />
       
-      {/* Background Video */}
-      <video
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover z-0 opacity-70"
-        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
-      />
+      {/* Floating Glowing Cards */}
+      {/* Top Left - Movie Reel */}
+      <GlowingCard 
+        className="top-[5%] left-[8%] w-48 h-48 -rotate-12"
+        gradient="bg-gradient-to-br from-amber-400 via-orange-500 to-red-600"
+        glow="bg-orange-500"
+        animDelay="0s"
+      >
+        <Film className="w-20 h-20 text-orange-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Middle Left - Sparkles (AI) */}
+      <GlowingCard 
+        className="top-[45%] -left-[2%] w-36 h-36 rotate-[25deg]"
+        gradient="bg-gradient-to-br from-fuchsia-400 via-pink-500 to-rose-600"
+        glow="bg-pink-500"
+        animDelay="2s"
+      >
+        <Sparkles className="w-16 h-16 text-pink-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Bottom Left - Cpu */}
+      <GlowingCard 
+        className="bottom-[5%] left-[15%] w-40 h-40 rotate-12"
+        gradient="bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600"
+        glow="bg-blue-500"
+        animDelay="4s"
+      >
+        <Cpu className="w-16 h-16 text-blue-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Top Right - Bot */}
+      <GlowingCard 
+        className="top-[10%] right-[10%] w-44 h-44 rotate-[15deg]"
+        gradient="bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600"
+        glow="bg-teal-500"
+        animDelay="1s"
+      >
+        <Bot className="w-20 h-20 text-teal-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Bottom Right - Clapperboard */}
+      <GlowingCard 
+        className="bottom-[10%] right-[8%] w-52 h-52 -rotate-[15deg]"
+        gradient="bg-gradient-to-br from-violet-400 via-purple-500 to-fuchsia-600"
+        glow="bg-purple-500"
+        animDelay="3s"
+      >
+        <Clapperboard className="w-24 h-24 text-purple-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+      
+      {/* Middle Right - Network */}
+      <GlowingCard 
+        className="top-[50%] -right-[2%] w-32 h-32 -rotate-[30deg]"
+        gradient="bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500"
+        glow="bg-amber-400"
+        animDelay="5s"
+      >
+        <Network className="w-14 h-14 text-amber-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
     </div>
   );
 }
@@ -283,7 +348,7 @@ function LoginLayout() {
       <div className={`w-full max-w-5xl flex flex-col md:flex-row ${Theme.bgCard} rounded-[2rem] shadow-xl overflow-hidden min-h-[600px] border ${Theme.border} z-10`}>
 
         {/* Left Side - Premium Dark Slate */}
-        <div className={`w-full md:w-[45%] ${Theme.bgDarkPanel} p-10 sm:p-14 flex flex-col ${Theme.textInverse} relative overflow-hidden`}>
+        <div className={`w-full md:w-[45%] ${Theme.bgDarkPanel} p-8 sm:p-10 flex flex-col ${Theme.textInverse} relative overflow-hidden`}>
           {/* Subtle gradient overlay to make it look premium but not "AI" */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/50 z-0"></div>
           
@@ -350,7 +415,7 @@ function LoginLayout() {
         </div>
 
         {/* Right Side - Form or OTP */}
-        <div className={`w-full md:w-[55%] p-10 sm:p-14 flex flex-col justify-center ${Theme.bgCard} relative`}>
+        <div className={`w-full md:w-[55%] p-8 sm:p-10 flex flex-col justify-center ${Theme.bgCard} relative`}>
 
           {/* ════════════════════════════════════════════════════════ */}
           {/* OTP VERIFICATION SCREEN */}
@@ -438,11 +503,11 @@ function LoginLayout() {
             /* NORMAL LOGIN / SIGNUP FORM */
             /* ════════════════════════════════════════════════════════ */
             <>
-              <h2 className="text-2xl font-bold ${Theme.textPrimary} mb-8">
+              <h2 className="text-2xl font-bold ${Theme.textPrimary} mb-5">
                 {isSignUp ? "Create Your Account" : "Sign In to Your Account"}
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
                   <div className="p-4 bg-rose-50 text-rose-700 font-medium text-sm rounded-xl border border-rose-100">
                     {error}
@@ -457,7 +522,7 @@ function LoginLayout() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className={`w-full px-4 py-3.5 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
+                      className={`w-full px-4 py-3 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
                       placeholder="John Doe"
                     />
                   </div>
@@ -470,7 +535,7 @@ function LoginLayout() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full px-4 py-3.5 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
+                    className={`w-full px-4 py-3 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
                     placeholder="name@company.com"
                   />
                 </div>
@@ -486,7 +551,7 @@ function LoginLayout() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`w-full px-4 py-3.5 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 pr-10 ${Theme.textPrimary}`}
+                      className={`w-full px-4 py-3 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 pr-10 ${Theme.textPrimary}`}
                       placeholder="Enter your password"
                     />
                     <button
@@ -499,18 +564,18 @@ function LoginLayout() {
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center py-4 px-4 rounded-xl shadow-md font-bold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl shadow-md font-bold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? 'Processing...' : (isSignUp ? "Sign Up" : "Sign In")}
                   </button>
                 </div>
               </form>
 
-              <div className="mt-8">
+              <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-slate-100"></div>
@@ -522,12 +587,12 @@ function LoginLayout() {
                   </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-5">
                   <button
                     type="button"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
-                    className={`w-full flex justify-center items-center py-3.5 px-4 ${Theme.bgCard} border ${Theme.border} rounded-xl shadow-sm font-bold text-slate-700 hover:${Theme.bgInput} transition-all disabled:opacity-50`}
+                    className={`w-full flex justify-center items-center py-3 px-4 ${Theme.bgCard} border ${Theme.border} rounded-xl shadow-sm font-bold text-slate-700 hover:${Theme.bgInput} transition-all disabled:opacity-50`}
                   >
                     <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
@@ -537,7 +602,7 @@ function LoginLayout() {
                 </div>
               </div>
 
-              <p className="mt-10 text-center text-sm font-medium ${Theme.textSecondary}">
+              <p className="mt-6 text-center text-sm font-medium ${Theme.textSecondary}">
                 {isSignUp ? (
                   <>
                     Already have an account? <button type="button" onClick={() => setIsSignUp(false)} className="font-bold ${Theme.accentText} ${Theme.accentTextHover}">Sign in</button>
@@ -666,12 +731,28 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
 
 function UploadForm({ onSuccess }: { onSuccess: (data: any) => void }) {
   const [loading, setLoading] = useState(false);
+  
+  const handleIngest = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const { IngestionAPI } = await import('./api');
+      await IngestionAPI.startImdbIngestion(500); // Fetch 500 records to start
+      onSuccess({});
+    } catch (err) {
+      console.error(err);
+      alert('Failed to start ingestion');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto mt-4">
       <div className={`rounded-3xl p-10 ${Theme.bgCard} border ${Theme.border} shadow-sm`}>
         <h2 className={`text-xl font-bold mb-8 ${Theme.textPrimary}`}>Ingest Movie Reviews</h2>
 
-        <form className="space-y-8" onSubmit={(e) => { e.preventDefault(); setLoading(true); setTimeout(() => { setLoading(false); onSuccess({}); }, 1000); }}>
+        <form className="space-y-8" onSubmit={handleIngest}>
           <div className="grid grid-cols-1 gap-y-8 gap-x-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
               <label className="block text-sm font-semibold mb-2 text-slate-700">Project / Movie Title</label>
@@ -695,7 +776,7 @@ function UploadForm({ onSuccess }: { onSuccess: (data: any) => void }) {
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2 text-slate-700">Upload Dataset</label>
+            <label className="block text-sm font-semibold mb-2 text-slate-700">Upload Dataset (Optional)</label>
             <div className={`flex justify-center px-6 pt-10 pb-10 rounded-3xl border-2 border-dashed ${Theme.border} ${Theme.bgInput} hover:bg-slate-100 transition-colors`}>
               <div className="space-y-3 text-center">
                 <div className={`w-16 h-16 ${Theme.bgCard} rounded-full flex items-center justify-center mx-auto shadow-sm border border-slate-100`}>
@@ -716,7 +797,7 @@ function UploadForm({ onSuccess }: { onSuccess: (data: any) => void }) {
           <div className="flex justify-end gap-4 pt-4">
             <button type="button" className={`py-3.5 px-6 rounded-2xl text-sm font-bold text-slate-600 ${Theme.bgCard} border ${Theme.border} hover:bg-slate-100 transition-all`}>Cancel</button>
             <button type="submit" disabled={loading} className={`py-3.5 px-8 rounded-2xl text-sm font-bold ${Theme.textInverse} ${Theme.primary} ${Theme.primaryHover} shadow-md transition-all disabled:opacity-50`}>
-              {loading ? "Scraping IMDb..." : "Trigger Ingestion"}
+              {loading ? "Triggering..." : "Trigger Ingestion"}
             </button>
           </div>
         </form>

@@ -26,8 +26,7 @@ export class IngestionProcessor {
     if (missingTitles.length > 0) {
       // Insert all missing titles in bulk
       const result = await db.movie.createMany({
-        data: missingTitles.map(t => ({ title: t })),
-        skipDuplicates: true
+        data: missingTitles.map(t => ({ title: t }))
       });
       newCreatedCount = result.count;
 
@@ -74,14 +73,23 @@ export class IngestionProcessor {
     const createData = Array.from(uniqueBatch.values());
     const batchDuplicates = validReviews.length - createData.length;
 
-    // 3. Bulk Insert with skipDuplicates
-    // If the record already exists in the database from a previous batch, it is safely ignored.
-    const result = await db.review.createMany({
-      data: createData,
-      skipDuplicates: true
+    // Filter out existing reviews to avoid SQLite unique constraint errors
+    const externalIds = createData.map(r => r.externalReviewId);
+    const existingReviews = await db.review.findMany({
+      where: { externalReviewId: { in: externalIds } },
+      select: { externalReviewId: true }
     });
+    const existingIds = new Set(existingReviews.map(r => r.externalReviewId));
+    const newReviewsToInsert = createData.filter(r => !existingIds.has(r.externalReviewId));
 
-    const inserted = result.count;
+    let inserted = 0;
+    if (newReviewsToInsert.length > 0) {
+      const result = await db.review.createMany({
+        data: newReviewsToInsert
+      });
+      inserted = result.count;
+    }
+
     const dbDuplicates = createData.length - inserted;
     const totalDuplicates = batchDuplicates + dbDuplicates;
 

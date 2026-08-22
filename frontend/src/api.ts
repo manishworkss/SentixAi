@@ -1,9 +1,13 @@
+import { auth } from './config/firebase';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001/api';
 
 async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
-  // Use existing auth token mechanism if available, typically in localStorage or from context.
-  // We'll rely on the existing token being passed, or assume it's set in localStorage by AuthContext.
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+  // Use Firebase ID token if user is logged in
+  let token = localStorage.getItem('token') || sessionStorage.getItem('token') || '';
+  if (auth.currentUser) {
+    token = await auth.currentUser.getIdToken();
+  }
   
   const headers = new Headers(options.headers || {});
   headers.set('Content-Type', 'application/json');
@@ -53,4 +57,9 @@ export const MovieAPI = {
   // Use existing movie search logic, or implement a simple search fallback here if needed
   searchMovies: (query: string, page = 1) => fetchWithAuth(`/movies?title=${encodeURIComponent(query)}&page=${page}&limit=20`),
   getMovie: (id: string) => fetchWithAuth(`/movies/${id}`)
+};
+
+export const IngestionAPI = {
+  startImdbIngestion: (maxRecords = 1000) => 
+    fetchWithAuth('/ingestion/imdb', { method: 'POST', body: JSON.stringify({ maxRecords }) })
 };

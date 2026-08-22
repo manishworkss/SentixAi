@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-  LineChart, Line, PieChart, Pie, Cell, Legend
+  LineChart, Line
 } from 'recharts';
 import { AnalyticsAPI, SentimentAPI } from '../api';
-import { AlertTriangle, CheckCircle2, Loader2, Activity } from 'lucide-react';
-
-const COLORS = ['#22c55e', '#ef4444', '#94a3b8']; // Positive, Negative, Neutral
+import { AlertTriangle, Loader2, Activity, Search, Bell, ChevronDown, FileText, Users, CheckCircle2 } from 'lucide-react';
 
 export function AnalyticsDashboard() {
   const [overview, setOverview] = useState<any>(null);
@@ -42,7 +40,6 @@ export function AnalyticsDashboard() {
   }, [groupBy]);
 
   useEffect(() => {
-    // Poll stats if processing is active
     let interval: ReturnType<typeof setInterval>;
     if (stats?.isProcessing) {
       interval = setInterval(async () => {
@@ -51,7 +48,7 @@ export function AnalyticsDashboard() {
           setStats(statsData);
           if (!statsData.isProcessing) {
             clearInterval(interval);
-            loadData(); // reload overview when finished
+            loadData();
           }
         } catch (e) {}
       }, 5000);
@@ -62,8 +59,7 @@ export function AnalyticsDashboard() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-slate-500" />
-        <span className="ml-3 text-slate-500">Loading analytics...</span>
+        <Loader2 className="h-8 w-8 animate-spin text-slate-400" />
       </div>
     );
   }
@@ -73,160 +69,210 @@ export function AnalyticsDashboard() {
       <div className="flex h-full items-center justify-center text-red-500 flex-col">
         <AlertTriangle className="h-10 w-10 mb-2" />
         <p>{error}</p>
-        <button onClick={loadData} className="mt-4 px-4 py-2 bg-slate-100 rounded-md text-slate-700 hover:bg-slate-200">Retry</button>
+        <button onClick={loadData} className="mt-4 px-4 py-2 bg-slate-100 rounded-xl text-slate-700 font-medium hover:bg-slate-200">Retry</button>
       </div>
     );
   }
 
   if (!overview) {
-    return <div className="p-8">No sentiment data available yet.</div>;
+    return <div className="p-8">No data available.</div>;
   }
 
-  const pieData = [
-    { name: 'Positive', value: overview.sentimentDistribution.POSITIVE },
-    { name: 'Negative', value: overview.sentimentDistribution.NEGATIVE },
-  ];
-
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 overflow-y-auto h-full pb-20">
+    <div className="p-8 max-w-[1400px] mx-auto overflow-y-auto h-full pb-20 bg-[#f8f9fc]">
       
-      {/* Header & Status */}
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-800">Analytics Overview</h1>
-          <p className="text-slate-500 mt-1">Global insights across {overview.totalMovies.toLocaleString()} movies and {overview.totalReviews.toLocaleString()} reviews.</p>
+      {/* Top Navigation Bar */}
+      <div className="flex justify-between items-center mb-10">
+        <div className="flex-1 max-w-md relative">
+          <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input 
+            type="text" 
+            placeholder="Search..." 
+            className="w-full pl-12 pr-4 py-3 bg-white border-none rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.02)] focus:ring-2 focus:ring-slate-100 outline-none text-slate-700 font-medium" 
+          />
         </div>
-        
-        {/* Processing Status Pill */}
-        <div className={`flex items-center px-4 py-2 rounded-full text-sm font-medium border ${stats?.isProcessing ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
-          {stats?.isProcessing ? (
-            <>
-              <Activity className="h-4 w-4 mr-2 animate-pulse" />
-              AI analysis is processing ({stats?.progressPercentage}% - {stats?.analyzedReviews.toLocaleString()} done)
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-4 w-4 mr-2" />
-              Sentiment analysis complete
-            </>
-          )}
+        <div className="flex items-center space-x-4">
+          <button className="p-3 bg-white rounded-full shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md transition-shadow text-slate-500 relative">
+            <div className="absolute top-2.5 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></div>
+            <Bell className="w-5 h-5" />
+          </button>
+          <button className="flex items-center px-5 py-3 bg-[#00c689] text-white rounded-2xl shadow-sm hover:bg-[#00b079] transition-colors font-bold text-sm">
+            Export <ChevronDown className="w-4 h-4 ml-2" />
+          </button>
         </div>
+      </div>
+
+      {/* Dashboard Title */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-800">Platform at a Glance</h1>
+        <p className="text-slate-400 text-sm mt-1">Real-time snapshot of sentiment, ratings, and active anomalies.</p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Total Analyzed" value={overview.analyzedReviews.toLocaleString()} subtitle={`${overview.pendingReviews.toLocaleString()} pending`} />
-        <KpiCard title="Average Rating" value={overview.averageRating.toFixed(2)} subtitle="/ 10" />
-        <KpiCard title="Avg Sentiment" value={overview.averageSentimentScore.toFixed(3)} subtitle="Scale: -1 to +1" />
-        <KpiCard title="Positive / Negative" value={`${overview.positivePercentage}% / ${overview.negativePercentage}%`} subtitle="Sentiment ratio" />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <KpiCard 
+          title="Total Reviews Analyzed" 
+          value={overview.analyzedReviews.toLocaleString()} 
+          trend="+12.50% from Yesterday"
+          subtitle={`${overview.totalMovies} Movies`}
+          bgColor="bg-[#eef2fa]"
+          iconBgColor="bg-[#4b6bfb]" 
+          icon={FileText} 
+        />
+        <KpiCard 
+          title="Average Sentiment" 
+          value={overview.averageSentimentScore.toFixed(3)} 
+          trend="+5.20% from Yesterday"
+          bgColor="bg-[#e9f8f3]"
+          iconBgColor="bg-[#00c689]" 
+          icon={Activity} 
+        />
+        <KpiCard 
+          title="Positive / Negative Ratio" 
+          value={`${overview.positivePercentage}%`} 
+          trend="+2.10% from Yesterday"
+          subtitle={`${overview.negativePercentage}% Negative`}
+          bgColor="bg-[#e8eaf6]"
+          iconBgColor="bg-[#5c6bc0]" 
+          icon={Users} 
+        />
       </div>
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
-        {/* Sentiment Distribution Pie */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm col-span-1 flex flex-col items-center">
-          <h3 className="text-lg font-semibold text-slate-800 self-start mb-4">Sentiment Distribution</h3>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={90} paddingAngle={5} dataKey="value">
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: any) => value?.toLocaleString()} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Sentiment Over Time */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm col-span-2">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-semibold text-slate-800">Sentiment Trend</h3>
+        {/* Sentiment Trend Line Chart */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] col-span-2 relative">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-lg font-bold text-slate-800">Sentiment Trend</h3>
             <select 
               value={groupBy}
               onChange={(e) => setGroupBy(e.target.value as any)}
-              className="text-sm border-slate-300 rounded-md focus:ring-slate-500 focus:border-slate-500 px-3 py-1 bg-slate-50"
+              className="text-sm border-none bg-slate-50 text-slate-600 font-bold rounded-xl focus:ring-0 px-4 py-2 cursor-pointer outline-none"
             >
-              <option value="day">Daily</option>
-              <option value="week">Weekly</option>
-              <option value="month">Monthly</option>
+              <option value="day">This Week</option>
+              <option value="week">This Month</option>
+              <option value="month">This Year</option>
             </select>
           </div>
-          <div className="h-[250px] w-full">
+          <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={timeSeries}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="period" tick={{fontSize: 12, fill: '#64748b'}} tickMargin={10} minTickGap={30} />
-                <YAxis yAxisId="left" tick={{fontSize: 12, fill: '#64748b'}} domain={[-1, 1]} />
-                <YAxis yAxisId="right" orientation="right" tick={{fontSize: 12, fill: '#64748b'}} />
-                <Tooltip />
-                <Legend />
-                <Line yAxisId="left" type="monotone" name="Avg Score" dataKey="averageScore" stroke="#8b5cf6" strokeWidth={2} dot={false} />
-                <Line yAxisId="right" type="monotone" name="Total Reviews" dataKey="totalReviews" stroke="#cbd5e1" strokeWidth={2} dot={false} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="period" tick={{fontSize: 12, fill: '#94a3b8'}} tickMargin={15} minTickGap={30} axisLine={false} tickLine={false} />
+                <YAxis yAxisId="left" tick={{fontSize: 12, fill: '#94a3b8'}} domain={[-1, 1]} axisLine={false} tickLine={false} />
+                <Tooltip 
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                />
+                <Line yAxisId="left" type="monotone" name="Avg Score" dataKey="averageScore" stroke="#00c689" strokeWidth={3} dot={{ r: 4, strokeWidth: 2 }} activeDot={{ r: 6, fill: '#00c689', stroke: '#fff', strokeWidth: 3 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
-
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
-        {/* Rating Distribution */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-800 mb-6">Rating Distribution</h3>
-          <div className="h-[250px] w-full">
+        {/* Rating Distribution Bar Chart */}
+        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-lg font-bold text-slate-800">Rating Distribution</h3>
+            <button className="px-3 py-1.5 bg-[#00c689] text-white font-bold rounded-lg text-xs">
+              See Details
+            </button>
+          </div>
+          <div className="h-[280px] w-full mt-2">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={overview.ratingDistribution}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="rating" tick={{fontSize: 12, fill: '#64748b'}} />
-                <YAxis tick={{fontSize: 12, fill: '#64748b'}} />
-                <Tooltip cursor={{fill: '#f1f5f9'}} />
-                <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+              <BarChart data={overview.ratingDistribution} barSize={20}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                <XAxis dataKey="rating" tick={{fontSize: 12, fill: '#94a3b8'}} axisLine={false} tickLine={false} tickMargin={10} />
+                <Tooltip 
+                  cursor={{fill: '#f8fafc'}}
+                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}
+                />
+                <Bar dataKey="count" fill="#4b6bfb" radius={[4, 4, 4, 4]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
+      </div>
 
-        {/* Anomalies */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm flex flex-col">
-          <h3 className="text-lg font-semibold text-slate-800 mb-4">Sentiment Anomalies ({groupBy})</h3>
-          <div className="flex-1 overflow-y-auto pr-2 space-y-3">
-            {anomalies.length === 0 ? (
-              <div className="h-full flex items-center justify-center text-slate-500 italic text-sm">
-                No significant sentiment anomalies detected.
-              </div>
-            ) : (
-              anomalies.map((a, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50">
-                  <div>
-                    <div className="font-semibold text-slate-800">{a.period}</div>
-                    <div className="text-xs text-slate-500">Expected: {a.expectedScore.toFixed(2)} | Actual: {a.sentimentScore.toFixed(2)}</div>
-                  </div>
-                  <div className={`px-2 py-1 rounded text-xs font-bold uppercase ${a.severity.includes('POSITIVE') ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-                    {a.severity.replace('_', ' ')}
-                  </div>
-                </div>
-              ))
-            )}
+      {/* Anomalies Table */}
+      <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] p-6 mb-8">
+        <div className="flex justify-between items-center mb-6 px-2">
+          <h3 className="text-lg font-bold text-slate-800">Sentiment Anomalies</h3>
+          <div className="flex space-x-3">
+            <select className="text-sm border-none bg-slate-50 text-slate-600 font-bold rounded-xl focus:ring-0 px-4 py-2 cursor-pointer outline-none">
+              <option>All Status</option>
+            </select>
+            <button className="px-4 py-2 bg-[#00c689] text-white font-bold rounded-xl hover:bg-[#00b079] text-sm flex items-center">
+              + Generate Report
+            </button>
           </div>
         </div>
-
+        
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="text-slate-400 text-sm border-b border-slate-100">
+                <th className="pb-4 font-medium pl-6">Period</th>
+                <th className="pb-4 font-medium">Expected Score</th>
+                <th className="pb-4 font-medium">Actual Score</th>
+                <th className="pb-4 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {anomalies.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-8 text-center text-slate-500 italic">No significant anomalies detected.</td>
+                </tr>
+              ) : (
+                anomalies.map((a, i) => (
+                  <tr key={i} className="border-b border-slate-50 last:border-none hover:bg-slate-50/50 transition-colors">
+                    <td className="py-4 pl-6 font-bold text-slate-700">{a.period}</td>
+                    <td className="py-4 text-slate-500 font-medium">{a.expectedScore.toFixed(2)}</td>
+                    <td className="py-4 text-slate-800 font-bold">{a.sentimentScore.toFixed(2)}</td>
+                    <td className="py-4">
+                      <span className={`px-3 py-1.5 text-xs font-bold rounded-full flex items-center w-max ${a.severity.includes('POSITIVE') ? 'bg-[#e9f8f3] text-[#00c689]' : 'bg-rose-50 text-rose-500'}`}>
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        {a.severity.replace('_', ' ')}
+                      </span>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
+
     </div>
   );
 }
 
-function KpiCard({ title, value, subtitle }: { title: string, value: string | number, subtitle?: string }) {
+function KpiCard({ title, value, subtitle, trend, bgColor, iconBgColor, icon: Icon }: any) {
   return (
-    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-      <div className="text-sm font-medium text-slate-500 mb-1">{title}</div>
-      <div className="text-2xl font-bold text-slate-800">{value}</div>
-      {subtitle && <div className="text-xs text-slate-400 mt-1">{subtitle}</div>}
+    <div className={`p-6 rounded-3xl ${bgColor} shadow-sm relative overflow-hidden flex flex-col justify-between h-44 border border-white/50`}>
+      {/* Decorative watermark */}
+      <div className="absolute -right-4 -bottom-6 opacity-[0.07] pointer-events-none">
+        <Icon className="w-40 h-40" />
+      </div>
+      
+      <div className="flex justify-between items-start z-10">
+        <div className="text-slate-600 font-bold">{title}</div>
+        <div className={`p-2.5 rounded-2xl ${iconBgColor} text-white shadow-md`}>
+          <Icon className="w-5 h-5" />
+        </div>
+      </div>
+      
+      <div className="z-10 mt-6">
+        <div className="text-3xl font-black text-slate-800 tracking-tight">{value}</div>
+        <div className="flex items-center mt-3 space-x-2">
+          {trend && (
+            <span className="text-[#00c689] font-extrabold text-[11px] uppercase tracking-wide bg-[#00c689]/10 px-2 py-1 rounded-md">
+              {trend}
+            </span>
+          )}
+          {subtitle && <span className="text-slate-500 text-xs font-medium">{subtitle}</span>}
+        </div>
+      </div>
     </div>
   );
 }

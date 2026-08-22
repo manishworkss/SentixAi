@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { 
+  onAuthStateChanged, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signInWithPopup, 
+  signOut
+} from 'firebase/auth';
+import type { User as FirebaseUser } from 'firebase/auth';
+import { auth, googleProvider } from '../config/firebase';
 
-// Mock User interface to match Firebase's minimal expected shape
-export interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-}
+export type User = FirebaseUser;
 
 interface AuthContextType {
   currentUser: User | null;
@@ -26,31 +29,32 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  // Start with a dummy user for development
-  const [currentUser, setCurrentUser] = useState<User | null>({
-    uid: 'mock-uid-12345',
-    email: 'mock@example.com',
-    displayName: 'Mock User',
-    photoURL: null,
-  });
-  
-  const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock functions that just resolve immediately
-  const login = async (email: string, pass: string) => {
-    setCurrentUser({ uid: 'mock-uid-' + Date.now(), email, displayName: 'Mock User', photoURL: null });
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      setLoading(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const login = (email: string, pass: string) => {
+    return signInWithEmailAndPassword(auth, email, pass);
   };
   
-  const signup = async (email: string, pass: string) => {
-    setCurrentUser({ uid: 'mock-uid-' + Date.now(), email, displayName: 'Mock User', photoURL: null });
+  const signup = (email: string, pass: string) => {
+    return createUserWithEmailAndPassword(auth, email, pass);
   };
   
-  const loginWithGoogle = async () => {
-    setCurrentUser({ uid: 'mock-uid-google', email: 'google@example.com', displayName: 'Google User', photoURL: null });
+  const loginWithGoogle = () => {
+    return signInWithPopup(auth, googleProvider);
   };
   
-  const logout = async () => {
-    setCurrentUser(null);
+  const logout = () => {
+    return signOut(auth);
   };
 
   const value = {
