@@ -7,7 +7,12 @@ import {
   FileText,
   Eye,
   Film,
-  Clapperboard
+  Clapperboard,
+  Video,
+  Sparkles,
+  Cpu,
+  Network,
+  Bot
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -96,6 +101,25 @@ function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'sma
         </div>
         {subtext}
       </div>
+    </div>
+  );
+}
+
+function AnimatedBackground() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+      {/* Dark overlay to ensure the login card stands out against the video */}
+      <div className="absolute inset-0 bg-slate-900/30 z-10 backdrop-blur-[2px]"></div>
+      
+      {/* Background Video */}
+      <video
+        autoPlay
+        loop
+        muted
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover z-0 opacity-70"
+        src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"
+      />
     </div>
   );
 }
@@ -252,7 +276,8 @@ function LoginLayout() {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${Theme.bgApp} ${Theme.fontFamily} ${Theme.textPrimary} p-4 sm:p-8 relative`}>
+    <div className={`min-h-screen flex items-center justify-center ${Theme.bgApp} ${Theme.fontFamily} ${Theme.textPrimary} p-4 sm:p-8 relative overflow-hidden`}>
+      <AnimatedBackground />
 
       {/* Split Login Card */}
       <div className={`w-full max-w-5xl flex flex-col md:flex-row ${Theme.bgCard} rounded-[2rem] shadow-xl overflow-hidden min-h-[600px] border ${Theme.border} z-10`}>
