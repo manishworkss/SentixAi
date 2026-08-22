@@ -6,7 +6,8 @@ import {
   LogOut,
   FileText,
   Eye,
-  Film
+  Film,
+  Clapperboard
 } from 'lucide-react';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -257,9 +258,25 @@ function LoginLayout() {
       <div className={`w-full max-w-5xl flex flex-col md:flex-row ${Theme.bgCard} rounded-[2rem] shadow-xl overflow-hidden min-h-[600px] border ${Theme.border} z-10`}>
 
         {/* Left Side - Premium Dark Slate */}
-        <div className={`w-full md:w-[45%] ${Theme.bgDarkPanel} p-10 sm:p-14 flex flex-col ${Theme.textInverse} relative`}>
+        <div className={`w-full md:w-[45%] ${Theme.bgDarkPanel} p-10 sm:p-14 flex flex-col ${Theme.textInverse} relative overflow-hidden`}>
           {/* Subtle gradient overlay to make it look premium but not "AI" */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/50"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/50 z-0"></div>
+          
+          {/* Animated Background Icons */}
+          <div className="absolute inset-0 pointer-events-none z-0">
+            <div 
+              className="absolute -top-32 -left-32 opacity-[0.03] text-white animate-spin"
+              style={{ animationDuration: '45s' }}
+            >
+              <Film size={600} strokeWidth={1} />
+            </div>
+            <div 
+              className="absolute -bottom-40 -right-40 opacity-[0.03] text-white animate-spin"
+              style={{ animationDuration: '65s', animationDirection: 'reverse' }}
+            >
+              <Clapperboard size={700} strokeWidth={1} />
+            </div>
+          </div>
           
           <div className="mb-12 flex justify-start w-full relative z-10">
             <Logo variant="large" theme="dark" />
