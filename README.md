@@ -2,6 +2,26 @@
 
 SentixAi is a modern, full-stack web application designed for film enthusiasts, analysts, and studios to track real-time audience sentiments. It ingests massive real-world movie review datasets and analyzes them using an embedded, local Artificial Intelligence NLP model.
 
+---
+
+## 📸 Platform Previews & Screenshots
+
+### 🎬 Homepage & Movie Discovery
+![SentixAi Movie Discovery](presentation/screenshots/homepage.png)
+
+### 📊 Executive Analytics Dashboard
+![SentixAi Analytics Dashboard](presentation/screenshots/dashboard.png)
+
+### 📽️ Movie Detail & Aspect Sentiment Analysis
+![SentixAi Movie Detail](presentation/screenshots/movie_detail.png)
+
+### 🔒 Authentication & Security
+| Login Screen | Signup & OTP Verification |
+| :---: | :---: |
+| ![Login Screen](presentation/screenshots/login_page.png) | ![Signup Screen](presentation/screenshots/signup_page.png) |
+
+---
+
 ## ✨ Key Features
 
 - **Local AI Sentiment Analysis**: Uses **DistilBERT** (`distilbert-base-uncased-finetuned-sst-2-english`) via Hugging Face's Transformers.js. Runs entirely on your local machine (zero API costs, complete privacy).
@@ -10,6 +30,8 @@ SentixAi is a modern, full-stack web application designed for film enthusiasts, 
 - **Executive Analytics Dashboard**: Visualizes sentiment distribution, total reviews processed, and AI-generated insights.
 - **Ultra-Secure Authentication**: Combines **Firebase Auth** (Google & Email/Password) with a custom backend-driven **6-digit OTP email verification** step (via `nodemailer`).
 - **Premium UI/UX**: Designed with a dark cinematic theme using React, Tailwind CSS, and a centralized theming system.
+
+---
 
 ## 🏗️ Architecture & Tech Stack
 
@@ -26,6 +48,8 @@ SentixAi is a modern, full-stack web application designed for film enthusiasts, 
 - **AI/ML Engine**: `@xenova/transformers` (DistilBERT loaded as a Singleton service)
 - **Email/Auth**: `nodemailer` for OTP, Firebase Admin SDK for JWT verification
 
+---
+
 ## 🗄️ Database Schema
 
 The relational database is managed via Prisma and includes 8 core models:
@@ -35,6 +59,8 @@ The relational database is managed via Prisma and includes 8 core models:
 - **SentimentAnalysis**: 1-to-1 mapping with Reviews, stores AI confidence and Pos/Neg labels.
 - **OtpVerification**: Temporary table for signup email verification.
 - **IngestionJob**: Tracks background dataset processing progress.
+
+---
 
 ## 🚀 Getting Started
 
@@ -75,6 +101,8 @@ npm run dev
 - **Frontend**: http://localhost:5173
 - **Backend API**: http://localhost:3001
 - **Prisma Studio (DB Viewer)**: `npx prisma studio` (runs on 5555)
+
+---
 
 ## 🧠 How the AI Pipeline Works
 
