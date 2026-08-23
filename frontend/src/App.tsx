@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   BarChart3,
   Upload,
@@ -7,11 +7,21 @@ import {
   FileText,
   Eye,
   Film,
-  Loader2,
-  AlertTriangle
+  Clapperboard,
+  Video,
+  Sparkles,
+  Cpu,
+  Network,
+  Bot,
+  Star,
+  Search,
+  ArrowUpRight,
+  TrendingUp
 } from 'lucide-react';
-
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Home } from './pages/Home';
+import { MovieDetail } from './pages/MovieDetail';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { MoviesExplorer } from './components/MoviesExplorer';
 import { MovieAnalytics } from './components/MovieAnalytics';
@@ -59,20 +69,31 @@ export default function App() {
 }
 
 function AppContent() {
-  const { currentUser, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
-
-  if (!currentUser) {
-    return <LoginLayout />;
-  }
+  const { currentUser } = useAuth();
 
   return (
-    <DashboardShell
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      onLogout={logout}
-    />
+    <Router>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/movie/:id" element={<MovieDetail />} />
+        
+        {/* Auth Route */}
+        <Route path="/login" element={!currentUser ? <LoginLayout /> : <Navigate to="/" />} />
+        
+        {/* Admin / Dashboard Route */}
+        <Route path="/dashboard" element={
+          currentUser ? <AdminRoute /> : <Navigate to="/login" />
+        } />
+      </Routes>
+    </Router>
   );
+}
+
+function AdminRoute() {
+  const { logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  return <DashboardShell activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />;
 }
 
 function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'small', theme?: 'light' | 'dark' }) {
@@ -101,9 +122,93 @@ function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'sma
   );
 }
 
+const GlowingCard = ({ children, className, gradient, glow, animDelay }: { children: React.ReactNode, className: string, gradient: string, glow: string, animDelay: string }) => (
+  <div className={`absolute ${className} animate-pulse`} style={{ animationDuration: '8s', animationDelay: animDelay }}>
+    {/* Glow effect behind the card */}
+    <div className={`absolute inset-0 rounded-[2.5rem] ${glow} blur-2xl opacity-30`} />
+    {/* The gradient border wrapper */}
+    <div className={`relative w-full h-full rounded-[2.5rem] ${gradient} p-[2px] shadow-2xl`}>
+      {/* The inner dark card */}
+      <div className="w-full h-full rounded-[2.5rem] bg-[#110E0E] flex items-center justify-center backdrop-blur-sm">
+        {children}
+      </div>
+    </div>
+  </div>
+);
+
+function AnimatedBackground() {
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 bg-[#0B0A0A]">
+      {/* Subtle ambient light in the background */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] h-[80vh] bg-indigo-500/5 rounded-full blur-[120px]" />
+      
+      {/* Floating Glowing Cards */}
+      {/* Top Left - Movie Reel */}
+      <GlowingCard 
+        className="top-[5%] left-[8%] w-48 h-48 -rotate-12"
+        gradient="bg-gradient-to-br from-amber-400 via-orange-500 to-red-600"
+        glow="bg-orange-500"
+        animDelay="0s"
+      >
+        <Film className="w-20 h-20 text-orange-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Middle Left - Sparkles (AI) */}
+      <GlowingCard 
+        className="top-[45%] -left-[2%] w-36 h-36 rotate-[25deg]"
+        gradient="bg-gradient-to-br from-fuchsia-400 via-pink-500 to-rose-600"
+        glow="bg-pink-500"
+        animDelay="2s"
+      >
+        <Sparkles className="w-16 h-16 text-pink-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Bottom Left - Cpu */}
+      <GlowingCard 
+        className="bottom-[5%] left-[15%] w-40 h-40 rotate-12"
+        gradient="bg-gradient-to-br from-cyan-400 via-blue-500 to-indigo-600"
+        glow="bg-blue-500"
+        animDelay="4s"
+      >
+        <Cpu className="w-16 h-16 text-blue-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Top Right - Bot */}
+      <GlowingCard 
+        className="top-[10%] right-[10%] w-44 h-44 rotate-[15deg]"
+        gradient="bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600"
+        glow="bg-teal-500"
+        animDelay="1s"
+      >
+        <Bot className="w-20 h-20 text-teal-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+
+      {/* Bottom Right - Clapperboard */}
+      <GlowingCard 
+        className="bottom-[10%] right-[8%] w-52 h-52 -rotate-[15deg]"
+        gradient="bg-gradient-to-br from-violet-400 via-purple-500 to-fuchsia-600"
+        glow="bg-purple-500"
+        animDelay="3s"
+      >
+        <Clapperboard className="w-24 h-24 text-purple-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+      
+      {/* Middle Right - Network */}
+      <GlowingCard 
+        className="top-[50%] -right-[2%] w-32 h-32 -rotate-[30deg]"
+        gradient="bg-gradient-to-br from-yellow-300 via-amber-400 to-orange-500"
+        glow="bg-amber-400"
+        animDelay="5s"
+      >
+        <Network className="w-14 h-14 text-amber-400 opacity-90" strokeWidth={1.5} />
+      </GlowingCard>
+    </div>
+  );
+}
 function LoginLayout() {
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true');
   const { login, signup, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -253,15 +358,32 @@ function LoginLayout() {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center ${Theme.bgApp} ${Theme.fontFamily} ${Theme.textPrimary} p-4 sm:p-8 relative`}>
+    <div className={`min-h-screen flex items-center justify-center ${Theme.bgApp} ${Theme.fontFamily} ${Theme.textPrimary} p-4 sm:p-8 relative overflow-hidden`}>
+      <AnimatedBackground />
 
       {/* Split Login Card */}
       <div className={`w-full max-w-5xl flex flex-col md:flex-row ${Theme.bgCard} rounded-[2rem] shadow-xl overflow-hidden min-h-[600px] border ${Theme.border} z-10`}>
 
         {/* Left Side - Premium Dark Slate */}
-        <div className={`w-full md:w-[45%] ${Theme.bgDarkPanel} p-10 sm:p-14 flex flex-col ${Theme.textInverse} relative`}>
+        <div className={`w-full md:w-[45%] ${Theme.bgDarkPanel} p-8 sm:p-10 flex flex-col ${Theme.textInverse} relative overflow-hidden`}>
           {/* Subtle gradient overlay to make it look premium but not "AI" */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/50"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-950/50 z-0"></div>
+          
+          {/* Animated Background Icons */}
+          <div className="absolute inset-0 pointer-events-none z-0">
+            <div 
+              className="absolute -top-32 -left-32 opacity-[0.03] text-white animate-spin"
+              style={{ animationDuration: '45s' }}
+            >
+              <Film size={600} strokeWidth={1} />
+            </div>
+            <div 
+              className="absolute -bottom-40 -right-40 opacity-[0.03] text-white animate-spin"
+              style={{ animationDuration: '65s', animationDirection: 'reverse' }}
+            >
+              <Clapperboard size={700} strokeWidth={1} />
+            </div>
+          </div>
           
           <div className="mb-12 flex justify-start w-full relative z-10">
             <Logo variant="large" theme="dark" />
@@ -310,7 +432,7 @@ function LoginLayout() {
         </div>
 
         {/* Right Side - Form or OTP */}
-        <div className={`w-full md:w-[55%] p-10 sm:p-14 flex flex-col justify-center ${Theme.bgCard} relative`}>
+        <div className={`w-full md:w-[55%] p-8 sm:p-10 flex flex-col justify-center ${Theme.bgCard} relative`}>
 
           {/* ════════════════════════════════════════════════════════ */}
           {/* OTP VERIFICATION SCREEN */}
@@ -398,11 +520,11 @@ function LoginLayout() {
             /* NORMAL LOGIN / SIGNUP FORM */
             /* ════════════════════════════════════════════════════════ */
             <>
-              <h2 className="text-2xl font-bold ${Theme.textPrimary} mb-8">
+              <h2 className="text-2xl font-bold ${Theme.textPrimary} mb-5">
                 {isSignUp ? "Create Your Account" : "Sign In to Your Account"}
               </h2>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {error && (
                   <div className="p-4 bg-rose-50 text-rose-700 font-medium text-sm rounded-xl border border-rose-100">
                     {error}
@@ -417,7 +539,7 @@ function LoginLayout() {
                       required
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className={`w-full px-4 py-3.5 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
+                      className={`w-full px-4 py-3 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
                       placeholder="John Doe"
                     />
                   </div>
@@ -430,7 +552,7 @@ function LoginLayout() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className={`w-full px-4 py-3.5 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
+                    className={`w-full px-4 py-3 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 ${Theme.textPrimary}`}
                     placeholder="name@company.com"
                   />
                 </div>
@@ -446,7 +568,7 @@ function LoginLayout() {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`w-full px-4 py-3.5 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 pr-10 ${Theme.textPrimary}`}
+                      className={`w-full px-4 py-3 ${Theme.bgInput} border ${Theme.border} rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all shadow-sm font-medium placeholder-slate-400 pr-10 ${Theme.textPrimary}`}
                       placeholder="Enter your password"
                     />
                     <button
@@ -459,18 +581,18 @@ function LoginLayout() {
                   </div>
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-2">
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full flex items-center justify-center py-4 px-4 rounded-xl shadow-md font-bold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center py-3.5 px-4 rounded-xl shadow-md font-bold text-white bg-slate-900 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading ? 'Processing...' : (isSignUp ? "Sign Up" : "Sign In")}
                   </button>
                 </div>
               </form>
 
-              <div className="mt-8">
+              <div className="mt-6">
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
                     <div className="w-full border-t border-slate-100"></div>
@@ -482,12 +604,12 @@ function LoginLayout() {
                   </div>
                 </div>
 
-                <div className="mt-6">
+                <div className="mt-5">
                   <button
                     type="button"
                     onClick={handleGoogleSignIn}
                     disabled={isLoading}
-                    className={`w-full flex justify-center items-center py-3.5 px-4 ${Theme.bgCard} border ${Theme.border} rounded-xl shadow-sm font-bold text-slate-700 hover:${Theme.bgInput} transition-all disabled:opacity-50`}
+                    className={`w-full flex justify-center items-center py-3 px-4 ${Theme.bgCard} border ${Theme.border} rounded-xl shadow-sm font-bold text-slate-700 hover:${Theme.bgInput} transition-all disabled:opacity-50`}
                   >
                     <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
                       <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
@@ -497,7 +619,7 @@ function LoginLayout() {
                 </div>
               </div>
 
-              <p className="mt-10 text-center text-sm font-medium ${Theme.textSecondary}">
+              <p className="mt-6 text-center text-sm font-medium ${Theme.textSecondary}">
                 {isSignUp ? (
                   <>
                     Already have an account? <button type="button" onClick={() => setIsSignUp(false)} className="font-bold ${Theme.accentText} ${Theme.accentTextHover}">Sign in</button>
@@ -554,6 +676,12 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
             >
               <Upload className="mr-3 h-[18px] w-[18px]" />
               Ingest Data
+            </button>
+            <button
+              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${Theme.textSecondary} hover:bg-white/50 hover:${Theme.textPrimary}`}
+            >
+              <FileText className="mr-3 h-[18px] w-[18px]" />
+              Projects
             </button>
           </nav>
         </div>
@@ -618,133 +746,78 @@ function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: stri
   );
 }
 
-import { IngestionAPI } from './api';
-
 function UploadForm({ onSuccess }: { onSuccess: (data: any) => void }) {
   const [loading, setLoading] = useState(false);
-  const [maxRecords, setMaxRecords] = useState(50000);
-  const [jobId, setJobId] = useState<string | null>(null);
-  const [jobStatus, setJobStatus] = useState<any>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  const startIngestion = async (e: React.FormEvent) => {
+  
+  const handleIngest = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
     try {
-      const res = await IngestionAPI.startImdbIngestion(maxRecords);
-      setJobId(res.jobId);
-    } catch (err: any) {
-      setError(err.message || 'Failed to start ingestion');
+      const { IngestionAPI } = await import('./api');
+      await IngestionAPI.startImdbIngestion(500); // Fetch 500 records to start
+      onSuccess({});
+    } catch (err) {
+      console.error(err);
+      alert('Failed to start ingestion');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    let interval: ReturnType<typeof setInterval>;
-    if (jobId && jobStatus?.status !== 'COMPLETED' && jobStatus?.status !== 'FAILED') {
-      interval = setInterval(async () => {
-        try {
-          const status = await IngestionAPI.getJobStatus(jobId);
-          setJobStatus(status);
-          if (status.status === 'COMPLETED' || status.status === 'FAILED') {
-            clearInterval(interval);
-          }
-        } catch (err) {
-          console.error(err);
-        }
-      }, 2000);
-    }
-    return () => clearInterval(interval);
-  }, [jobId, jobStatus?.status]);
-
   return (
     <div className="max-w-3xl mx-auto mt-4">
       <div className={`rounded-3xl p-10 ${Theme.bgCard} border ${Theme.border} shadow-sm`}>
-        <h2 className={`text-xl font-bold mb-8 ${Theme.textPrimary}`}>IMDb Dataset Ingestion</h2>
+        <h2 className={`text-xl font-bold mb-8 ${Theme.textPrimary}`}>Ingest Movie Reviews</h2>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl flex items-center">
-            <AlertTriangle className="h-5 w-5 mr-3 shrink-0" />
-            <p className="text-sm">{error}</p>
-          </div>
-        )}
-
-        <form className="space-y-8" onSubmit={startIngestion}>
+        <form className="space-y-8" onSubmit={handleIngest}>
           <div className="grid grid-cols-1 gap-y-8 gap-x-6 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className="block text-sm font-semibold mb-2 text-slate-700">Dataset Source</label>
+              <label className="block text-sm font-semibold mb-2 text-slate-700">Project / Movie Title</label>
               <input
                 type="text"
-                disabled
-                value="IMDb Reviews Dataset (Local)"
-                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} text-slate-500 opacity-70`}
+                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all placeholder:text-slate-400`}
+                placeholder="e.g. tt15398776"
               />
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-sm font-semibold mb-2 text-slate-700">Maximum Records</label>
-              <input
-                type="number"
-                value={maxRecords}
-                onChange={(e) => setMaxRecords(Number(e.target.value))}
-                min={1}
-                max={50000}
-                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all`}
-              />
+            <div>
+              <label className="block text-sm font-semibold mb-2 text-slate-700">Source Platform</label>
+              <select
+                className={`w-full px-5 py-4 rounded-2xl text-sm font-medium ${Theme.bgInput} border ${Theme.border} focus:outline-none focus:ring-2 focus:ring-slate-900 focus:${Theme.bgCard} transition-all text-slate-700`}
+              >
+                <option>IMDb</option>
+                <option>Rotten Tomatoes</option>
+                <option>Letterboxd</option>
+                <option>Custom JSON/CSV</option>
+              </select>
             </div>
           </div>
 
-          <div className="flex justify-end gap-4 pt-4 border-b border-slate-200 pb-8">
-            <button type="submit" disabled={loading || (!!jobId && jobStatus?.status === 'PROCESSING')} className={`py-3.5 px-8 rounded-2xl text-sm font-bold ${Theme.textInverse} ${Theme.primary} ${Theme.primaryHover} shadow-md transition-all disabled:opacity-50 flex items-center`}>
-              {loading || (!!jobId && jobStatus?.status === 'PROCESSING') ? (
-                <>
-                  <Loader2 className="animate-spin h-4 w-4 mr-2" />
-                  Processing...
-                </>
-              ) : "Start Ingestion"}
+          <div>
+            <label className="block text-sm font-semibold mb-2 text-slate-700">Upload Dataset (Optional)</label>
+            <div className={`flex justify-center px-6 pt-10 pb-10 rounded-3xl border-2 border-dashed ${Theme.border} ${Theme.bgInput} hover:bg-slate-100 transition-colors`}>
+              <div className="space-y-3 text-center">
+                <div className={`w-16 h-16 ${Theme.bgCard} rounded-full flex items-center justify-center mx-auto shadow-sm border border-slate-100`}>
+                  <Upload className="h-7 w-7 text-slate-600" />
+                </div>
+                <div className="flex text-sm justify-center text-slate-600 font-medium mt-4">
+                  <label htmlFor="file-upload" className={`cursor-pointer font-bold ${Theme.accentText} ${Theme.accentTextHover}`}>
+                    <span>Click to upload</span>
+                    <input id="file-upload" type="file" className="sr-only" />
+                  </label>
+                  <p className="pl-1">or drag and drop</p>
+                </div>
+                <p className={`text-xs ${Theme.textSecondary} font-medium`}>CSV, JSON up to 50MB</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4 pt-4">
+            <button type="button" className={`py-3.5 px-6 rounded-2xl text-sm font-bold text-slate-600 ${Theme.bgCard} border ${Theme.border} hover:bg-slate-100 transition-all`}>Cancel</button>
+            <button type="submit" disabled={loading} className={`py-3.5 px-8 rounded-2xl text-sm font-bold ${Theme.textInverse} ${Theme.primary} ${Theme.primaryHover} shadow-md transition-all disabled:opacity-50`}>
+              {loading ? "Triggering..." : "Trigger Ingestion"}
             </button>
           </div>
         </form>
-
-        {jobId && (
-          <div className="mt-8 space-y-6">
-            <h3 className="text-lg font-bold text-slate-800">Job Status: {jobStatus ? jobStatus.status : 'INITIALIZING'}</h3>
-            
-            {jobStatus && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Progress</div>
-                  <div className="text-2xl font-bold text-slate-800">{jobStatus.processedRecords.toLocaleString()} / {jobStatus.totalRecords.toLocaleString()}</div>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Inserted Reviews</div>
-                  <div className="text-2xl font-bold text-emerald-600">{jobStatus.insertedReviews.toLocaleString()}</div>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Movies Created</div>
-                  <div className="text-2xl font-bold text-indigo-600">{jobStatus.moviesCreated.toLocaleString()}</div>
-                </div>
-                <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-                  <div className="text-xs font-semibold text-slate-500 mb-1">Invalid / Duplicates</div>
-                  <div className="text-2xl font-bold text-amber-600">{jobStatus.invalidRecords.toLocaleString()} / {jobStatus.duplicateReviews.toLocaleString()}</div>
-                </div>
-                
-                {jobStatus.error && (
-                  <div className="col-span-2 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-                    <span className="font-bold">Error:</span> {jobStatus.error}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {jobStatus?.status === 'COMPLETED' && (
-              <div className="flex justify-end pt-4">
-                 <button onClick={() => onSuccess(jobStatus)} className="text-indigo-600 font-bold text-sm hover:text-indigo-800">Go to Dashboard &rarr;</button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

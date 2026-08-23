@@ -1,38 +1,72 @@
-# SentixAI: Movie Reviews & Recommendations Platform
+# SentixAi: AI-Powered Movie Review & Sentiment Analysis Platform
 
-SentixAI is a modern, full-stack executive analytics platform designed for film studios and analysts to track real-time audience sentiments, ingest movie reviews, and receive actionable insights.
+SentixAi is a modern, full-stack web application designed for film enthusiasts, analysts, and studios to track real-time audience sentiments. It ingests massive real-world movie review datasets and analyzes them using an embedded, local Artificial Intelligence NLP model.
+
+---
+
+## 📸 Platform Previews & Screenshots
+
+### 🎬 Homepage & Movie Discovery
+![SentixAi Movie Discovery](presentation/screenshots/homepage.png)
+
+### 📊 Executive Analytics Dashboard
+![SentixAi Analytics Dashboard](presentation/screenshots/dashboard.png)
+
+### 📽️ Movie Detail & Aspect Sentiment Analysis
+![SentixAi Movie Detail](presentation/screenshots/movie_detail.png)
+
+### 🔒 Authentication & Security
+| Login Screen | Signup & OTP Verification |
+| :---: | :---: |
+| ![Login Screen](presentation/screenshots/login_page.png) | ![Signup Screen](presentation/screenshots/signup_page.png) |
+
+---
 
 ## ✨ Key Features
 
-- **Premium UI/UX**: Designed with a "Figma Mindset" using a custom, warm Beige and Charcoal theme that avoids generic "tech" aesthetics. Built entirely with React and Tailwind CSS using a centralized theme configuration.
-- **Secure Authentication Flow**: 
-  - Integrated with **Firebase Auth** (Google & Email/Password).
-  - Custom Node.js/Express backend handles a **secure 6-digit OTP email verification** step (via `nodemailer`) before creating a user account.
-- **Executive Analytics Dashboard**: Displays high-level metrics including total reviews processed, positive/negative sentiment shares, Aspect-Based Sentiment Analysis (ABSA) progress bars, and an AI-generated executive summary.
-- **IMDb Data Ingestion Pipeline**: Connects the frontend to an Express backend endpoint (`/api/ingest/imdb`) to fetch realistic dataset metrics based on a given IMDb Title ID (e.g. `tt15398776` for Oppenheimer).
+- **Local AI Sentiment Analysis**: Uses **DistilBERT** (`distilbert-base-uncased-finetuned-sst-2-english`) via Hugging Face's Transformers.js. Runs entirely on your local machine (zero API costs, complete privacy).
+- **Real IMDB Data Ingestion**: Built-in pipeline to process and ingest a 50,000+ review IMDB dataset directly into the database.
+- **Social Movie Discovery**: A Letterboxd-inspired UI where users can browse popular movies, read reviews, and see aggregate sentiment scores.
+- **Executive Analytics Dashboard**: Visualizes sentiment distribution, total reviews processed, and AI-generated insights.
+- **Ultra-Secure Authentication**: Combines **Firebase Auth** (Google & Email/Password) with a custom backend-driven **6-digit OTP email verification** step (via `nodemailer`).
+- **Premium UI/UX**: Designed with a dark cinematic theme using React, Tailwind CSS, and a centralized theming system.
 
-## 🏗️ Architecture
+---
 
-The project is split into two main directories: 
+## 🏗️ Architecture & Tech Stack
 
-### 1. Frontend (`/frontend`)
-- **Framework**: React + Vite + TypeScript
+### Frontend (`/frontend`)
+- **Framework**: React 18 + Vite + TypeScript
 - **Styling**: Tailwind CSS + Lucide Icons
-- **Auth**: Firebase Authentication SDK
-- **Design System**: Centralized `ThemeConfig` exported in `App.tsx` allowing for instantaneous, global theme changes (colors, fonts, borders).
+- **Auth State**: Firebase Authentication SDK + React Context
+- **API Client**: Custom `fetchWithAuth` wrapper for secure backend communication
 
-### 2. Backend (`/backend`)
-- **Framework**: Node.js + Express
-- **Dependencies**: `nodemailer`, `cors`, `axios`, `cheerio`
-- **Endpoints**:
-  - `POST /api/send-otp`: Generates a 6-digit OTP and sends it via Gmail SMTP with a beautifully styled HTML email template.
-  - `POST /api/verify-otp`: Validates the user's OTP.
-  - `POST /api/ingest/imdb`: A data ingestion simulator that accepts an IMDb ID and returns realistic, high-quality review and sentiment datasets (bypassing strict IMDb bot protections for seamless UI testing).
+### Backend (`/backend`)
+- **Framework**: Node.js + Express + TypeScript
+- **Database**: MySQL/MariaDB (via XAMPP or native)
+- **ORM**: Prisma (Type-safe database queries and migrations)
+- **AI/ML Engine**: `@xenova/transformers` (DistilBERT loaded as a Singleton service)
+- **Email/Auth**: `nodemailer` for OTP, Firebase Admin SDK for JWT verification
+
+---
+
+## 🗄️ Database Schema
+
+The relational database is managed via Prisma and includes 8 core models:
+- **User**: Managed alongside Firebase UIDs.
+- **Movie**: Stores metadata and TMDB/IMDb identifiers.
+- **Review**: Raw text and user ratings.
+- **SentimentAnalysis**: 1-to-1 mapping with Reviews, stores AI confidence and Pos/Neg labels.
+- **OtpVerification**: Temporary table for signup email verification.
+- **IngestionJob**: Tracks background dataset processing progress.
+
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
+- MySQL or MariaDB (via XAMPP or natively)
 - Firebase Project configured for Authentication.
 - Gmail App Password for SMTP OTP delivery.
 
@@ -48,8 +82,13 @@ The project is split into two main directories:
    ```bash
    cd backend
    npm install
+
+   # Setup Prisma Database
+   npx prisma generate
+   npx prisma db push
+
    # Start the Express server on port 3001
-   node server.js 
+   npm run dev
    ```
 
 3. **Setup the Frontend**
@@ -62,7 +101,7 @@ The project is split into two main directories:
    ```
 
 4. **Access the App**
-   Open your browser and navigate to `http://localhost:5174`.
+   Open your browser and navigate to `http://localhost:5173`.
 
 ## 🎨 Theme Configuration
 
@@ -77,6 +116,16 @@ export const Theme = {
   // ...
 };
 ```
+
+---
+
+## 🧠 How the AI Pipeline Works
+
+1. **Ingestion**: The admin triggers an ingestion job. The backend reads the `IMDB Dataset.csv`, cleans the HTML tags, maps them to movies, and saves raw reviews in the database.
+2. **Background Processing**: A non-blocking Node.js service continuously polls the database for unanalyzed reviews.
+3. **Inference**: Reviews are fed into the DistilBERT model in batches of 50.
+4. **Scoring**: The model returns POSITIVE/NEGATIVE labels and a confidence score (0 to 1).
+5. **Storage & Dashboard**: Results are stored in the `SentimentAnalysis` table and immediately reflected on the frontend Analytics Dashboard.
 
 ---
 *Developed for intelligent, AI-powered movie insights.*

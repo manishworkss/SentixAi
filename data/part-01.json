@@ -1,0 +1,112 @@
+[
+  {
+    "review_id": "rw1001",
+    "reviewer": "john_doe",
+    "movie": "Inception",
+    "rating": "9",
+    "review_summary": "Mind-bending masterpiece",
+    "review_date": "15 July 2010",
+    "spoiler_tag": 0,
+    "review_detail": "Christopher Nolan delivers a visual and intellectual treat. The concept of dreams within dreams is executed flawlessly. The score by Hans Zimmer elevates the tension to incredible heights. One of the best sci-fi movies of the decade.",
+    "helpful": "400 out of 450 found this helpful"
+  },
+  {
+    "review_id": "rw1002",
+    "reviewer": "cinema_critic",
+    "movie": "Inception",
+    "rating": "5",
+    "review_summary": "Too confusing",
+    "review_date": "20 July 2010",
+    "spoiler_tag": 0,
+    "review_detail": "I found the movie far too convoluted for its own good. It tries to be smart but just ends up being a maze of exposition. The action scenes were decent, but the emotional core was lacking.",
+    "helpful": "150 out of 300 found this helpful"
+  },
+  {
+    "review_id": "rw1003",
+    "reviewer": "sci_fi_fan",
+    "movie": "Inception",
+    "rating": "10",
+    "review_summary": "Absolutely brilliant!",
+    "review_date": "22 July 2010",
+    "spoiler_tag": 0,
+    "review_detail": "Everything about this movie is perfect. The acting, the directing, the pacing. DiCaprio gives one of his best performances. I've watched it five times and still find new details.",
+    "helpful": "500 out of 510 found this helpful"
+  },
+  {
+    "review_id": "rw2001",
+    "reviewer": "action_lover",
+    "movie": "The Dark Knight",
+    "rating": "10",
+    "review_summary": "Heath Ledger is iconic",
+    "review_date": "18 July 2008",
+    "spoiler_tag": 0,
+    "review_detail": "The Dark Knight transcends the superhero genre. It's a gripping crime thriller. Heath Ledger's Joker is arguably the greatest cinematic villain of all time. The pacing is relentless and the themes are surprisingly deep.",
+    "helpful": "1000 out of 1050 found this helpful"
+  },
+  {
+    "review_id": "rw2002",
+    "reviewer": "comic_purist",
+    "movie": "The Dark Knight",
+    "rating": "8",
+    "review_summary": "Great film, but...",
+    "review_date": "25 July 2008",
+    "spoiler_tag": 0,
+    "review_detail": "It's a fantastic movie, no doubt. But the third act feels a bit rushed and Two-Face's arc could have used more breathing room. Still, a monumental achievement in comic book movies.",
+    "helpful": "200 out of 250 found this helpful"
+  },
+  {
+    "review_id": "rw3001",
+    "reviewer": "family_guy",
+    "movie": "Avatar",
+    "rating": "7",
+    "review_summary": "Visually stunning, basic plot",
+    "review_date": "18 Dec 2009",
+    "spoiler_tag": 0,
+    "review_detail": "Pandora is gorgeous and the 3D effects are groundbreaking. However, the story is just Dances with Wolves in space. It's predictable and the characters are somewhat one-dimensional.",
+    "helpful": "300 out of 400 found this helpful"
+  },
+  {
+    "review_id": "rw3002",
+    "reviewer": "tech_geek",
+    "movie": "Avatar",
+    "rating": "9",
+    "review_summary": "A technological marvel",
+    "review_date": "20 Dec 2009",
+    "spoiler_tag": 0,
+    "review_detail": "James Cameron pushed the boundaries of CGI and performance capture. The world-building is spectacular. I didn't mind the simple story because the experience itself was so immersive.",
+    "helpful": "450 out of 500 found this helpful"
+  },
+  {
+    "review_id": "rw4001",
+    "reviewer": "indie_snob",
+    "movie": "Transformers",
+    "rating": "3",
+    "review_summary": "Loud, dumb, and too long",
+    "review_date": "5 July 2007",
+    "spoiler_tag": 0,
+    "review_detail": "Michael Bay's signature explosions cannot hide the terrible script, wooden acting, and incomprehensible action sequences. A massive waste of money and time. Pure garbage.",
+    "helpful": "800 out of 1200 found this helpful"
+  },
+  {
+    "review_id": "rw4002",
+    "reviewer": "summer_blockbuster",
+    "movie": "Transformers",
+    "rating": "8",
+    "review_summary": "Awesome robot fights!",
+    "review_date": "6 July 2007",
+    "spoiler_tag": 0,
+    "review_detail": "If you turn off your brain and just enjoy the spectacle, it's a great time. The visual effects of the robots transforming are incredible. Optimus Prime is badass. Exactly what I wanted for a summer movie.",
+    "helpful": "500 out of 800 found this helpful"
+  },
+  {
+    "review_id": "rw5001",
+    "reviewer": "horror_fan",
+    "movie": "Get Out",
+    "rating": "9",
+    "review_summary": "A brilliant social thriller",
+    "review_date": "24 Feb 2017",
+    "spoiler_tag": 0,
+    "review_detail": "Jordan Peele's directorial debut is a masterclass in building tension. The social commentary is sharp and the horror elements are genuinely unsettling. Daniel Kaluuya is fantastic.",
+    "helpful": "600 out of 650 found this helpful"
+  }
+]
