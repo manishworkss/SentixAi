@@ -11,52 +11,97 @@ export interface TMDBMovie {
   overview: string;
 }
 
-// Fallback data if API key is missing
+// Fallback data with 10 popular real movies
 const FALLBACK_MOVIES: TMDBMovie[] = [
-  {
-    id: 155,
-    title: "The Dark Knight",
-    poster_path: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
-    backdrop_path: "/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg",
-    release_date: "2008-07-16",
-    vote_average: 8.5,
-    overview: "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker."
-  },
   {
     id: 27205,
     title: "Inception",
     poster_path: "/oYuLEt3zVCKq57qu2F8dT7NIa6f.jpg",
-    backdrop_path: "/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/s3TBrRGB1iav7gFOCNx3H31MoES.jpg",
     release_date: "2010-07-15",
     vote_average: 8.4,
-    overview: "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious."
+    overview: "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: inception."
   },
   {
-    id: 19995,
-    title: "Avatar",
-    poster_path: "/kyeqWdyKINLSywicfVjKpXkmCne.jpg",
-    backdrop_path: "/vL5LR6WdxWPjIgRVYGiZpGgoOK.jpg",
-    release_date: "2009-12-15",
-    vote_average: 7.6,
-    overview: "In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization."
+    id: 155,
+    title: "The Dark Knight",
+    poster_path: "https://m.media-amazon.com/images/I/818hyvdVfvL._AC_UF894,1000_QL80_.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg",
+    release_date: "2008-07-16",
+    vote_average: 8.5,
+    overview: "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets."
   },
   {
-    id: 1858,
-    title: "Transformers",
-    poster_path: "/432BowXw7a4bMAKJcBAEevsiA8k.jpg",
-    backdrop_path: "/zvG5J7s5zXjPZc0v2Q1Icb0VlUv.jpg",
-    release_date: "2007-06-27",
-    vote_average: 6.8,
-    overview: "Young teenager, Sam Witwicky becomes involved in the ancient struggle between two extraterrestrial factions of transforming robots – the heroic Autobots and the evil Decepticons. Sam holds the clue to unimaginable power and the Decepticons will stop at nothing to retrieve it."
+    id: 157336,
+    title: "Interstellar",
+    poster_path: "https://m.media-amazon.com/images/I/A1JVqNMI7UL._AC_UF894,1000_QL80_.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/rAiYTfKGqDCRIIqo664sY9XZIvQ.jpg",
+    release_date: "2014-11-05",
+    vote_average: 8.4,
+    overview: "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage."
   },
   {
-    id: 419430,
-    title: "Get Out",
-    poster_path: "/tFXcEccSQAmRoIdcgGOSNptm10e.jpg",
-    backdrop_path: "/2qO9bImrLgAiywS4uUARwEwK0Tj.jpg",
-    release_date: "2017-02-24",
-    vote_average: 7.6,
-    overview: "Chris and his girlfriend Rose go upstate to visit her parents for the weekend. At first, Chris reads the family's overly accommodating behavior as nervous attempts to deal with their daughter's interracial relationship, but as the weekend progresses, a series of increasingly disturbing discoveries lead him to a truth that he never could have imagined."
+    id: 299534,
+    title: "Avengers: Endgame",
+    poster_path: "https://m.media-amazon.com/images/I/81ExhpBEbHL._AC_UF894,1000_QL80_.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/7RyHsO4yDXtBv1zUU3mTpHeQ0d5.jpg",
+    release_date: "2019-04-24",
+    vote_average: 8.3,
+    overview: "After the devastating events of Infinity War, the universe is in ruins. With the help of remaining allies, the Avengers assemble once more in order to reverse Thanos' actions and restore balance to the universe."
+  },
+  {
+    id: 550,
+    title: "Fight Club",
+    poster_path: "/pB8BM7pdSp6B6Ih7QZ4DrQ3PmJK.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/rr7E0NoGKxaeKdicGz22pb4h2l2.jpg",
+    release_date: "1999-10-15",
+    vote_average: 8.4,
+    overview: "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground fight clubs forming in every town."
+  },
+  {
+    id: 13,
+    title: "Forrest Gump",
+    poster_path: "/arw2vcBveWOVZr6pxd9XTd1TdQa.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/3h1JZGDhZ8usL1vEunN7sH7D6kF.jpg",
+    release_date: "1994-06-23",
+    vote_average: 8.5,
+    overview: "A man with a low IQ has accomplished great things in his life and been present during significant historic events—in each case, far exceeding what anyone imagined he could do. But despite all he has achieved, his one true love eludes him."
+  },
+  {
+    id: 603,
+    title: "The Matrix",
+    poster_path: "https://m.media-amazon.com/images/I/613ypTLZHsL._AC_UF894,1000_QL80_.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/l6hQWH9eDksNJNiXWYRkWIGmE6B.jpg",
+    release_date: "1999-03-30",
+    vote_average: 8.2,
+    overview: "Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth."
+  },
+  {
+    id: 671,
+    title: "Harry Potter and the Sorcerer's Stone",
+    poster_path: "/sdEOH0992YZ0QSxgXNIGLq1ToUi.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/hziiv14OpD73u9gAak4XDDfBKa2.jpg",
+    release_date: "2001-11-16",
+    vote_average: 7.9,
+    overview: "Harry Potter has lived under the stairs at his aunt and uncle's house his whole life. But on his 11th birthday, he learns he's a powerful wizard—with a place waiting for him at the Hogwarts School of Witchcraft and Wizardry."
+  },
+  {
+    id: 120,
+    title: "The Lord of the Rings: The Fellowship of the Ring",
+    poster_path: "/6oom5QYQ2yQTMJIbnvbkBL9cHo6.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/vI3aUGtu37cKRaVtc7A4X17KzZc.jpg",
+    release_date: "2001-12-18",
+    vote_average: 8.4,
+    overview: "Young hobbit Frodo Baggins, after inheriting a mysterious ring from his uncle Bilbo, must leave his home in order to keep it from falling into the hands of its evil creator. Along the way, a fellowship is formed to protect the ringbearer and make sure that the ring arrives at its final destination: Mt. Doom."
+  },
+  {
+    id: 284054,
+    title: "Black Panther",
+    poster_path: "/uxzzxijgPIY7slzFvMotPv8wjKA.jpg",
+    backdrop_path: "https://image.tmdb.org/t/p/original/6ELJEzQJ3Y45HczvreC3v00HNwW.jpg",
+    release_date: "2018-02-13",
+    vote_average: 7.4,
+    overview: "King T'Challa returns home to the reclusive, technologically advanced African nation of Wakanda to serve as his country's new leader. However, T'Challa soon finds that he is challenged for the throne by factions within his own country as well as without."
   }
 ];
 

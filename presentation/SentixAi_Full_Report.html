@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SentixAi — Full Project Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; color: #1a1a2e; line-height: 1.75; font-size: 11.5pt; background: #fff; }
+
+  /* Cover Page */
+  .cover { page-break-after: always; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: linear-gradient(135deg, #0a0a0f 0%, #14181c 50%, #1a1a2e 100%); color: #fff; padding: 40px; }
+  .cover h1 { font-size: 52pt; font-weight: 900; letter-spacing: -2px; margin-bottom: 8px; }
+  .cover h1 span { color: #00B4D8; font-weight: 300; }
+  .cover .subtitle { font-size: 16pt; color: #9ab; margin-bottom: 40px; font-weight: 300; }
+  .cover .meta { font-size: 12pt; color: #666; line-height: 2; }
+  .cover .meta strong { color: #ccc; }
+  .cover .badge { display: inline-block; padding: 8px 24px; border-radius: 50px; border: 1px solid rgba(0,224,84,0.4); color: #00e054; font-size: 10pt; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 30px; }
+
+  /* TOC */
+  .toc { page-break-after: always; padding-top: 40px; }
+  .toc h2 { font-size: 22pt; font-weight: 800; margin-bottom: 24px; color: #14181c; border-bottom: 3px solid #00e054; display: inline-block; padding-bottom: 4px; }
+  .toc ol { list-style: none; counter-reset: toc; }
+  .toc ol li { counter-increment: toc; padding: 10px 0; border-bottom: 1px solid #eee; font-size: 12pt; }
+  .toc ol li::before { content: counter(toc) ". "; font-weight: 800; color: #00B4D8; margin-right: 8px; }
+
+  /* Sections */
+  h2.section-title { font-size: 20pt; font-weight: 800; color: #14181c; margin: 40px 0 16px; padding-bottom: 6px; border-bottom: 3px solid #00e054; page-break-after: avoid; }
+  h3 { font-size: 14pt; font-weight: 700; color: #00B4D8; margin: 24px 0 10px; page-break-after: avoid; }
+  h4 { font-size: 12pt; font-weight: 700; color: #333; margin: 16px 0 8px; }
+  p { margin-bottom: 12px; text-align: justify; }
+  ul, ol { margin: 8px 0 16px 24px; }
+  li { margin-bottom: 6px; }
+
+  /* Code */
+  code { font-family: 'JetBrains Mono', monospace; background: #f0f4f8; padding: 2px 6px; border-radius: 4px; font-size: 10pt; color: #00B4D8; }
+  pre { font-family: 'JetBrains Mono', monospace; background: #f6f8fa; border: 1px solid #e1e4e8; border-radius: 8px; padding: 16px; font-size: 9.5pt; line-height: 1.7; overflow-x: auto; margin: 12px 0 20px; white-space: pre; page-break-inside: avoid; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 10.5pt; page-break-inside: avoid; }
+  th { background: #14181c; color: #fff; font-weight: 700; text-align: left; padding: 10px 14px; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 9px 14px; border-bottom: 1px solid #e8e8e8; }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  /* Screenshots */
+  .screenshot { margin: 16px 0 24px; text-align: center; page-break-inside: avoid; }
+  .screenshot img { max-width: 100%; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+  .screenshot .caption { font-size: 9.5pt; color: #666; font-style: italic; margin-top: 8px; }
+
+  /* Highlight boxes */
+  .info-box { background: #f0f9ff; border-left: 4px solid #00B4D8; padding: 14px 18px; margin: 16px 0; border-radius: 0 8px 8px 0; page-break-inside: avoid; }
+  .info-box.green { background: #f0fdf4; border-left-color: #00e054; }
+  .info-box.amber { background: #fffbeb; border-left-color: #f59e0b; }
+  .info-box strong { color: #14181c; }
+
+  .page-break { page-break-before: always; }
+
+  /* Footer */
+  .footer { margin-top: 60px; padding-top: 16px; border-top: 1px solid #ddd; text-align: center; font-size: 9pt; color: #999; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ COVER PAGE ═══════════════════ -->
+<div class="cover">
+  <div class="badge">Project Report</div>
+  <h1>Sentix<span>[Ai]</span></h1>
+  <div class="subtitle">AI-Powered Movie Review & Sentiment Analysis Platform</div>
+  <div class="meta">
+    <strong>Developed by:</strong> Manish Kumar<br>
+    <strong>Repository:</strong> github.com/manishworkss/SentixAi<br>
+    <strong>Date:</strong> August 2026<br>
+    <strong>Tech Stack:</strong> React · Node.js · Prisma · SQLite · Firebase · DistilBERT
+  </div>
+</div>
+
+<!-- ═══════════════════ TABLE OF CONTENTS ═══════════════════ -->
+<div class="toc">
+  <h2>Table of Contents</h2>
+  <ol>
+    <li>Introduction & Problem Statement</li>
+    <li>Project Objectives</li>
+    <li>System Architecture & Design</li>
+    <li>Technology Stack — Why Each Technology Was Chosen</li>
+    <li>Folder Structure — Complete Project Layout</li>
+    <li>Frontend — Detailed Explanation</li>
+    <li>Backend — Detailed Explanation</li>
+    <li>Database Schema — Prisma Models</li>
+    <li>Authentication Flow — Firebase + OTP</li>
+    <li>AI/ML Pipeline — Sentiment Analysis</li>
+    <li>Data Ingestion Pipeline — IMDB Dataset</li>
+    <li>REST API Endpoints — Full Documentation</li>
+    <li>UI/UX Design Philosophy</li>
+    <li>Screenshots — Live Application</li>
+    <li>Key Metrics & Achievements</li>
+    <li>Challenges Faced & Solutions</li>
+    <li>Future Scope & Enhancements</li>
+    <li>Conclusion</li>
+  </ol>
+</div>
+
+<!-- ═══════════════════ 1. INTRODUCTION ═══════════════════ -->
+<h2 class="section-title">1. Introduction & Problem Statement</h2>
+
+<p>In the modern era of digital entertainment, millions of movie reviews are posted daily across platforms like IMDb, Rotten Tomatoes, and Letterboxd. However, manually reading and understanding the overall sentiment behind thousands of reviews for a single film is a time-consuming and impractical task for both audiences and film industry professionals.</p>
+
+<p><strong>SentixAi</strong> addresses this problem by building an intelligent, AI-powered movie review platform that automatically:</p>
+
+<ul>
+  <li><strong>Aggregates</strong> real movie reviews from large-scale datasets (IMDB Dataset with 50,000+ reviews)</li>
+  <li><strong>Analyzes</strong> the sentiment of each review using Natural Language Processing (NLP) — specifically a DistilBERT transformer model running entirely locally</li>
+  <li><strong>Visualizes</strong> audience sentiment through an executive analytics dashboard with real-time metrics</li>
+  <li><strong>Enables</strong> social film discovery with a Letterboxd-inspired interface where users can browse, rate, and review movies</li>
+</ul>
+
+<div class="info-box green">
+  <strong>Core Innovation:</strong> Unlike commercial sentiment analysis APIs (Google NLP, AWS Comprehend) that charge per request, SentixAi runs its AI model entirely on the local machine — achieving zero API cost with complete data privacy.
+</div>
+
+<!-- ═══════════════════ 2. OBJECTIVES ═══════════════════ -->
+<h2 class="section-title">2. Project Objectives</h2>
+
+<ol>
+  <li><strong>Build a social movie platform</strong> where users can browse popular films, read reviews, and submit their own ratings — inspired by Letterboxd's design philosophy</li>
+  <li><strong>Implement secure authentication</strong> with Firebase Auth (Google & Email/Password) combined with a custom 6-digit OTP email verification system</li>
+  <li><strong>Ingest real-world movie review data</strong> from the IMDB Dataset (50,000 labeled reviews) through an automated CSV ingestion pipeline</li>
+  <li><strong>Perform automated sentiment analysis</strong> on every review using a local DistilBERT NLP model, classifying each as POSITIVE or NEGATIVE with confidence scores</li>
+  <li><strong>Provide executive analytics</strong> via a dashboard showing sentiment distribution, rating trends, aspect-based analysis, and AI-generated insights</li>
+  <li><strong>Maintain a clean, scalable codebase</strong> with TypeScript across both frontend and backend, Prisma ORM for type-safe database operations, and a modular architecture</li>
+</ol>
+
+<!-- ═══════════════════ 3. ARCHITECTURE ═══════════════════ -->
+<h2 class="section-title page-break">3. System Architecture & Design</h2>
+
+<p>SentixAi follows a modern <strong>three-tier architecture</strong> consisting of a React-based frontend, a Node.js/Express backend API, and a SQLite database managed through Prisma ORM. The AI layer operates as an embedded service within the backend.</p>
+
+<h3>3.1 Architecture Overview</h3>
+
+<pre>
+┌──────────────────────────────────────────────────────────────────────┐
+│                        CLIENT (Browser)                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────────────────────┐  │
+│  │  Home Page   │  │ Movie Detail │  │   Admin Dashboard         │  │
+│  │  (Movie Grid)│  │ (Reviews)    │  │   (Analytics/Ingestion)   │  │
+│  └──────┬───────┘  └──────┬───────┘  └───────────┬───────────────┘  │
+│         │                 │                       │                  │
+│  ┌──────┴─────────────────┴───────────────────────┴──────────────┐  │
+│  │              React + Vite + TypeScript Frontend                │  │
+│  │     AuthContext (Firebase) │ API Client (fetchWithAuth)        │  │
+│  └───────────────────────────┼───────────────────────────────────┘  │
+│                              │ HTTP REST (JSON)                     │
+└──────────────────────────────┼──────────────────────────────────────┘
+                               │
+┌──────────────────────────────┼──────────────────────────────────────┐
+│                     SERVER (Node.js + Express)                      │
+│  ┌───────────────────────────┴──────────────────────────────────┐   │
+│  │                    REST API Routes                            │   │
+│  │  /api/movies  │  /api/sentiment  │  /api/analytics           │   │
+│  │  /api/users   │  /api/ingestion  │  /api/health              │   │
+│  └───────────┬──────────┬───────────────┬───────────────────────┘   │
+│              │          │               │                           │
+│  ┌───────────┴──┐ ┌─────┴────────┐ ┌───┴────────────────────┐     │
+│  │ Movie/User   │ │ Sentiment    │ │ Analytics / Ingestion  │     │
+│  │ Services     │ │ Service      │ │ Services               │     │
+│  └──────────────┘ │ (DistilBERT) │ └────────────────────────┘     │
+│                   └──────────────┘                                  │
+│  ┌──────────────────────────────────────────────────────────────┐   │
+│  │              Prisma ORM (Type-Safe Database Client)          │   │
+│  └──────────────────────────┬───────────────────────────────────┘   │
+└─────────────────────────────┼──────────────────────────────────────┘
+                              │
+┌─────────────────────────────┼──────────────────────────────────────┐
+│                    SQLite Database (dev.db)                         │
+│  User │ Movie │ Review │ SentimentAnalysis │ Aspect │ IngestionJob │
+└────────────────────────────────────────────────────────────────────┘
+</pre>
+
+<h3>3.2 Data Flow</h3>
+<ol>
+  <li><strong>User opens the app</strong> → React frontend loads and fetches movie data from TMDB API (or local fallback)</li>
+  <li><strong>User clicks a movie</strong> → Frontend calls <code>GET /api/movies?title=X</code> to find the internal DB ID, then <code>GET /api/movies/:id/reviews</code> to fetch real reviews</li>
+  <li><strong>Admin triggers ingestion</strong> → Backend reads the IMDB CSV, parses reviews, maps them to movies, and inserts into SQLite via Prisma</li>
+  <li><strong>Sentiment analysis runs</strong> → Background service loads DistilBERT, processes unanalyzed reviews in batches of 50, and stores results in <code>SentimentAnalysis</code> table</li>
+  <li><strong>Dashboard displays metrics</strong> → Frontend queries <code>/api/analytics/overview</code> which aggregates data from Review and SentimentAnalysis tables</li>
+</ol>
+
+<!-- ═══════════════════ 4. TECH STACK ═══════════════════ -->
+<h2 class="section-title page-break">4. Technology Stack — Why Each Technology Was Chosen</h2>
+
+<h3>4.1 Frontend Technologies</h3>
+
+<table>
+  <tr><th>Technology</th><th>Version</th><th>Purpose</th><th>Why This Choice?</th></tr>
+  <tr><td><strong>React</strong></td><td>18.x</td><td>UI Framework</td><td>Component-based architecture enables reusable UI elements. React's virtual DOM ensures efficient re-renders when review data or auth state changes. Industry standard with massive ecosystem.</td></tr>
+  <tr><td><strong>Vite</strong></td><td>5.x</td><td>Build Tool & Dev Server</td><td>10-100x faster than Create React App (CRA) or Webpack. Uses ES modules for instant HMR (Hot Module Replacement). Zero-config TypeScript support out of the box.</td></tr>
+  <tr><td><strong>TypeScript</strong></td><td>5.x</td><td>Type-Safe JavaScript</td><td>Catches type errors at compile time rather than runtime. Essential for large codebases — the frontend has 800+ lines in App.tsx alone. Provides excellent IDE autocompletion.</td></tr>
+  <tr><td><strong>Tailwind CSS</strong></td><td>3.x</td><td>Utility-First CSS</td><td>Enables rapid UI prototyping without leaving the component file. Purges unused CSS in production for minimal bundle size. Perfect for the dark cinematic theme used in SentixAi.</td></tr>
+  <tr><td><strong>Firebase Auth SDK</strong></td><td>10.x</td><td>Client-Side Authentication</td><td>Handles the complexity of OAuth flows, session management, and token refresh automatically. Supports Google, Email/Password, and more — zero backend auth code needed.</td></tr>
+  <tr><td><strong>Lucide Icons</strong></td><td>Latest</td><td>Icon Library</td><td>Modern, tree-shakeable icon library (only imports the icons you use). Clean design that matches the Letterboxd-inspired aesthetic. 1000+ icons available.</td></tr>
+  <tr><td><strong>TMDB API</strong></td><td>v3</td><td>Movie Metadata</td><td>Free API providing movie posters, backdrops, ratings, and descriptions for 800K+ movies. Essential for the visual film discovery experience.</td></tr>
+</table>
+
+<h3>4.2 Backend Technologies</h3>
+
+<table>
+  <tr><th>Technology</th><th>Version</th><th>Purpose</th><th>Why This Choice?</th></tr>
+  <tr><td><strong>Node.js</strong></td><td>20.x</td><td>JavaScript Runtime</td><td>Same language (TypeScript) across frontend and backend — shared types and reduced context switching. Non-blocking I/O is ideal for handling many concurrent review queries.</td></tr>
+  <tr><td><strong>Express.js</strong></td><td>4.x</td><td>REST API Framework</td><td>Minimal, unopinionated framework that gives full control over routing and middleware. Massive ecosystem of middleware (CORS, Helmet, Pino logger).</td></tr>
+  <tr><td><strong>Prisma ORM</strong></td><td>5.x</td><td>Database Client</td><td>Type-safe database queries generated from schema.prisma — eliminates SQL injection risks and provides autocompletion for all queries. Supports migrations, seeding, and Prisma Studio for visual DB inspection.</td></tr>
+  <tr><td><strong>SQLite</strong></td><td>3.x</td><td>Relational Database</td><td>Zero-configuration, serverless database stored as a single file (dev.db). Perfect for development and prototyping — can easily migrate to PostgreSQL or MySQL for production. No separate database server needed.</td></tr>
+  <tr><td><strong>@xenova/transformers</strong></td><td>2.x</td><td>Local NLP Model</td><td>Runs Hugging Face transformer models directly in Node.js without Python or external APIs. The DistilBERT model loads once into memory and processes reviews at high throughput with zero API cost.</td></tr>
+  <tr><td><strong>Nodemailer</strong></td><td>6.x</td><td>Email (OTP)</td><td>Sends beautifully styled HTML emails with 6-digit OTP codes via Gmail SMTP. Essential for the custom email verification step in the signup flow.</td></tr>
+  <tr><td><strong>Firebase Admin SDK</strong></td><td>12.x</td><td>Server Token Verification</td><td>Verifies Firebase ID tokens on the backend to ensure only authenticated users can access protected endpoints like the dashboard and ingestion routes.</td></tr>
+  <tr><td><strong>Pino</strong></td><td>8.x</td><td>Structured Logging</td><td>50x faster than Winston/Bunyan. JSON-formatted logs that are easy to parse and search. Used throughout the backend for request logging and error tracking.</td></tr>
+</table>
+
+<!-- ═══════════════════ 5. FOLDER STRUCTURE ═══════════════════ -->
+<h2 class="section-title page-break">5. Folder Structure — Complete Project Layout</h2>
+
+<p>The project follows a clean <strong>monorepo</strong> structure with separate <code>frontend/</code> and <code>backend/</code> directories, each with their own <code>package.json</code> and dependency management.</p>
+
+<pre>
+SentixAi/
+│
+├── 📂 frontend/                         # React + Vite Application
+│   ├── index.html                       # Entry HTML (includes no-referrer meta for image loading)
+│   ├── package.json                     # Frontend dependencies
+│   ├── vite.config.ts                   # Vite configuration
+│   ├── tsconfig.json                    # TypeScript configuration
+│   ├── tailwind.config.js               # Tailwind CSS configuration
+│   ├── public/
+│   │   └── logo.png                     # SentixAi brand logo
+│   │
+│   └── src/
+│       ├── main.tsx                     # React entry point — renders App inside StrictMode
+│       ├── App.tsx                      # ★ MAIN FILE (828 lines) — Routing, Theme, Dashboard,
+│       │                                #   Login/Signup forms, animated background, all in one
+│       ├── App.css                      # Global CSS overrides (scrollbar, animations)
+│       ├── index.css                    # Tailwind base/components/utilities imports
+│       ├── api.ts                       # ★ API client with fetchWithAuth() helper
+│       │                                #   Exports: MovieAPI, AnalyticsAPI, SentimentAPI, IngestionAPI
+│       │
+│       ├── pages/
+│       │   ├── Home.tsx                 # ★ PUBLIC homepage — Hero section + movie grid
+│       │   │                            #   Fetches from TMDB API, conditional auth UI
+│       │   └── MovieDetail.tsx          # ★ PUBLIC movie page — Backdrop, poster, real reviews
+│       │                                #   Fetches reviews from backend SQLite database
+│       │
+│       ├── components/
+│       │   ├── AnalyticsDashboard.tsx   # Dashboard overview tab (metrics, charts)
+│       │   ├── MoviesExplorer.tsx       # Movie browser with search and filters
+│       │   └── MovieAnalytics.tsx       # Per-movie sentiment breakdown
+│       │
+│       ├── contexts/
+│       │   └── AuthContext.tsx          # ★ Firebase auth state management
+│       │                                #   Provides: currentUser, login, signup,
+│       │                                #   loginWithGoogle, logout
+│       │
+│       ├── config/
+│       │   └── firebase.ts             # Firebase app initialization + Google provider config
+│       │
+│       └── lib/
+│           └── tmdb.ts                 # ★ TMDB API client + FALLBACK_MOVIES (10 movies)
+│                                        #   Auto-switches to fallback data if no API key
+│
+├── 📂 backend/                          # Node.js + Express Server
+│   ├── package.json                     # Backend dependencies
+│   ├── tsconfig.json                    # TypeScript configuration
+│   ├── .env                             # Environment variables (DATABASE_URL, Firebase keys)
+│   │
+│   ├── prisma/
+│   │   ├── schema.prisma               # ★ DATABASE SCHEMA — 8 Prisma models
+│   │   │                                #   User, Movie, Review, SentimentAnalysis,
+│   │   │                                #   Aspect, AspectSentiment, IngestionJob, OtpVerification
+│   │   ├── dev.db                       # SQLite database file (auto-generated)
+│   │   └── migrations/                  # Database migration history
+│   │
+│   └── src/
+│       ├── app.ts                       # Express app setup — CORS, Helmet, routes, error handler
+│       ├── server.ts                    # Server entry point — listens on port 3001
+│       │
+│       ├── routes/
+│       │   ├── movie.routes.ts          # GET /api/movies, GET /api/movies/:id/reviews
+│       │   ├── analytics.routes.ts      # GET /api/analytics/overview, sentiment-over-time
+│       │   ├── sentiment.routes.ts      # GET /api/sentiment/stats, trigger analysis
+│       │   ├── ingestion.routes.ts      # POST /api/ingestion/imdb, GET /api/ingestion/:jobId
+│       │   ├── user.routes.ts           # POST /api/users (register)
+│       │   ├── health.routes.ts         # GET /api/health
+│       │   └── legacy.routes.ts         # Legacy OTP routes (send-otp, verify-otp)
+│       │
+│       ├── services/
+│       │   ├── ai/
+│       │   │   ├── SentimentProvider.ts      # Interface for sentiment analysis providers
+│       │   │   ├── SentimentService.ts       # ★ Batch processor — fetches unanalyzed reviews,
+│       │   │   │                              #   runs DistilBERT, stores results. Background loop.
+│       │   │   └── TransformersProvider.ts   # ★ Singleton DistilBERT wrapper using @xenova/transformers
+│       │   │                                  #   Lazy loads model, maps raw output to SentimentResult
+│       │   ├── AnalyticsService.ts           # ★ Aggregation queries for dashboard metrics
+│       │   ├── ingestion.service.ts          # IMDB ingestion job manager
+│       │   ├── movie.service.ts              # Movie CRUD operations
+│       │   └── dataset/
+│       │       ├── CsvIngestor.ts            # ★ Reads IMDB Dataset.csv, maps reviews to movies,
+│       │       │                              #   converts sentiment to ratings, inserts via Prisma
+│       │       └── DatasetService.ts         # Dataset service orchestrator
+│       │
+│       ├── middleware/
+│       │   ├── auth.ts                  # requireAuth middleware — verifies Firebase ID tokens
+│       │   └── errorHandler.ts          # Global error handling middleware
+│       │
+│       ├── schemas/                     # Zod validation schemas
+│       ├── types/                       # TypeScript type definitions
+│       ├── config/
+│       │   └── firebase.ts             # Firebase Admin SDK initialization
+│       └── utils/
+│           ├── db.ts                    # Prisma client singleton export
+│           └── logger.ts               # Pino logger configuration
+│
+├── 📂 data/
+│   ├── IMDB Dataset.csv                 # ★ 50,000 real IMDB reviews with sentiment labels
+│   └── part-01.json                     # Custom movie review dataset (Inception, Dark Knight, etc.)
+│
+├── README.md                            # Project documentation
+└── .gitignore                           # Git ignore rules
+</pre>
+
+<!-- ═══════════════════ 6. FRONTEND ═══════════════════ -->
+<h2 class="section-title page-break">6. Frontend — Detailed Explanation</h2>
+
+<h3>6.1 Application Entry Point (<code>main.tsx</code>)</h3>
+<p>The entry point renders the root <code>&lt;App /&gt;</code> component inside React's <code>StrictMode</code> for development warnings. The app is mounted on the <code>#root</code> div in <code>index.html</code>.</p>
+
+<h3>6.2 Routing & Layout (<code>App.tsx</code> — 828 lines)</h3>
+<p>This is the largest and most central file in the frontend. It contains:</p>
+<ul>
+  <li><strong>Theme Configuration:</strong> A centralized <code>Theme</code> object that controls all colors, fonts, and borders across the entire application. Changing one value here changes the look globally.</li>
+  <li><strong>React Router Setup:</strong> Three main routes — <code>/</code> (Home), <code>/movie/:id</code> (MovieDetail), <code>/login</code> (Auth), and <code>/dashboard</code> (Admin)</li>
+  <li><strong>Login/Signup Forms:</strong> Full authentication UI with email/password fields, OTP verification step, Google Sign-In button, and animated background with floating glowing cards</li>
+  <li><strong>Dashboard Shell:</strong> A sidebar navigation layout with tabs for Dashboard, Ingestion, Movies, Analytics, and Settings</li>
+  <li><strong>Protected Routes:</strong> The <code>/dashboard</code> route redirects unauthenticated users to <code>/login</code>. The <code>/login</code> route redirects authenticated users to <code>/</code>.</li>
+</ul>
+
+<h3>6.3 Authentication State (<code>AuthContext.tsx</code>)</h3>
+<p>A React Context that wraps the entire app and provides authentication state to all components:</p>
+<ul>
+  <li><code>currentUser</code> — The currently logged-in Firebase user (or null)</li>
+  <li><code>login(email, pass)</code> — Signs in with email and password via Firebase</li>
+  <li><code>signup(email, pass)</code> — Creates a new account via Firebase</li>
+  <li><code>loginWithGoogle()</code> — Opens Google OAuth popup</li>
+  <li><code>logout()</code> — Signs out and clears state</li>
+</ul>
+<p>The context uses <code>onAuthStateChanged</code> to listen for auth state changes and re-render the app automatically when a user logs in or out.</p>
+
+<h3>6.4 API Client (<code>api.ts</code>)</h3>
+<p>A centralized API client with a <code>fetchWithAuth()</code> helper that automatically attaches the Firebase ID token to every request. It exports four API modules:</p>
+<ul>
+  <li><strong>MovieAPI</strong> — <code>searchMovies()</code>, <code>getMovie()</code>, <code>getMovieReviews()</code></li>
+  <li><strong>AnalyticsAPI</strong> — <code>getOverview()</code>, <code>getSentimentOverTime()</code>, <code>getMovieAnalytics()</code></li>
+  <li><strong>SentimentAPI</strong> — <code>getStats()</code>, <code>getMovieSentiments()</code></li>
+  <li><strong>IngestionAPI</strong> — <code>startImdbIngestion()</code></li>
+</ul>
+
+<h3>6.5 TMDB Integration (<code>tmdb.ts</code>)</h3>
+<p>This module handles movie data fetching with a two-tier approach:</p>
+<ol>
+  <li><strong>Primary:</strong> If a TMDB API key is configured (<code>VITE_TMDB_API_KEY</code>), it fetches live data from the TMDB API</li>
+  <li><strong>Fallback:</strong> If no API key is available, it returns a hardcoded array of 10 popular movies (Inception, The Dark Knight, Interstellar, etc.) with verified TMDB poster/backdrop URLs</li>
+</ol>
+
+<!-- ═══════════════════ 7. BACKEND ═══════════════════ -->
+<h2 class="section-title page-break">7. Backend — Detailed Explanation</h2>
+
+<h3>7.1 Express Application (<code>app.ts</code>)</h3>
+<p>The Express app is configured with the following middleware stack:</p>
+<ol>
+  <li><strong>Helmet</strong> — Sets security HTTP headers (X-Content-Type-Options, X-Frame-Options, etc.)</li>
+  <li><strong>CORS</strong> — Enables Cross-Origin Resource Sharing for frontend-backend communication</li>
+  <li><strong>express.json()</strong> — Parses incoming JSON request bodies</li>
+  <li><strong>Pino HTTP</strong> — Structured request logging with timestamps and response times</li>
+  <li><strong>Route Mounting</strong> — All API routes are mounted under <code>/api/</code> prefix</li>
+  <li><strong>404 Handler</strong> — Returns structured JSON for unknown routes</li>
+  <li><strong>Global Error Handler</strong> — Catches unhandled errors and returns clean error responses</li>
+</ol>
+
+<h3>7.2 Sentiment Service (<code>SentimentService.ts</code>)</h3>
+<p>The core AI component that orchestrates sentiment analysis:</p>
+<ul>
+  <li><strong>processPendingReviews(limit)</strong> — Fetches up to <code>limit</code> reviews that haven't been analyzed yet, runs them through DistilBERT in batch, and bulk-inserts results into <code>SentimentAnalysis</code> table</li>
+  <li><strong>startBackgroundProcessing(batchSize)</strong> — Starts an asynchronous loop that continuously processes pending reviews until none remain. Uses <code>setImmediate()</code> to run non-blockingly and <code>setTimeout(100ms)</code> to yield the event loop between batches</li>
+  <li><strong>getStats()</strong> — Returns current processing statistics: total reviews, analyzed count, positive/negative distribution, average score, and processing status</li>
+</ul>
+
+<h3>7.3 Transformers Provider (<code>TransformersProvider.ts</code>)</h3>
+<p>A <strong>Singleton</strong> class that wraps the DistilBERT model:</p>
+<ul>
+  <li><strong>Singleton Pattern</strong> — Ensures the large ML model is loaded into memory only once, regardless of how many requests come in</li>
+  <li><strong>Lazy Loading</strong> — The model is loaded on the first request, not at server startup, to reduce cold start time</li>
+  <li><strong>Model:</strong> <code>Xenova/distilbert-base-uncased-finetuned-sst-2-english</code> — A 67M parameter transformer fine-tuned on the Stanford Sentiment Treebank (SST-2) dataset</li>
+  <li><strong>Output Mapping:</strong> Raw model output (<code>{label: "POSITIVE", score: 0.99}</code>) is mapped to our standard format with normalized scores (-1.0 to 1.0)</li>
+</ul>
+
+<h3>7.4 Analytics Service (<code>AnalyticsService.ts</code>)</h3>
+<p>Handles all dashboard aggregation queries using Prisma's aggregate and groupBy functions:</p>
+<ul>
+  <li>Total reviews, movies, and analyzed review counts</li>
+  <li>Positive/negative percentage distribution</li>
+  <li>Average sentiment score and average rating</li>
+  <li>Rating distribution histogram (1-10)</li>
+  <li>Sentiment trends over time (groupable by day/week/month)</li>
+  <li>Per-movie analytics with aspect-based sentiment breakdown</li>
+</ul>
+
+<!-- ═══════════════════ 8. DATABASE ═══════════════════ -->
+<h2 class="section-title page-break">8. Database Schema — Prisma Models</h2>
+
+<p>The database consists of <strong>8 interconnected models</strong> defined in <code>prisma/schema.prisma</code>:</p>
+
+<table>
+  <tr><th>Model</th><th>Fields</th><th>Relationships</th><th>Purpose</th></tr>
+  <tr><td><strong>User</strong></td><td>id, firebaseUid (unique), email (unique), name, role (USER/ADMIN), status (ACTIVE/SUSPENDED), timestamps</td><td>Standalone</td><td>Stores registered user profiles synced with Firebase Auth</td></tr>
+  <tr><td><strong>Movie</strong></td><td>id, imdbId (unique, optional), title, releaseDate, posterUrl, metadata (JSON), timestamps</td><td>→ Review[], IngestionJob[]</td><td>Stores movie records. The metadata JSON field allows flexible storage of genre, plot, director info</td></tr>
+  <tr><td><strong>Review</strong></td><td>id, movieId (FK), externalReviewId, reviewText, rating (1-10), reviewDate, source (IMDB/METACRITIC/IMDB_CSV)</td><td>→ Movie, → SentimentAnalysis[], AspectSentiment[]</td><td>Stores individual reviews. The @@unique([source, externalReviewId]) constraint prevents duplicate ingestion</td></tr>
+  <tr><td><strong>SentimentAnalysis</strong></td><td>id, reviewId (FK), sentiment (POSITIVE/NEGATIVE/NEUTRAL), score (-1 to 1), confidence, modelProvider, analyzedAt</td><td>→ Review</td><td>Stores AI analysis results. @@unique([reviewId, modelProvider]) allows multiple models to analyze the same review</td></tr>
+  <tr><td><strong>Aspect</strong></td><td>id, name (unique — Acting, Story, Direction, Music, etc.)</td><td>→ AspectSentiment[]</td><td>Lookup table for review aspects used in ABSA (Aspect-Based Sentiment Analysis)</td></tr>
+  <tr><td><strong>AspectSentiment</strong></td><td>id, reviewId (FK), aspectId (FK), sentiment, score, analyzedAt</td><td>→ Review, → Aspect</td><td>Stores per-aspect sentiment for a review (e.g., "Acting: POSITIVE, Story: NEGATIVE")</td></tr>
+  <tr><td><strong>IngestionJob</strong></td><td>id, movieId (FK), status, totalReviews, processedRecords, insertedReviews, duplicateReviews, invalidReviews, timestamps</td><td>→ Movie</td><td>Tracks the progress and status of data ingestion pipeline jobs</td></tr>
+  <tr><td><strong>OtpVerification</strong></td><td>id, email (unique), otpHash, attempts, expiresAt, createdAt</td><td>Standalone</td><td>Stores hashed OTP codes with attempt counts and expiry for email verification</td></tr>
+</table>
+
+<div class="info-box">
+  <strong>Design Decision:</strong> The OTP hash is stored instead of the plaintext OTP. The bcrypt hash ensures that even if the database is compromised, the OTP codes cannot be reverse-engineered. Each OTP has a 5-minute expiry and a maximum of 3 verification attempts.
+</div>
+
+<!-- ═══════════════════ 9. AUTH FLOW ═══════════════════ -->
+<h2 class="section-title page-break">9. Authentication Flow — Firebase + OTP</h2>
+
+<p>SentixAi implements a <strong>multi-step authentication</strong> system that combines Firebase Authentication with a custom OTP (One-Time Password) email verification step.</p>
+
+<h3>9.1 Sign Up Flow</h3>
+<ol>
+  <li>User enters their email and password on the Sign Up form</li>
+  <li>Frontend sends <code>POST /api/send-otp</code> with the email to the backend</li>
+  <li>Backend generates a random 6-digit OTP, hashes it with bcrypt, and stores it in the <code>OtpVerification</code> table with a 5-minute expiry</li>
+  <li>Backend sends a beautifully styled HTML email containing the OTP via Gmail SMTP (using Nodemailer)</li>
+  <li>User enters the received OTP on the frontend</li>
+  <li>Frontend sends <code>POST /api/verify-otp</code> with the email and OTP</li>
+  <li>Backend verifies the OTP hash, checks expiry and attempt count</li>
+  <li>On success, frontend calls <code>createUserWithEmailAndPassword()</code> from Firebase Auth SDK</li>
+  <li>Firebase creates the account and returns an ID token</li>
+  <li>User is redirected to the Dashboard</li>
+</ol>
+
+<h3>9.2 Sign In Flow</h3>
+<ol>
+  <li>User enters email and password on the Sign In form</li>
+  <li>Frontend calls <code>signInWithEmailAndPassword()</code> from Firebase Auth SDK</li>
+  <li>Firebase validates credentials and returns an ID token</li>
+  <li>ID token is automatically attached to all subsequent API requests via <code>fetchWithAuth()</code></li>
+</ol>
+
+<h3>9.3 Google Sign-In</h3>
+<ol>
+  <li>User clicks "Sign in with Google" button</li>
+  <li>Frontend calls <code>signInWithPopup(auth, googleProvider)</code></li>
+  <li>Google OAuth popup opens, user selects account</li>
+  <li>Firebase handles the entire OAuth flow and returns the user object</li>
+</ol>
+
+<h3>9.4 Protected Routes</h3>
+<p>The backend uses a <code>requireAuth</code> middleware that:</p>
+<ol>
+  <li>Extracts the <code>Authorization: Bearer &lt;token&gt;</code> header from the request</li>
+  <li>Verifies the token using Firebase Admin SDK's <code>verifyIdToken()</code></li>
+  <li>Attaches the decoded user info to <code>req.user</code></li>
+  <li>Returns 401 Unauthorized if the token is invalid or expired</li>
+</ol>
+
+<!-- ═══════════════════ 10. AI PIPELINE ═══════════════════ -->
+<h2 class="section-title page-break">10. AI/ML Pipeline — Sentiment Analysis</h2>
+
+<h3>10.1 Model Selection</h3>
+<p>The project uses <strong>DistilBERT</strong> (<code>distilbert-base-uncased-finetuned-sst-2-english</code>), a distilled version of BERT that is:</p>
+<ul>
+  <li><strong>40% smaller</strong> than BERT-base (67M vs 110M parameters)</li>
+  <li><strong>60% faster</strong> inference while retaining 97% of BERT's performance</li>
+  <li><strong>Fine-tuned on SST-2</strong> — the Stanford Sentiment Treebank, a benchmark dataset for binary sentiment classification</li>
+  <li><strong>Runs locally</strong> via <code>@xenova/transformers</code> — no Python, no external API, no GPU required</li>
+</ul>
+
+<h3>10.2 Processing Pipeline</h3>
+<pre>
+Step 1: Discovery
+   └─→ Query: SELECT * FROM Review WHERE id NOT IN 
+              (SELECT reviewId FROM SentimentAnalysis WHERE modelProvider = 'local-distilbert')
+              LIMIT 50
+
+Step 2: Batch Inference
+   └─→ Pass 50 review texts to DistilBERT pipeline
+   └─→ Model returns: { label: "POSITIVE"|"NEGATIVE", score: 0.0-1.0 }
+
+Step 3: Score Mapping
+   └─→ POSITIVE reviews: score = +confidence (e.g., +0.95)
+   └─→ NEGATIVE reviews: score = -confidence (e.g., -0.87)
+
+Step 4: Database Insertion
+   └─→ createMany() into SentimentAnalysis table
+   └─→ skipDuplicates: true (idempotent)
+
+Step 5: Loop
+   └─→ If more pending reviews exist, yield event loop (100ms) and repeat
+   └─→ If none remain, stop and release processing lock
+</pre>
+
+<h3>10.3 Output Schema</h3>
+<table>
+  <tr><th>Field</th><th>Type</th><th>Example</th><th>Description</th></tr>
+  <tr><td>sentiment</td><td>String</td><td>"POSITIVE"</td><td>Classification label</td></tr>
+  <tr><td>score</td><td>Float</td><td>0.9543</td><td>Normalized score (-1.0 to 1.0)</td></tr>
+  <tr><td>confidence</td><td>Float</td><td>0.9543</td><td>Model confidence (0.0 to 1.0)</td></tr>
+  <tr><td>modelProvider</td><td>String</td><td>"local-distilbert"</td><td>Which model produced this result</td></tr>
+</table>
+
+<!-- ═══════════════════ 11. INGESTION ═══════════════════ -->
+<h2 class="section-title page-break">11. Data Ingestion Pipeline — IMDB Dataset</h2>
+
+<h3>11.1 Dataset Description</h3>
+<p>The project uses the <strong>IMDB Dataset</strong> — a widely-used benchmark dataset containing 50,000 movie reviews labeled as either <code>positive</code> or <code>negative</code>. The CSV has two columns:</p>
+<table>
+  <tr><th>Column</th><th>Description</th><th>Example</th></tr>
+  <tr><td><code>review</code></td><td>Full text of the movie review (HTML formatted)</td><td>"One of the other reviewers has mentioned that after watching just 1 Oz episode..."</td></tr>
+  <tr><td><code>sentiment</code></td><td>Binary label</td><td>"positive" or "negative"</td></tr>
+</table>
+
+<h3>11.2 Ingestion Process (<code>CsvIngestor.ts</code>)</h3>
+<ol>
+  <li><strong>Movie Creation:</strong> Creates or finds 10 movies in the database (Inception, The Dark Knight, Interstellar, Avengers: Endgame, Fight Club, Forrest Gump, The Matrix, Harry Potter, Lord of the Rings, Black Panther)</li>
+  <li><strong>CSV Parsing:</strong> Uses the <code>csv-parser</code> library to stream-read the CSV file</li>
+  <li><strong>HTML Cleanup:</strong> Strips <code>&lt;br /&gt;</code> tags from review text, replacing them with newlines</li>
+  <li><strong>Movie Assignment:</strong> Each review is randomly assigned to one of the 10 movies using <code>Math.random()</code></li>
+  <li><strong>Rating Conversion:</strong> Converts sentiment labels to numeric ratings:
+    <ul>
+      <li><code>positive</code> → random rating between 7-10</li>
+      <li><code>negative</code> → random rating between 1-4</li>
+    </ul>
+  </li>
+  <li><strong>Author Generation:</strong> Assigns realistic reviewer names from a predefined pool (Cinephile99, MovieBuff, FilmCritic, etc.)</li>
+  <li><strong>Duplicate Prevention:</strong> Uses Prisma's <code>upsert()</code> with the <code>@@unique([source, externalReviewId])</code> constraint to skip already-ingested reviews</li>
+  <li><strong>Limit:</strong> Processes the first 500 reviews for performance (configurable)</li>
+</ol>
+
+<!-- ═══════════════════ 12. API DOCS ═══════════════════ -->
+<h2 class="section-title page-break">12. REST API Endpoints — Full Documentation</h2>
+
+<table>
+  <tr><th>Method</th><th>Endpoint</th><th>Auth</th><th>Description</th><th>Response</th></tr>
+  <tr><td><code>GET</code></td><td>/api/health</td><td>No</td><td>Server health check</td><td><code>{ status: "ok" }</code></td></tr>
+  <tr><td><code>GET</code></td><td>/api/movies</td><td>No</td><td>List/search movies. Supports <code>?title=</code> and pagination</td><td>Array of Movie objects + pagination meta</td></tr>
+  <tr><td><code>GET</code></td><td>/api/movies/:id</td><td>No</td><td>Get movie by internal UUID</td><td>Single Movie object</td></tr>
+  <tr><td><code>GET</code></td><td>/api/movies/:id/reviews</td><td>No</td><td>Get reviews for a movie. Supports <code>?page=</code>, <code>?limit=</code>, <code>?minRating=</code>, <code>?maxRating=</code></td><td>Array of Review objects + pagination</td></tr>
+  <tr><td><code>POST</code></td><td>/api/ingestion/imdb</td><td>Yes</td><td>Start IMDB dataset ingestion job</td><td><code>{ jobId, status: "PENDING" }</code></td></tr>
+  <tr><td><code>GET</code></td><td>/api/ingestion/:jobId</td><td>Yes</td><td>Check ingestion job progress</td><td>Job details with processed/inserted/duplicate counts</td></tr>
+  <tr><td><code>GET</code></td><td>/api/ingestion/stats</td><td>Yes</td><td>Dataset statistics</td><td>Total reviews, rating distribution, date range</td></tr>
+  <tr><td><code>GET</code></td><td>/api/sentiment/stats</td><td>No</td><td>Sentiment analysis progress</td><td>Analyzed count, positive/negative %, avg score</td></tr>
+  <tr><td><code>GET</code></td><td>/api/sentiment/movies/:id</td><td>No</td><td>Per-movie sentiment details</td><td>Sentiment analyses for reviews of that movie</td></tr>
+  <tr><td><code>GET</code></td><td>/api/analytics/overview</td><td>No</td><td>Dashboard overview metrics</td><td>Total reviews, sentiment %, avg rating, distribution</td></tr>
+  <tr><td><code>GET</code></td><td>/api/analytics/sentiment-over-time</td><td>No</td><td>Sentiment trends (groupBy: day/week/month)</td><td>Time series of positive/negative counts</td></tr>
+  <tr><td><code>POST</code></td><td>/api/users</td><td>Yes</td><td>Register user (syncs Firebase UID to local DB)</td><td>User object</td></tr>
+</table>
+
+<!-- ═══════════════════ 13. UI/UX ═══════════════════ -->
+<h2 class="section-title page-break">13. UI/UX Design Philosophy</h2>
+
+<h3>13.1 Design Inspiration</h3>
+<p>SentixAi's public-facing pages (Home, Movie Detail) are heavily inspired by <strong>Letterboxd</strong> — the world's most popular social film-tracking platform. Key design elements borrowed:</p>
+<ul>
+  <li><strong>Dark Theme:</strong> Background color <code>#14181c</code> with card color <code>#1e252b</code> — creates a cinematic atmosphere</li>
+  <li><strong>Green Accent:</strong> <code>#00e054</code> for interactive elements (buttons, borders, stars) — matches Letterboxd's signature green</li>
+  <li><strong>Typography:</strong> Sans-serif for UI elements, serif for movie titles — creates a premium editorial feel</li>
+  <li><strong>Movie Poster Grid:</strong> 5-column responsive grid with 2:3 aspect ratio cards and hover effects</li>
+</ul>
+
+<h3>13.2 Dashboard Design</h3>
+<p>The admin dashboard uses a contrasting <strong>warm beige & charcoal</strong> theme (configurable via the <code>Theme</code> object in App.tsx) with:</p>
+<ul>
+  <li>Sidebar navigation with icon-labeled tabs</li>
+  <li>Stat cards with large numbers and colored indicators</li>
+  <li>Clean data tables with alternating row colors</li>
+</ul>
+
+<h3>13.3 Responsive Design</h3>
+<p>All pages are fully responsive using Tailwind's breakpoint system:</p>
+<ul>
+  <li><strong>Mobile (sm):</strong> 2-column movie grid, stacked layout</li>
+  <li><strong>Tablet (md):</strong> 3-4 column grid, side-by-side poster + details</li>
+  <li><strong>Desktop (lg):</strong> 5-column grid, full sidebar dashboard</li>
+</ul>
+
+<!-- ═══════════════════ 14. SCREENSHOTS ═══════════════════ -->
+<h2 class="section-title page-break">14. Screenshots — Live Application</h2>
+
+<div class="screenshot">
+  <div class="caption">Figure 1: Login Page — Email/Password authentication with animated background</div>
+  <img src="screenshots/login_page.png" alt="Login Page">
+</div>
+
+<div class="screenshot">
+  <div class="caption">Figure 2: Sign Up Page — New account creation with OTP verification step</div>
+  <img src="screenshots/signup_page.png" alt="Sign Up Page">
+</div>
+
+<div class="screenshot page-break">
+  <div class="caption">Figure 3: Homepage — Popular films grid with movie posters from TMDB</div>
+  <img src="screenshots/homepage.png" alt="Homepage">
+</div>
+
+<div class="screenshot">
+  <div class="caption">Figure 4: Movie Detail Page — Inception with real IMDB reviews from database</div>
+  <img src="screenshots/movie_detail.png" alt="Movie Detail">
+</div>
+
+<div class="screenshot page-break">
+  <div class="caption">Figure 5: Admin Dashboard — Executive overview with metrics and navigation</div>
+  <img src="screenshots/dashboard.png" alt="Dashboard">
+</div>
+
+<div class="screenshot">
+  <div class="caption">Figure 6: Analytics Panel — Sentiment distribution and trend analysis</div>
+  <img src="screenshots/analytics.png" alt="Analytics">
+</div>
+
+<!-- ═══════════════════ 15. METRICS ═══════════════════ -->
+<h2 class="section-title page-break">15. Key Metrics & Achievements</h2>
+
+<table>
+  <tr><th>Metric</th><th>Value</th><th>Details</th></tr>
+  <tr><td>Reviews Ingested</td><td><strong>500+</strong></td><td>Real IMDB reviews parsed from CSV and stored in SQLite</td></tr>
+  <tr><td>Movies Indexed</td><td><strong>10</strong></td><td>Inception, Dark Knight, Interstellar, Endgame, Fight Club, Forrest Gump, Matrix, Harry Potter, LOTR, Black Panther</td></tr>
+  <tr><td>Database Models</td><td><strong>8</strong></td><td>User, Movie, Review, SentimentAnalysis, Aspect, AspectSentiment, IngestionJob, OtpVerification</td></tr>
+  <tr><td>API Endpoints</td><td><strong>11+</strong></td><td>RESTful routes covering movies, reviews, sentiment, analytics, ingestion, users</td></tr>
+  <tr><td>Auth Methods</td><td><strong>3</strong></td><td>Email/Password, Google OAuth, OTP Email Verification</td></tr>
+  <tr><td>AI Model Parameters</td><td><strong>67M</strong></td><td>DistilBERT fine-tuned on SST-2 for binary sentiment classification</td></tr>
+  <tr><td>External API Cost</td><td><strong>$0</strong></td><td>All AI inference runs locally — zero API calls to OpenAI, Google, or AWS</td></tr>
+  <tr><td>Frontend Components</td><td><strong>10+</strong></td><td>Home, MovieDetail, LoginLayout, Dashboard, AnalyticsDashboard, MoviesExplorer, etc.</td></tr>
+  <tr><td>CSV Dataset Size</td><td><strong>50,000</strong></td><td>IMDB Dataset with labeled positive/negative reviews</td></tr>
+</table>
+
+<!-- ═══════════════════ 16. CHALLENGES ═══════════════════ -->
+<h2 class="section-title">16. Challenges Faced & Solutions</h2>
+
+<table>
+  <tr><th>Challenge</th><th>Solution</th></tr>
+  <tr><td>Movie poster images not loading from Amazon CDN due to hotlinking protection</td><td>Switched to TMDB's official image CDN (<code>image.tmdb.org</code>) and added <code>&lt;meta name="referrer" content="no-referrer"&gt;</code> to index.html</td></tr>
+  <tr><td>IMDB Dataset CSV lacks movie names — reviews are generic text with only positive/negative labels</td><td>Built a mapping system that randomly distributes reviews across 10 movies and converts sentiment labels to numeric 1-10 ratings</td></tr>
+  <tr><td>DistilBERT model is large (~100MB) and slow to load on first request</td><td>Implemented Singleton pattern with lazy loading — model loads once on first request and stays in memory for all subsequent requests</td></tr>
+  <tr><td>Background sentiment processing blocks the Express event loop</td><td>Used <code>setImmediate()</code> for the processing loop and <code>setTimeout(100ms)</code> between batches to yield control back to the event loop</td></tr>
+  <tr><td>Duplicate reviews when re-running the ingestion pipeline</td><td>Used Prisma's <code>@@unique([source, externalReviewId])</code> constraint with <code>upsert()</code> to make ingestion idempotent</td></tr>
+  <tr><td>Firebase Auth state not persisting across page refreshes</td><td>Used <code>onAuthStateChanged()</code> listener in AuthContext that automatically restores the session from Firebase's IndexedDB persistence</td></tr>
+</table>
+
+<!-- ═══════════════════ 17. FUTURE SCOPE ═══════════════════ -->
+<h2 class="section-title page-break">17. Future Scope & Enhancements</h2>
+
+<ol>
+  <li><strong>Advanced NLP with GPT:</strong> Integrate GPT-4 or Gemini for review summarization — generate one-paragraph summaries of hundreds of reviews for each movie</li>
+  <li><strong>Real-time Charts:</strong> Add interactive Chart.js or Recharts visualizations showing sentiment trends over time on the dashboard</li>
+  <li><strong>Aspect-Based Sentiment Analysis (ABSA):</strong> Break down reviews into specific aspects (Acting, Directing, Cinematography, Music, Story) and show per-aspect sentiment scores</li>
+  <li><strong>Multi-Language Support:</strong> Add NLP models for Hindi, Spanish, French, and other languages to analyze non-English reviews</li>
+  <li><strong>Mobile Application:</strong> Build a React Native companion app for on-the-go movie tracking and review reading</li>
+  <li><strong>AI Recommendation Engine:</strong> Use collaborative filtering and content-based algorithms to suggest movies based on user review history and preferences</li>
+  <li><strong>Social Features:</strong> Add user profiles, follow system, watchlists, and the ability to like/comment on reviews</li>
+  <li><strong>Production Database:</strong> Migrate from SQLite to PostgreSQL for concurrent multi-user access and horizontal scaling</li>
+  <li><strong>CI/CD Pipeline:</strong> Set up GitHub Actions for automated testing, linting, and deployment to Vercel (frontend) and Railway (backend)</li>
+  <li><strong>Real TMDB Integration:</strong> Register for a TMDB API key to fetch live movie data instead of relying on the fallback dataset</li>
+</ol>
+
+<!-- ═══════════════════ 18. CONCLUSION ═══════════════════ -->
+<h2 class="section-title">18. Conclusion</h2>
+
+<p>SentixAi successfully demonstrates the integration of modern web development practices with artificial intelligence to create a meaningful, real-world application. The project showcases:</p>
+
+<ul>
+  <li><strong>Full-Stack Proficiency:</strong> A complete React + Node.js application with TypeScript across both layers, Prisma ORM for type-safe database operations, and a modular service-oriented architecture</li>
+  <li><strong>AI/ML Integration:</strong> A fully functional NLP pipeline using DistilBERT that processes reviews in real-time without external API dependencies — proving that sophisticated AI can be embedded directly into web applications</li>
+  <li><strong>Security Best Practices:</strong> Multi-factor authentication combining Firebase Auth with custom OTP verification, bcrypt hashing, token-based API protection, and Helmet security headers</li>
+  <li><strong>Data Engineering:</strong> A robust CSV ingestion pipeline with duplicate detection, batch processing, and idempotent operations</li>
+  <li><strong>Premium UI/UX:</strong> A Letterboxd-inspired design that balances aesthetic beauty with functional usability, featuring responsive layouts, micro-animations, and conditional UI based on authentication state</li>
+</ul>
+
+<p>The platform is designed with extensibility in mind — the modular architecture, clean separation of concerns, and comprehensive API make it straightforward to add new features like recommendation engines, social interactions, or multi-language support in future iterations.</p>
+
+<div class="footer">
+  SentixAi — AI-Powered Movie Review & Sentiment Analysis Platform<br>
+  Developed by Manish Kumar • August 2026 • github.com/manishworkss/SentixAi
+</div>
+
+</body>
+</html>

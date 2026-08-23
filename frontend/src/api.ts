@@ -56,7 +56,8 @@ export const SentimentAPI = {
 export const MovieAPI = {
   // Use existing movie search logic, or implement a simple search fallback here if needed
   searchMovies: (query: string, page = 1) => fetchWithAuth(`/movies?title=${encodeURIComponent(query)}&page=${page}&limit=20`),
-  getMovie: (id: string) => fetchWithAuth(`/movies/${id}`)
+  getMovie: (id: string) => fetchWithAuth(`/movies/${id}`),
+  getMovieReviews: (id: string, page = 1) => fetchWithAuth(`/movies/${id}/reviews?page=${page}&limit=20`)
 };
 
 export const IngestionAPI = {

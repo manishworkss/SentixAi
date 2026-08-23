@@ -12,10 +12,16 @@ import {
   Sparkles,
   Cpu,
   Network,
-  Bot
+  Bot,
+  Star,
+  Search,
+  ArrowUpRight,
+  TrendingUp
 } from 'lucide-react';
-
+import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Home } from './pages/Home';
+import { MovieDetail } from './pages/MovieDetail';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard';
 import { MoviesExplorer } from './components/MoviesExplorer';
 import { MovieAnalytics } from './components/MovieAnalytics';
@@ -63,20 +69,31 @@ export default function App() {
 }
 
 function AppContent() {
-  const { currentUser, logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
-
-  if (!currentUser) {
-    return <LoginLayout />;
-  }
+  const { currentUser } = useAuth();
 
   return (
-    <DashboardShell
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      onLogout={logout}
-    />
+    <Router>
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/movie/:id" element={<MovieDetail />} />
+        
+        {/* Auth Route */}
+        <Route path="/login" element={!currentUser ? <LoginLayout /> : <Navigate to="/" />} />
+        
+        {/* Admin / Dashboard Route */}
+        <Route path="/dashboard" element={
+          currentUser ? <AdminRoute /> : <Navigate to="/login" />
+        } />
+      </Routes>
+    </Router>
   );
+}
+
+function AdminRoute() {
+  const { logout } = useAuth();
+  const [activeTab, setActiveTab] = useState('dashboard');
+  return <DashboardShell activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />;
 }
 
 function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'small', theme?: 'light' | 'dark' }) {
@@ -188,10 +205,10 @@ function AnimatedBackground() {
     </div>
   );
 }
-
 function LoginLayout() {
+  const [searchParams] = useSearchParams();
   const [showPassword, setShowPassword] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true');
   const { login, signup, loginWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
