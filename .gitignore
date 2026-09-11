@@ -1,5 +1,27 @@
-node_modules
-.DS_Store
-dist
+# Dependencies
+node_modules/
+
+# Environment Variables
 .env
+.env.*
+!.env.example
+
+# Build Output
+dist/
+build/
+
+# OS Files
+.DS_Store
+
+# Data & Sensitive Files
 data/
+firebase-service-account.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDEs
+.vscode/
+.idea/

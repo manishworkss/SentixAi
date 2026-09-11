@@ -54,7 +54,7 @@ router.get('/sentiment-anomalies', requireAuth, async (req, res) => {
 });
 
 // Feature 4: Movie Sentiment Summary
-router.get('/movies/:movieId', requireAuth, async (req, res) => {
+router.get('/movies/:movieId', async (req, res) => {
   try {
     const movieId = req.params.movieId as string;
     const data = await analyticsService.getMovieSummary(movieId);

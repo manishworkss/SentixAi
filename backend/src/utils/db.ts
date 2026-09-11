@@ -14,7 +14,7 @@ const adapter = new PrismaMariaDb(env.DATABASE_URL!.replace(/^mysql:\/\//, 'mari
 export const db =
   globalForPrisma.prisma ||
   new PrismaClient({
-    adapter,
+    
     log:
       env.NODE_ENV === 'development'
         ? ['query', 'error', 'warn']

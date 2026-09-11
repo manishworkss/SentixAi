@@ -1,9 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -16,11 +17,14 @@ model User {
   status      String   @default("ACTIVE") // ACTIVE, SUSPENDED
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  reviews     Review[]
+  lists       List[]
 }
 
 model Movie {
   id          String    @id @default(uuid())
   imdbId      String?   @unique
+  tmdbId      Int?      @unique
   title       String
   releaseDate DateTime?
   posterUrl   String?
@@ -30,6 +34,7 @@ model Movie {
 
   reviews       Review[]
   ingestionJobs IngestionJob[]
+  listMovies    ListMovie[]
 
   @@index([title])
 }
@@ -38,11 +43,13 @@ model Review {
   id               String    @id @default(uuid())
   movieId          String
   movie            Movie     @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  userId           String?
+  user             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   externalReviewId String? // ID from IMDb or other source
-  reviewText       String
+  reviewText       String    @db.Text
   rating           Int?
   reviewDate       DateTime?
-  source           String    @default("IMDB") // IMDB, METACRITIC
+  source           String    @default("IMDB") // IMDB, METACRITIC, INTERNAL
   createdAt        DateTime  @default(now())
 
   sentiments       SentimentAnalysis[]
@@ -111,4 +118,26 @@ model OtpVerification {
   attempts  Int      @default(0)
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model List {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movies      ListMovie[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model ListMovie {
+  id        String   @id @default(uuid())
+  listId    String
+  list      List     @relation(fields: [listId], references: [id], onDelete: Cascade)
+  movieId   String
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+
+  @@unique([listId, movieId])
 }

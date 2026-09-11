@@ -11,6 +11,8 @@ import movieRoutes from './routes/movie.routes';
 import ingestionRoutes from './routes/ingestion.routes';
 import sentimentRoutes from './routes/sentiment.routes';
 import analyticsRoutes from './routes/analytics.routes';
+import listRoutes from './routes/list.routes';
+import reviewRoutes from './routes/review.routes';
 
 const app = express();
 
@@ -29,6 +31,8 @@ app.use('/api/movies', movieRoutes);
 app.use('/api/ingestion', ingestionRoutes);
 app.use('/api/sentiment', sentimentRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/lists', listRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api', legacyRoutes);
 
 // Unknown route handler (404)

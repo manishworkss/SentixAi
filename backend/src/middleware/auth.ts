@@ -2,21 +2,46 @@ import { Request, Response, NextFunction } from 'express';
 import { db } from '../utils/db';
 import { logger } from '../utils/logger';
 
+import { getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+
+// Initialize Firebase Admin if not already initialized
+if (!getApps().length) {
+  try {
+    initializeApp(); // Will look for GOOGLE_APPLICATION_CREDENTIALS
+  } catch (err) {
+    logger.warn('Firebase Admin initialization failed. Ensure GOOGLE_APPLICATION_CREDENTIALS is set.');
+  }
+}
+
 export const requireAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // MOCK: Firebase is removed for now, we just pass a mock user or find the first user
-    let dbUser = await db.user.findFirst();
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized: Missing or invalid token',
+        error: 'UNAUTHORIZED'
+      });
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    const decodedToken = await getAuth().verifyIdToken(idToken);
     
-    // If no user exists, create a dummy one for testing
+    const { uid, email, name } = decodedToken;
+
+    // Find or create the user in local DB
+    let dbUser = await db.user.findUnique({ where: { firebaseUid: uid } });
+    
     if (!dbUser) {
       dbUser = await db.user.create({
         data: {
-          firebaseUid: 'mock-uid-' + Date.now(),
-          email: 'mock@example.com',
-          name: 'Mock User',
+          firebaseUid: uid,
+          email: email || '',
+          name: name || null,
         }
       });
-      logger.info({ userId: dbUser.id }, 'Created mock user for development');
+      logger.info({ userId: dbUser.id }, 'Created local user for authenticated Firebase user');
     }
 
     if (dbUser.status === 'INACTIVE') {
@@ -32,13 +57,46 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
     
     next();
   } catch (error: any) {
-    logger.warn({ error: error.message }, 'Mock auth failed');
+    logger.warn({ error: error.message }, 'Firebase auth failed');
     
-    return res.status(500).json({
+    return res.status(401).json({
       success: false,
-      message: 'Internal server error during mock auth',
+      message: 'Unauthorized: Invalid token',
       error: 'AUTH_ERROR'
     });
+  }
+};
+
+export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next();
+    }
+
+    const idToken = authHeader.split('Bearer ')[1];
+    const decodedToken = await getAuth().verifyIdToken(idToken);
+    
+    const { uid, email, name } = decodedToken;
+
+    let dbUser = await db.user.findUnique({ where: { firebaseUid: uid } });
+    if (!dbUser) {
+      dbUser = await db.user.create({
+        data: {
+          firebaseUid: uid,
+          email: email || '',
+          name: name || null,
+        }
+      });
+      logger.info({ userId: dbUser.id }, 'Created local user for authenticated Firebase user (optionalAuth)');
+    }
+
+    if (dbUser.status !== 'INACTIVE') {
+      req.dbUser = dbUser;
+    }
+    next();
+  } catch (error: any) {
+    next(); // Ignore errors and proceed as unauthenticated
   }
 };
 

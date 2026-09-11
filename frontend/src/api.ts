@@ -34,6 +34,7 @@ async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
 
 export const AnalyticsAPI = {
   getOverview: () => fetchWithAuth('/analytics/overview'),
+  getMovieAnalytics: (id: string) => fetchWithAuth(`/analytics/movies/${id}`),
   getSentimentOverTime: (groupBy: 'day'|'week'|'month' = 'month', movieId?: string) => {
     const query = new URLSearchParams({ groupBy });
     if (movieId) query.append('movieId', movieId);
@@ -42,7 +43,6 @@ export const AnalyticsAPI = {
   getSentimentAnomalies: (groupBy: 'day'|'week'|'month' = 'month', threshold = 2.0) => {
     return fetchWithAuth(`/analytics/sentiment-anomalies?groupBy=${groupBy}&threshold=${threshold}`);
   },
-  getMovieAnalytics: (movieId: string) => fetchWithAuth(`/analytics/movies/${movieId}`),
   getMovieAspects: (movieId: string) => fetchWithAuth(`/analytics/movies/${movieId}/aspects`)
 };
 
@@ -56,11 +56,38 @@ export const SentimentAPI = {
 export const MovieAPI = {
   searchMovies: (query: string, page = 1) => fetchWithAuth(`/movies?title=${encodeURIComponent(query)}&page=${page}&limit=20`),
   getMovie: (id: string) => fetchWithAuth(`/movies/${id}`),
-  getMovieReviews: (id: string, page = 1) => fetchWithAuth(`/movies/${id}/reviews?page=${page}&limit=20`)
+  getMovieReviews: (id: string, page = 1) => fetchWithAuth(`/movies/${id}/reviews?page=${page}&limit=20`),
+  syncMovie: (movieData: any) => fetchWithAuth(`/movies/sync`, { method: 'POST', body: JSON.stringify(movieData) }),
+  addReview: (id: string, reviewText: string, rating: number) => fetchWithAuth(`/movies/${id}/reviews`, { method: 'POST', body: JSON.stringify({ reviewText, rating }) }),
+  updateReview: (movieId: string, reviewId: string, reviewText: string, rating: number) => fetchWithAuth(`/movies/${movieId}/reviews/${reviewId}`, { method: 'PUT', body: JSON.stringify({ reviewText, rating }) }),
+  deleteReview: (movieId: string, reviewId: string) => fetchWithAuth(`/movies/${movieId}/reviews/${reviewId}`, { method: 'DELETE' })
+};
+
+export const ReviewAPI = {
+  getAllReviews: (params?: { page?: number; limit?: number; movieTitle?: string; sentiment?: string; myReviews?: boolean }) => {
+    const query = new URLSearchParams();
+    if (params?.page) query.append('page', params.page.toString());
+    if (params?.limit) query.append('limit', params.limit.toString());
+    if (params?.movieTitle) query.append('movieTitle', params.movieTitle);
+    if (params?.sentiment) query.append('sentiment', params.sentiment);
+    if (params?.myReviews) query.append('myReviews', 'true');
+    return fetchWithAuth(`/reviews?${query.toString()}`);
+  }
 };
 
 export const IngestionAPI = {
   startImdbIngestion: (maxRecords = 1000) => 
     fetchWithAuth('/ingestion/imdb', { method: 'POST', body: JSON.stringify({ maxRecords }) }),
   getJobStatus: (jobId: string) => fetchWithAuth(`/ingestion/${jobId}`)
+};
+
+export const ListAPI = {
+  getLists: () => fetchWithAuth('/lists'),
+  createList: (name: string, description?: string) => 
+    fetchWithAuth('/lists', { method: 'POST', body: JSON.stringify({ name, description }) }),
+  getList: (id: string) => fetchWithAuth(`/lists/${id}`),
+  addMovieToList: (listId: string, movieId: string) => 
+    fetchWithAuth(`/lists/${listId}/movies`, { method: 'POST', body: JSON.stringify({ movieId }) }),
+  removeMovieFromList: (listId: string, movieId: string) => 
+    fetchWithAuth(`/lists/${listId}/movies/${movieId}`, { method: 'DELETE' })
 };
