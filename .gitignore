@@ -25,3 +25,8 @@ npm-debug.log*
 # IDEs
 .vscode/
 .idea/
+# Python
+venv/
+__pycache__/
+*.pyc
+chroma_db/
