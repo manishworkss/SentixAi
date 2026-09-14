@@ -6,6 +6,7 @@ import { Star, MessageSquare, Loader2, Activity, Bookmark, Edit2, Trash2, X } fr
 import { useAuth } from '../contexts/AuthContext';
 import { MovieAPI, AnalyticsAPI, ListAPI } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactPlayer from 'react-player';
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -256,6 +257,37 @@ export function MovieDetail() {
             <p className="text-lg leading-relaxed text-white/80 mb-8 max-w-3xl mx-auto md:mx-0">
               {movie.overview}
             </p>
+
+            {/* Trailer Section */}
+            {movie.videos?.results && movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer') && (
+              <div className="mb-12 max-w-3xl mx-auto md:mx-0">
+                <a 
+                  href={`https://www.youtube.com/watch?v=${movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group relative block w-full aspect-video rounded-2xl overflow-hidden border border-sentix-border shadow-2xl bg-black cursor-pointer transition-transform hover:scale-[1.02]"
+                >
+                  <img 
+                    src={`https://img.youtube.com/vi/${movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')?.key}/maxresdefault.jpg`}
+                    onError={(e) => {
+                      // Fallback to hqdefault if maxresdefault doesn't exist
+                      (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')?.key}/hqdefault.jpg`;
+                    }}
+                    alt="Trailer Thumbnail"
+                    className="w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity"
+                  />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
+                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(220,38,38,0.6)] group-hover:scale-110 transition-transform">
+                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl font-bold text-white text-center drop-shadow-md">Watch Trailer on YouTube</h3>
+                    <p className="text-sm text-gray-300 mt-2 text-center drop-shadow-md">Opens in a new tab</p>
+                  </div>
+                </a>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               {/* Traditional Rating */}
