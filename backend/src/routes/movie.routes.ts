@@ -39,6 +39,48 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ─── GET /api/movies/semantic-search ──────────────────────────────────────
+router.get('/semantic-search', async (req, res) => {
+  try {
+    const query = req.query.q as string;
+    if (!query) {
+      return res.status(400).json({ success: false, message: 'Query parameter q is required' });
+    }
+
+    // Call Python ML service to get semantic search results
+    const response = await fetch('http://127.0.0.1:8000/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, n_results: 5 })
+    });
+
+    if (!response.ok) {
+      throw new Error(`ML Service responded with ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    // The ML service returns ids (which we stored as movie ids).
+    // Let's fetch the full movie details from the DB.
+    if (!data.results || !data.results.ids || data.results.ids[0].length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const movieIds = data.results.ids[0];
+    const movies = await db.movie.findMany({
+      where: { id: { in: movieIds } }
+    });
+
+    // Sort movies in the order they were returned by ChromaDB
+    movies.sort((a, b) => movieIds.indexOf(a.id) - movieIds.indexOf(b.id));
+
+    res.json({ success: true, data: movies });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to perform semantic search');
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
 // ─── GET /api/movies/:id ──────────────────────────────────────────────
 router.get('/:id', async (req, res) => {
   try {
@@ -85,6 +127,25 @@ router.post('/sync', async (req, res) => {
           metadata: { overview }
         }
       });
+      
+      // Send to Vector DB for Semantic Search
+      if (overview) {
+        try {
+          await fetch('http://127.0.0.1:8000/movies', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: movie.id,
+              title: movie.title,
+              text: overview,
+              metadata: { tmdbId: movie.tmdbId }
+            })
+          });
+          logger.info(`Synced movie ${movie.title} to Vector DB`);
+        } catch (e: any) {
+          logger.error(`Failed to sync movie to Vector DB: ${e.message}`);
+        }
+      }
     }
 
     res.json({ success: true, data: movie });

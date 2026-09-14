@@ -4,7 +4,7 @@ import { TransformersProvider } from './TransformersProvider';
 
 export class SentimentService {
   private provider = TransformersProvider.getInstance();
-  private readonly providerName = 'local-distilbert';
+  private readonly providerName = 'python-ml-service';
 
   private isProcessing = false;
 
