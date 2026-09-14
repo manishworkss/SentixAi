@@ -443,15 +443,15 @@ function LoginLayout() {
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-[900px] bg-white rounded-[24px] shadow-2xl overflow-hidden z-10 relative flex flex-col md:flex-row"
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.6, type: "spring", bounce: 0.4 }}
+        className="w-full max-w-[900px] bg-black/40 backdrop-blur-3xl border border-white/10 rounded-[32px] shadow-[0_0_80px_rgba(0,194,255,0.15)] overflow-hidden z-10 relative flex flex-col md:flex-row"
       >
         {/* Left Side (Dark Panel) */}
-        <div className="w-full md:w-[45%] bg-[#1E1F26] p-10 flex flex-col relative overflow-hidden">
+        <div className="w-full md:w-[45%] p-10 flex flex-col relative overflow-hidden bg-gradient-to-br from-blue-900/20 to-cyan-900/20 border-r border-white/5">
           {/* subtle background pattern in dark panel */}
-          <div className="absolute inset-0 opacity-[0.03]">
+          <div className="absolute inset-0 opacity-[0.05] mix-blend-overlay">
              <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
                <defs>
                  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -463,37 +463,39 @@ function LoginLayout() {
           </div>
           
           <div className="relative z-10 flex-1 flex flex-col">
-            <Link to="/" className="flex flex-col items-center mb-12 mt-4">
-              <div className="w-24 h-24 mb-4 rounded-full bg-blue-900/30 border border-blue-500/30 flex items-center justify-center relative overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.3)]">
-                 <Clapperboard className="text-blue-400 w-12 h-12 absolute z-10" />
-                 <Network className="text-cyan-400 w-16 h-16 absolute opacity-50 rotate-45" />
+            <Link to="/" className="flex flex-col items-center mb-12 mt-4 hover:scale-105 transition-transform">
+              <div className="w-24 h-24 mb-4 rounded-3xl bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden shadow-[0_0_30px_rgba(59,130,246,0.3)] backdrop-blur-xl">
+                 <Clapperboard className="text-cyan-400 w-12 h-12 absolute z-10 drop-shadow-[0_0_15px_rgba(34,211,238,0.8)]" />
+                 <Network className="text-blue-500 w-16 h-16 absolute opacity-30 rotate-45" />
               </div>
-              <span className="text-4xl font-black tracking-tighter text-white">
-                Sentix<span className="text-[#00C2FF] font-black">[Ai]</span>
+              <span className="text-4xl font-black tracking-tighter text-white drop-shadow-md">
+                Sentix<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500 font-black">[Ai]</span>
               </span>
-              <span className="text-[10px] font-bold tracking-widest text-gray-400 mt-2 text-center uppercase">
-                AI-Powered Movie Reviews & Recommendations
+              <span className="text-[9px] font-bold tracking-[0.3em] text-cyan-200/70 mt-3 text-center uppercase">
+                AI-Powered Movie Recommendations
               </span>
             </Link>
 
             <div className="mt-auto mb-10">
-              <h2 className="text-3xl font-bold text-white mb-4">
+              <h2 className="text-3xl font-bold text-white mb-4 tracking-tight drop-shadow-sm">
                 {isSignUp ? "Join SentixAI" : "Welcome Back"}
               </h2>
-              <p className="text-gray-300 text-sm leading-relaxed mb-8">
+              <p className="text-gray-300/80 text-sm leading-relaxed mb-8">
                 {isSignUp 
-                  ? "Unlock the full potential of your studio's data with our advanced movie intelligence platform."
-                  : "Access your centralized movie intelligence platform. Streamline your reviews and analytics with SentixAI."}
+                  ? "Unlock mood-based semantic search and personalized movie recommendations."
+                  : "Access your centralized movie intelligence platform. Discover your next favorite film."}
               </p>
               
               <ul className="space-y-4">
                 {[
-                  isSignUp ? "Real-Time Sentiment Analysis" : "Track Real-Time Audience Sentiments",
-                  isSignUp ? "Predictive Audience Metrics" : "Review Automated Breakdowns",
-                  isSignUp ? "Centralized Studio Dashboard" : "Generate Predictive Reports"
+                  isSignUp ? "Semantic Mood Search" : "Track Real-Time Audience Sentiments",
+                  isSignUp ? "AI Personalized Recommendations" : "Review Automated Breakdowns",
+                  isSignUp ? "Create Custom Watchlists" : "Generate Predictive Reports"
                 ].map((feature, idx) => (
-                  <li key={idx} className="flex items-center text-sm font-medium text-gray-200">
-                    <Check className="w-5 h-5 text-blue-400 mr-3 shrink-0" />
+                  <li key={idx} className="flex items-center text-sm font-medium text-gray-200/90">
+                    <div className="w-6 h-6 rounded-full bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center mr-3 shrink-0">
+                      <Check className="w-3.5 h-3.5 text-cyan-400" />
+                    </div>
                     {feature}
                   </li>
                 ))}
@@ -503,30 +505,34 @@ function LoginLayout() {
         </div>
 
         {/* Right Side (Form Panel) */}
-        <div className="w-full md:w-[55%] p-10 lg:p-12 flex flex-col justify-center bg-[#F9FAFB]">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            {otpStep ? "Verify Email" : (isSignUp ? "Create Your Account" : "Sign In to Your Account")}
+        <div className="w-full md:w-[55%] p-10 lg:p-12 flex flex-col justify-center bg-black/20 relative">
+          {/* Subtle glow behind form */}
+          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 blur-[80px] pointer-events-none rounded-full" />
+          
+          <h2 className="text-3xl font-bold text-white mb-6 tracking-tight">
+            {otpStep ? "Verify Email" : (isSignUp ? "Create Account" : "Sign In")}
           </h2>
 
           {location.state?.message && !otpStep && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-lg">
+            <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm font-medium rounded-xl flex items-center">
+              <LogOut className="w-4 h-4 mr-2 shrink-0" />
               {location.state.message}
-            </div>
+            </motion.div>
           )}
           {error && (
-            <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm font-medium rounded-lg">
+            <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="mb-6 p-4 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm font-medium rounded-xl">
               {error}
-            </div>
+            </motion.div>
           )}
           {success && (
-            <div className="mb-6 p-3 bg-green-50 border border-green-200 text-green-600 text-sm font-medium rounded-lg">
+            <motion.div initial={{opacity:0, y:-10}} animate={{opacity:1, y:0}} className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-medium rounded-xl">
               {success}
-            </div>
+            </motion.div>
           )}
 
           {otpStep ? (
-            <div className="space-y-6">
-              <p className="text-sm text-gray-600 mb-2">We sent a code to <span className="font-semibold">{email}</span></p>
+            <motion.div initial={{opacity:0, x:20}} animate={{opacity:1, x:0}} className="space-y-6 relative z-10">
+              <p className="text-sm text-gray-400 mb-2">We sent a code to <span className="font-semibold text-white">{email}</span></p>
               <div className="flex gap-2 justify-between" onPaste={handleOtpPaste}>
                 {otpDigits.map((digit, index) => (
                   <input
@@ -538,7 +544,7 @@ function LoginLayout() {
                     value={digit}
                     onChange={(e) => handleOtpChange(index, e.target.value)}
                     onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                    className="w-12 h-14 text-center text-xl font-bold bg-white border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-900"
+                    className="w-12 h-14 text-center text-xl font-bold bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-white placeholder-gray-600"
                     autoFocus={index === 0}
                   />
                 ))}
@@ -547,7 +553,7 @@ function LoginLayout() {
                 type="button"
                 onClick={verifyOtp}
                 disabled={isLoading || otpDigits.join('').length !== 6}
-                className="w-full py-3.5 px-4 rounded-xl font-bold text-white bg-[#0F172A] hover:bg-gray-800 transition-colors disabled:opacity-50"
+                className="w-full py-4 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(6,182,212,0.3)] hover:shadow-[0_0_30px_rgba(6,182,212,0.5)]"
               >
                 {isLoading ? 'Verifying...' : 'Verify & Create Account'}
               </button>
@@ -555,45 +561,45 @@ function LoginLayout() {
                 {resendCooldown > 0 ? (
                   <span className="text-gray-500">Resend code in {resendCooldown}s</span>
                 ) : (
-                  <button type="button" onClick={sendOtp} disabled={isLoading} className="text-blue-600 hover:text-blue-800 transition-colors">
+                  <button type="button" onClick={sendOtp} disabled={isLoading} className="text-cyan-400 hover:text-cyan-300 transition-colors">
                     Didn't receive the code? Resend
                   </button>
                 )}
               </div>
-              <button onClick={handleBackFromOtp} className="w-full text-center text-sm font-medium text-gray-500 hover:text-gray-900 mt-2">
+              <button onClick={handleBackFromOtp} className="w-full text-center text-sm font-medium text-gray-500 hover:text-white mt-2 transition-colors">
                 Back to signup
               </button>
-            </div>
+            </motion.div>
           ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <motion.form initial={{opacity:0}} animate={{opacity:1}} onSubmit={handleSubmit} className="space-y-5 relative z-10">
               {isSignUp && (
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-1.5">Full Name</label>
+                <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height:'auto'}}>
+                  <label className="block text-sm font-bold text-gray-300 mb-1.5">Full Name</label>
                   <input
                     type="text"
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-900 placeholder-gray-400"
+                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-white placeholder-gray-500 backdrop-blur-sm"
                     placeholder="John Doe"
                   />
-                </div>
+                </motion.div>
               )}
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1.5">Email Address</label>
+                <label className="block text-sm font-bold text-gray-300 mb-1.5">Email Address</label>
                 <input
                   type="email"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-900 placeholder-gray-400"
+                  className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-white placeholder-gray-500 backdrop-blur-sm"
                   placeholder="name@company.com"
                 />
               </div>
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="block text-sm font-bold text-gray-700">Password</label>
-                  <a href="#" className="text-xs font-bold text-gray-600 hover:text-gray-900 transition-colors">
+                  <label className="block text-sm font-bold text-gray-300">Password</label>
+                  <a href="#" className="text-xs font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
                     Forgot Password?
                   </a>
                 </div>
@@ -603,32 +609,32 @@ function LoginLayout() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all text-gray-900 placeholder-gray-400 pr-12"
+                    className="w-full px-4 py-3.5 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all text-white placeholder-gray-500 pr-12 backdrop-blur-sm"
                     placeholder="Enter your password"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600"
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-cyan-400 transition-colors"
                   >
-                    {showPassword ? <Eye size={20} /> : <Eye size={20} className="opacity-50" />}
+                    {showPassword ? <Eye size={20} /> : <Eye size={20} className="opacity-70" />}
                   </button>
                 </div>
               </div>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full mt-2 py-3.5 px-4 rounded-xl font-bold text-white bg-[#0F172A] hover:bg-gray-800 transition-colors disabled:opacity-50 shadow-md"
+                className="w-full mt-4 py-4 px-4 rounded-xl font-bold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(6,182,212,0.2)] hover:shadow-[0_0_30px_rgba(6,182,212,0.4)]"
               >
                 {isLoading ? 'Processing...' : (isSignUp ? "Sign Up" : "Sign In")}
               </button>
 
               <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
+                  <div className="w-full border-t border-white/10"></div>
                 </div>
                 <div className="relative flex justify-center text-sm font-bold">
-                  <span className="px-4 bg-[#F9FAFB] text-gray-400 uppercase tracking-widest text-[10px]">
+                  <span className="px-4 bg-[#0B0C10] text-gray-500 uppercase tracking-widest text-[10px] rounded-full">
                     or continue with
                   </span>
                 </div>
@@ -638,21 +644,21 @@ function LoginLayout() {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={isLoading}
-                className="w-full flex justify-center items-center py-3.5 px-4 bg-white border border-gray-300 rounded-xl font-bold text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 shadow-sm"
+                className="w-full flex justify-center items-center py-4 px-4 bg-white/5 border border-white/10 hover:bg-white/10 rounded-xl font-bold text-white transition-all disabled:opacity-50 backdrop-blur-sm group"
               >
-                <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
                 </svg>
-                Google
+                Sign in with Google
               </button>
 
-              <p className="mt-8 text-center text-sm font-medium text-gray-600">
+              <p className="mt-8 text-center text-sm font-medium text-gray-400">
                 {isSignUp ? "Already have an account? " : "Don't have an account? "}
-                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="font-bold text-gray-900 hover:underline transition-all">
+                <button type="button" onClick={() => setIsSignUp(!isSignUp)} className="font-bold text-cyan-400 hover:text-cyan-300 transition-colors">
                   {isSignUp ? "Sign in" : "Create one now"}
                 </button>
               </p>
-            </form>
+            </motion.form>
           )}
         </div>
       </motion.div>
