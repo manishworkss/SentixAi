@@ -328,6 +328,18 @@ export const tmdb = {
     }
   },
 
+  getMovieReviews: async (id: number): Promise<any[]> => {
+    if (!TMDB_API_KEY) return [];
+    try {
+      const res = await fetch(`${BASE_URL}/movie/${id}/reviews?api_key=${TMDB_API_KEY}&language=en-US`);
+      if (!res.ok) throw new Error('TMDB fetch failed');
+      const data = await res.json();
+      return data.results || [];
+    } catch (e) {
+      return [];
+    }
+  },
+
   searchMovies: async (query: string, page: number = 1): Promise<TMDBMovie[]> => {
     if (!TMDB_API_KEY) {
       const results = FALLBACK_MOVIES.filter(m => m.title.toLowerCase().includes(query.toLowerCase()));

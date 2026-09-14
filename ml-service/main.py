@@ -18,6 +18,9 @@ embedder = SentenceTransformer('all-MiniLM-L6-v2')
 logger.info("Loading Sentiment pipeline...")
 sentiment_analyzer = pipeline("sentiment-analysis", model="distilbert-base-uncased-finetuned-sst-2-english")
 
+logger.info("Loading Zero-Shot Aspect pipeline...")
+aspect_analyzer = pipeline("zero-shot-classification", model="typeform/distilbert-base-uncased-mnli")
+
 logger.info("Initializing ChromaDB...")
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 collection = chroma_client.get_or_create_collection(name="movies")
@@ -27,6 +30,10 @@ class EmbedRequest(BaseModel):
 
 class SentimentRequest(BaseModel):
     texts: List[str]
+
+class AspectRequest(BaseModel):
+    texts: List[str]
+    labels: List[str]
 
 class MovieInsertRequest(BaseModel):
     id: str
@@ -54,6 +61,14 @@ def get_embeddings(req: EmbedRequest):
 def get_sentiment(req: SentimentRequest):
     try:
         results = sentiment_analyzer(req.texts)
+        return {"results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/aspects")
+def get_aspects(req: AspectRequest):
+    try:
+        results = aspect_analyzer(req.texts, req.labels, multi_label=True)
         return {"results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

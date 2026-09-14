@@ -197,6 +197,90 @@ router.post('/:id/reviews', requireAuth, async (req, res) => {
   }
 });
 
+// ─── POST /api/movies/:id/reviews/bulk ──────────────────────────────────────
+router.post('/:id/reviews/bulk', async (req, res) => {
+  try {
+    const movieId = req.params.id as string;
+    const { reviews } = req.body;
+    
+    // Attempt to get user if auth header provided, but don't require it
+    // Wait, since we removed requireAuth, req.dbUser won't be set by middleware. We can just leave userId as null for TMDB reviews.
+    const userId = null;
+
+    const movie = await db.movie.findUnique({ where: { id: movieId } });
+    if (!movie) return res.status(404).json({ success: false, message: 'Movie not found' });
+
+    if (!reviews || !Array.isArray(reviews)) {
+      return res.status(400).json({ success: false, message: 'Invalid reviews data' });
+    }
+
+    const inserted = [];
+    for (const r of reviews) {
+      const existing = await db.review.findFirst({
+        where: { movieId, reviewText: r.content.substring(0, 500) }
+      });
+
+      if (!existing) {
+        // Create or find the TMDB user
+        let reviewAuthorId = null;
+        if (r.author) {
+          const sanitizedName = r.author.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'anonymous';
+          const uid = r.author_details?.username ? `tmdb_user_${r.author_details.username}` : `tmdb_${r.id}`;
+          const fakeEmail = `${sanitizedName}_${uid.substring(uid.length - 6)}@tmdb.local`;
+          
+          try {
+            // Find by name first
+            let authorUser = await db.user.findFirst({ where: { name: r.author } });
+            
+            if (!authorUser) {
+              // Try to create, ignoring if another concurrent request just created it
+              authorUser = await db.user.create({
+                data: {
+                  name: r.author,
+                  email: fakeEmail,
+                  firebaseUid: uid,
+                }
+              });
+            }
+            reviewAuthorId = authorUser.id;
+          } catch (e: any) {
+            // If unique constraint failed (likely concurrent request in React strict mode), find the user again
+            if (e.code === 'P2002') {
+              const existingUser = await db.user.findUnique({ where: { firebaseUid: uid } });
+              if (existingUser) reviewAuthorId = existingUser.id;
+            } else {
+              logger.error(`Error creating TMDB user: ${e.message}`);
+            }
+          }
+        }
+
+        const rating = r.author_details?.rating || 8; 
+        const newReview = await db.review.create({
+          data: {
+            movieId,
+            userId: reviewAuthorId, 
+            reviewText: r.content.substring(0, 2000), 
+            rating,
+            reviewDate: new Date(r.created_at)
+          }
+        });
+        inserted.push(newReview);
+      }
+    }
+
+    // Trigger sentiment analysis for the new reviews
+    if (inserted.length > 0) {
+      const { SentimentService } = require('../services/ai/SentimentService');
+      new SentimentService().startBackgroundProcessing();
+    }
+
+    res.json({ success: true, count: inserted.length });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to bulk insert reviews');
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
 // ─── GET /api/movies/:id/reviews ──────────────────────────────────────
 router.get('/:id/reviews', async (req, res) => {
   try {
@@ -233,7 +317,8 @@ router.get('/:id/reviews', async (req, res) => {
       where,
       include: {
         user: { select: { name: true, email: true, firebaseUid: true } },
-        sentiments: { take: 1, orderBy: { analyzedAt: 'desc' } }
+        sentiments: { take: 1, orderBy: { analyzedAt: 'desc' } },
+        aspectSentiments: { include: { aspect: true } }
       },
       orderBy: { reviewDate: 'desc' },
       skip,
@@ -242,10 +327,34 @@ router.get('/:id/reviews', async (req, res) => {
 
     const total = await db.review.count({ where });
 
+    // Aggregate aspect stats
+    const aspectStatsData = await db.aspectSentiment.findMany({
+      where: { review: { movieId: movie.id } },
+      include: { aspect: true, review: { select: { rating: true } } }
+    });
+
+    const aspectCounts: Record<string, { count: number, totalRating: number, reviewCountWithRating: number }> = {};
+    for (const as of aspectStatsData) {
+      const name = as.aspect.name;
+      if (!aspectCounts[name]) aspectCounts[name] = { count: 0, totalRating: 0, reviewCountWithRating: 0 };
+      aspectCounts[name].count++;
+      if (as.review.rating) {
+        aspectCounts[name].totalRating += as.review.rating;
+        aspectCounts[name].reviewCountWithRating++;
+      }
+    }
+
+    const aspects = Object.entries(aspectCounts).map(([name, data]) => ({
+      name,
+      count: data.count,
+      averageRating: data.reviewCountWithRating > 0 ? (data.totalRating / data.reviewCountWithRating).toFixed(1) : null
+    })).sort((a, b) => b.count - a.count);
+
     res.json({
       success: true,
       data: {
         reviews,
+        aspects,
         pagination: {
           total,
           page,

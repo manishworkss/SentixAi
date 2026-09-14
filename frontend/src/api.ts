@@ -59,6 +59,7 @@ export const MovieAPI = {
   getMovie: (id: string) => fetchWithAuth(`/movies/${id}`),
   getMovieReviews: (id: string, page = 1) => fetchWithAuth(`/movies/${id}/reviews?page=${page}&limit=20`),
   syncMovie: (movieData: any) => fetchWithAuth(`/movies/sync`, { method: 'POST', body: JSON.stringify(movieData) }),
+  bulkAddReviews: (id: string, reviews: any[]) => fetchWithAuth(`/movies/${id}/reviews/bulk`, { method: 'POST', body: JSON.stringify({ reviews }) }),
   addReview: (id: string, reviewText: string, rating: number) => fetchWithAuth(`/movies/${id}/reviews`, { method: 'POST', body: JSON.stringify({ reviewText, rating }) }),
   updateReview: (movieId: string, reviewId: string, reviewText: string, rating: number) => fetchWithAuth(`/movies/${movieId}/reviews/${reviewId}`, { method: 'PUT', body: JSON.stringify({ reviewText, rating }) }),
   deleteReview: (movieId: string, reviewId: string) => fetchWithAuth(`/movies/${movieId}/reviews/${reviewId}`, { method: 'DELETE' })

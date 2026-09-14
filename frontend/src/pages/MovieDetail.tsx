@@ -37,10 +37,15 @@ export function MovieDetail() {
   // Edit Review State
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
-  // List Modal State
+  // Lists State
   const [showListModal, setShowListModal] = useState(false);
-  const [userLists, setUserLists] = useState<any[]>([]);
+  const [lists, setLists] = useState<any[]>([]);
   const [loadingLists, setLoadingLists] = useState(false);
+  const [newListTitle, setNewListTitle] = useState('');
+
+  // Aspects State
+  const [aspects, setAspects] = useState<any[]>([]);
+  const [selectedAspect, setSelectedAspect] = useState<string | null>(null);
 
   const { currentUser } = useAuth();
 
@@ -50,8 +55,26 @@ export function MovieDetail() {
         MovieAPI.getMovieReviews(internalId),
         AnalyticsAPI.getMovieAnalytics(internalId).catch(() => null)
       ]);
-      if (revs && revs.reviews) {
-        setReviews(revs.reviews);
+      if (revs) {
+        let currentReviews = revs.reviews || [];
+        setReviews(currentReviews);
+        setAspects(revs.aspects || []);
+
+        if (currentReviews.length === 0) {
+          try {
+            const tmdbRevs = await tmdb.getMovieReviews(Number(id));
+            if (tmdbRevs && tmdbRevs.length > 0) {
+              await MovieAPI.bulkAddReviews(internalId, tmdbRevs);
+              const freshRevs = await MovieAPI.getMovieReviews(internalId);
+              if (freshRevs) {
+                setReviews(freshRevs.reviews || []);
+                setAspects(freshRevs.aspects || []);
+              }
+            }
+          } catch(e) {
+            console.error("Failed to auto-sync TMDB reviews", e);
+          }
+        }
       }
       if (analytics) {
         setSentimentSummary(analytics);
@@ -113,6 +136,7 @@ export function MovieDetail() {
       // refresh reviews
       const data = await MovieAPI.getMovieReviews(internalMovieId);
       setReviews(data?.reviews || []);
+      setAspects(data?.aspects || []);
     } catch (e: any) {
       setSubmitError(e.message || 'Failed to submit review');
     } finally {
@@ -135,6 +159,7 @@ export function MovieDetail() {
       await MovieAPI.deleteReview(internalMovieId, reviewId);
       const data = await MovieAPI.getMovieReviews(internalMovieId);
       setReviews(data?.reviews || []);
+      setAspects(data?.aspects || []);
     } catch (e: any) {
       alert(e.message || 'Failed to delete review');
     }
@@ -148,8 +173,8 @@ export function MovieDetail() {
     setShowListModal(true);
     setLoadingLists(true);
     try {
-      const lists = await ListAPI.getLists();
-      setUserLists(lists || []);
+      const fetchedLists = await ListAPI.getLists();
+      setLists(fetchedLists || []);
     } catch (e) {
       console.error(e);
     } finally {
@@ -355,62 +380,98 @@ export function MovieDetail() {
               </div>
             </div>
 
-            <h3 id="reviews-section" className="text-sm font-bold uppercase tracking-widest text-white border-b border-sentix-border pb-2 mb-6 text-center md:text-left">User Reviews</h3>
+            <h3 id="reviews-section" className="text-sm font-bold uppercase tracking-widest text-white border-b border-sentix-border pb-2 mb-6 text-center md:text-left">Top Rated Review</h3>
             
+            {/* Aspect Filters */}
+            {aspects && aspects.length > 0 && (
+              <div className="mb-6 p-5 bg-[#181d23] rounded-2xl border border-sentix-border shadow-md">
+                <h3 className="text-[11px] font-bold text-sentix-text uppercase tracking-widest mb-4">Highlighted Topics</h3>
+                <div className="flex flex-wrap gap-2.5">
+                  <button 
+                    onClick={() => setSelectedAspect(null)}
+                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center h-8 ${!selectedAspect ? 'text-white' : 'text-sentix-text hover:text-white'}`}
+                  >
+                    All Reviews
+                  </button>
+                  {aspects.map(a => (
+                    <button
+                      key={a.name}
+                      onClick={() => setSelectedAspect(a.name === selectedAspect ? null : a.name)}
+                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 h-8 border ${selectedAspect === a.name ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-transparent border-sentix-border text-sentix-text hover:border-sentix-text/40 hover:text-white/90'}`}
+                    >
+                      <span className="uppercase tracking-wide">{a.name} ({a.count})</span>
+                      {a.averageRating && (
+                        <span className="flex items-center gap-1.5 opacity-80">
+                          <span className="text-sentix-border">|</span>
+                          <span className="flex items-center gap-0.5"><Star className="w-2.5 h-2.5 fill-current" /> {a.averageRating}/10</span>
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="space-y-4">
               {reviews.length > 0 ? (
-                reviews.map((r, i) => (
+                (selectedAspect ? reviews.filter((r: any) => r.aspectSentiments?.some((as: any) => as.aspect.name === selectedAspect)) : reviews).map((r: any) => (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    key={r.id || i} 
-                    className="bg-sentix-panel p-6 rounded-2xl border border-sentix-border text-left"
+                    key={r.id} 
+                    className="bg-sentix-panel p-5 rounded-2xl border border-sentix-border/60 hover:border-sentix-border transition-colors group"
                   >
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
-                          {r.user?.name ? r.user.name.charAt(0).toUpperCase() : (r.user?.email ? r.user.email.charAt(0).toUpperCase() : "A")}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 pb-4 border-b border-sentix-border/40">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-sentix-bg border border-sentix-border flex items-center justify-center overflow-hidden shrink-0">
+                          {r.user ? (
+                            <span className="text-sentix-primary font-bold text-lg">{r.user.name.charAt(0).toUpperCase()}</span>
+                          ) : (
+                            <span className="text-sentix-text font-bold text-sm">TMDB</span>
+                          )}
                         </div>
                         <div>
-                          <div className="font-bold text-white">
-                            {r.user?.name || r.user?.email || "Anonymous User"}
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white text-[15px]">{r.user ? r.user.name : 'TMDB User'}</span>
+                            <span className="text-[11px] text-sentix-text font-medium bg-sentix-bg px-2 py-0.5 rounded border border-sentix-border">
+                              {new Date(r.reviewDate || r.createdAt).toLocaleDateString()}
+                            </span>
                           </div>
                           {r.rating && (
-                            <div className="flex items-center text-sentix-green mt-0.5">
+                            <div className="flex items-center text-sentix-green mt-1">
                               {Array.from({ length: 5 }).map((_, idx) => (
-                                <Star key={idx} className={`w-3.5 h-3.5 ${idx < r.rating ? 'fill-current' : 'text-sentix-border'}`} />
+                                <Star key={idx} className={`w-3.5 h-3.5 ${idx < (r.rating / 2) ? 'fill-current' : 'text-sentix-border'}`} />
                               ))}
+                              <span className="text-[10px] font-bold ml-1.5 opacity-80">{r.rating}/10</span>
                             </div>
                           )}
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3 self-end sm:self-auto">
-                        {/* Show AI Sentiment label if processed */}
-                        {r.sentiments && r.sentiments.length > 0 && (
-                          <div className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                            r.sentiments[0].sentiment === 'POSITIVE' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : 
-                            r.sentiments[0].sentiment === 'NEGATIVE' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 
+                      <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+                        {r.aspectSentiments?.map((as: any) => (
+                          <div key={as.id} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                            as.sentiment === 'POSITIVE' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : 
+                            as.sentiment === 'NEGATIVE' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 
                             'bg-amber-400/10 text-amber-400 border border-amber-400/20'
                           }`}>
-                            AI: {r.sentiments[0].sentiment}
+                            {as.aspect.name}
                           </div>
-                        )}
+                        ))}
                         
                         {currentUser && r.user?.firebaseUid === currentUser.uid && (
-                          <div className="flex items-center space-x-1 pl-2 border-l border-sentix-border">
-                            <button onClick={() => handleEditReview(r)} className="text-sentix-text hover:text-white bg-sentix-bg p-1.5 rounded-lg border border-sentix-border transition-colors" title="Edit Review">
-                              <Edit2 className="w-4 h-4" />
+                          <div className="flex items-center space-x-1 pl-2 ml-1 border-l border-sentix-border">
+                            <button onClick={() => handleEditReview(r)} className="text-sentix-text hover:text-white bg-sentix-bg p-1 rounded border border-sentix-border transition-colors" title="Edit">
+                              <Edit2 className="w-3.5 h-3.5" />
                             </button>
-                            <button onClick={() => handleDeleteReview(r.id)} className="text-sentix-text hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/30 bg-sentix-bg p-1.5 rounded-lg border border-sentix-border transition-colors" title="Delete Review">
-                              <Trash2 className="w-4 h-4" />
+                            <button onClick={() => handleDeleteReview(r.id)} className="text-sentix-text hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/30 bg-sentix-bg p-1 rounded border border-sentix-border transition-colors" title="Delete">
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         )}
                       </div>
                     </div>
-                    <p className="text-[15px] leading-relaxed text-white/90 whitespace-pre-wrap">{r.reviewText}</p>
+                    <p className="text-[14px] leading-relaxed text-white/80 whitespace-pre-wrap font-medium">{r.reviewText}</p>
                   </motion.div>
                 ))
               ) : (

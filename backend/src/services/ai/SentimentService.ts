@@ -47,6 +47,9 @@ export class SentimentService {
     try {
       const results = await this.provider.analyzeBatch(texts);
       
+      const aspectLabels = ["Action", "Romance", "Horror", "Comedy", "Sci-Fi", "Drama", "Story", "Acting", "Visuals", "Music"];
+      const aspectResults = await this.provider.analyzeAspects(texts, aspectLabels);
+      
       // 3. Database Insertion Prep
       const insertData = results.map((result, index) => ({
         reviewId: pendingReviews[index].id,
@@ -62,9 +65,49 @@ export class SentimentService {
         data: insertData,
         skipDuplicates: true
       });
+
+      // 4. Aspect Insertion
+      for (let i = 0; i < pendingReviews.length; i++) {
+        const review = pendingReviews[i];
+        const overallScore = insertData[i].score;
+        const aspectOutput = aspectResults[i];
+        
+        if (aspectOutput && aspectOutput.labels) {
+          for (let j = 0; j < aspectOutput.labels.length; j++) {
+            const label = aspectOutput.labels[j];
+            const score = aspectOutput.scores[j];
+            
+            if (score > 0.6) {
+              // Ensure aspect exists
+              const aspect = await db.aspect.upsert({
+                where: { name: label },
+                update: {},
+                create: { name: label }
+              });
+
+              // Insert AspectSentiment
+              await db.aspectSentiment.upsert({
+                where: {
+                  reviewId_aspectId: {
+                    reviewId: review.id,
+                    aspectId: aspect.id
+                  }
+                },
+                update: {},
+                create: {
+                  reviewId: review.id,
+                  aspectId: aspect.id,
+                  sentiment: overallScore >= 0 ? 'POSITIVE' : 'NEGATIVE',
+                  score: overallScore
+                }
+              });
+            }
+          }
+        }
+      }
       
       successCount = insertData.length;
-      logger.info(`Successfully processed and saved ${successCount} sentiment analyses.`);
+      logger.info(`Successfully processed and saved ${successCount} sentiment analyses and aspects.`);
 
     } catch (error: any) {
       logger.error({ error: error.message }, 'Failed to process sentiment batch');
