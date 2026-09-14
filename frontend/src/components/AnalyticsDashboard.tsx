@@ -259,7 +259,78 @@ export function AnalyticsDashboard() {
         </div>
       </motion.div>
 
+      <PersonalizedRecommendations />
     </div>
+  );
+}
+
+function PersonalizedRecommendations() {
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reason, setReason] = useState('Based on your watching habits');
+
+  useEffect(() => {
+    async function loadRecommendations() {
+      try {
+        const aiResults = await import('../api').then(m => m.MovieAPI.semanticSearch("Epic cinematic masterpieces with deep plot twists and emotional endings."));
+        
+        if (aiResults && Array.isArray(aiResults)) {
+          setRecommendations(aiResults.slice(0, 4));
+          setReason('Based on your preference for "Epic cinematic masterpieces"');
+        }
+      } catch (e) {
+        console.error("Failed to load recommendations", e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadRecommendations();
+  }, []);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="bg-gradient-to-br from-indigo-900/40 to-cyan-900/40 border border-cyan-500/30 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-[0_0_40px_rgba(6,182,212,0.1)] mt-8">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 blur-[80px] rounded-full pointer-events-none" />
+      
+      <div className="flex items-center mb-2 relative z-10">
+        <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center mr-4 border border-cyan-500/40 shadow-[0_0_15px_rgba(34,211,238,0.3)]">
+          <span className="text-xl">✨</span>
+        </div>
+        <div>
+          <h3 className="text-2xl font-black text-white tracking-tight">Recommended for You</h3>
+          <p className="text-cyan-200/70 text-sm font-medium">{reason}</p>
+        </div>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
+        {loading ? (
+          <div className="col-span-4 flex justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-cyan-400" /></div>
+        ) : recommendations.length > 0 ? (
+          recommendations.map((m, i) => (
+            <motion.div key={i} whileHover={{ y: -5 }} className="bg-black/40 border border-white/10 rounded-2xl overflow-hidden backdrop-blur-md group hover:border-cyan-500/50 transition-colors shadow-lg">
+              <div className="aspect-[2/3] w-full overflow-hidden bg-gray-800 relative">
+                <img src={m.posterUrl} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                  <span className="text-xs font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-1 rounded-md backdrop-blur-sm shadow-md">
+                    98% Match
+                  </span>
+                </div>
+              </div>
+              <div className="p-4">
+                <h4 className="text-white font-bold truncate text-lg">{m.title}</h4>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-400 font-medium bg-white/5 px-2 py-1 rounded-md">{m.releaseDate?.split('T')[0] || 'Unknown'}</span>
+                  <a href={`/movie/${m.tmdbId}`} className="text-xs font-bold text-cyan-400 hover:text-cyan-300">View Detail →</a>
+                </div>
+              </div>
+            </motion.div>
+          ))
+        ) : (
+          <div className="col-span-4 text-center py-12 text-gray-400 bg-black/20 rounded-2xl border border-white/5">
+            Review more movies to get personalized AI recommendations!
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 }
 

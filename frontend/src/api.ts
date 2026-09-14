@@ -55,6 +55,7 @@ export const SentimentAPI = {
 
 export const MovieAPI = {
   searchMovies: (query: string, page = 1) => fetchWithAuth(`/movies?title=${encodeURIComponent(query)}&page=${page}&limit=20`),
+  semanticSearch: (query: string) => fetchWithAuth(`/movies/semantic-search?q=${encodeURIComponent(query)}`),
   getMovie: (id: string) => fetchWithAuth(`/movies/${id}`),
   getMovieReviews: (id: string, page = 1) => fetchWithAuth(`/movies/${id}/reviews?page=${page}&limit=20`),
   syncMovie: (movieData: any) => fetchWithAuth(`/movies/sync`, { method: 'POST', body: JSON.stringify(movieData) }),

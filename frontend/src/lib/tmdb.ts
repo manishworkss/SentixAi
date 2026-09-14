@@ -9,6 +9,13 @@ export interface TMDBMovie {
   release_date: string;
   vote_average: number;
   overview: string;
+  videos?: {
+    results: {
+      key: string;
+      site: string;
+      type: string;
+    }[];
+  };
 }
 
 // Fallback data with 10 popular real movies
@@ -313,7 +320,7 @@ export const tmdb = {
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US`);
+      const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US&append_to_response=videos`);
       if (!res.ok) throw new Error('TMDB fetch failed');
       return await res.json();
     } catch (e) {
