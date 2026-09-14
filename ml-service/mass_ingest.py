@@ -6,7 +6,11 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-TMDB_API_KEY = "2e8993eccb4fe608177d39af9a14ed4c"
+from dotenv import load_dotenv
+
+load_dotenv()
+
+TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "")
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 NODE_SYNC_URL = "http://127.0.0.1:3001/api/movies/sync"
 
