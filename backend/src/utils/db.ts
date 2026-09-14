@@ -1,37 +1,28 @@
-import { PrismaClient } from '@prisma/client';
-import { PrismaMariaDb } from '@prisma/adapter-mariadb';
-import { env } from '../config/env';
-import { logger } from './logger';
+import { PrismaClient } from "@prisma/client";
+import { env } from "../config/env";
+import { logger } from "./logger";
 
-// Prevent multiple instances of Prisma Client in development
-// due to hot reloading (which can exhaust database connections)
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
-
-// Initialize Mariadb adapter
-// PrismaMariaDb in v7 accepts the connection string directly
-const adapter = new PrismaMariaDb(env.DATABASE_URL!.replace(/^mysql:\/\//, 'mariadb://'));
 
 export const db =
   globalForPrisma.prisma ||
   new PrismaClient({
-    
     log:
-      env.NODE_ENV === 'development'
-        ? ['query', 'error', 'warn']
-        : ['error'],
+      env.NODE_ENV === "development"
+        ? ["query", "error", "warn"]
+        : ["error"],
   });
 
-if (env.NODE_ENV !== 'production') globalForPrisma.prisma = db;
+if (env.NODE_ENV !== "production") globalForPrisma.prisma = db;
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  logger.info('Disconnecting Prisma Client...');
+process.on("SIGINT", async () => {
+  logger.info("Disconnecting Prisma Client...");
   await db.$disconnect();
   process.exit(0);
 });
 
-process.on('SIGTERM', async () => {
-  logger.info('Disconnecting Prisma Client...');
+process.on("SIGTERM", async () => {
+  logger.info("Disconnecting Prisma Client...");
   await db.$disconnect();
   process.exit(0);
 });
