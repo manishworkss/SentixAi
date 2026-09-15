@@ -29,7 +29,7 @@ export function JournalMovieCard({ movie }: JournalMovieCardProps) {
       className="bg-sentix-panel rounded-xl overflow-hidden shadow-lg border border-sentix-border flex flex-col group mb-6"
     >
       {/* Image / Trailer Section */}
-      <div className="relative aspect-video w-full bg-sentix-bg overflow-hidden shrink-0">
+      <Link to={`/movie/${movie.id}`} className="relative aspect-video w-full bg-sentix-bg overflow-hidden shrink-0 block">
         {imageUrl ? (
           <img 
             src={imageUrl} 
@@ -44,22 +44,24 @@ export function JournalMovieCard({ movie }: JournalMovieCardProps) {
         )}
         
         {/* Overlay & Play Button */}
-        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
+        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center pointer-events-none">
           <button 
             onClick={openTrailer}
-            className="text-white/80 hover:text-white transition-transform hover:scale-110"
+            className="text-white/80 hover:text-white transition-transform hover:scale-110 pointer-events-auto"
             aria-label="Play Trailer"
           >
             <PlayCircle className="w-14 h-14" strokeWidth={1.5} />
           </button>
         </div>
-      </div>
+      </Link>
 
       {/* Content Section */}
       <div className="p-5 flex flex-col flex-1">
-        <h3 className="text-xl font-bold text-white mb-2" title={movie.title}>
-          {movie.title}
-        </h3>
+        <Link to={`/movie/${movie.id}`}>
+          <h3 className="text-xl font-bold text-white mb-2 hover:text-sentix-cyan transition-colors" title={movie.title}>
+            {movie.title}
+          </h3>
+        </Link>
         
         <p className="text-sentix-text text-sm mb-4 leading-relaxed flex-1">
           {movie.overview || "No overview available."}
