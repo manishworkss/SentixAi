@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserAvatar } from '../components/UserAvatar';
 import { StackedPosters } from '../components/StackedPosters';
+import { EditProfileModal } from '../components/EditProfileModal';
+import { ComingSoonModal } from '../components/ComingSoonModal';
 import { Calendar, Film, Heart, List as ListIcon, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { TMDBMovie } from '../lib/tmdb';
@@ -49,6 +51,8 @@ const MOCK_FAVORITES: TMDBMovie[] = [
 export function Dashboard() {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'reviews' | 'lists' | 'watchlist'>('lists');
+  const [showEditProfile, setShowEditProfile] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState({ isOpen: false, title: '' });
 
   // Stats mock
   const stats = {
@@ -75,9 +79,12 @@ export function Dashboard() {
               {currentUser?.email && (
                 <p className="text-sentix-text text-sm mb-2">{currentUser.email}</p>
               )}
-              <a href="#" className="text-sentix-text hover:text-white text-xs uppercase tracking-wider font-bold transition-colors">
+              <button 
+                onClick={() => setShowEditProfile(true)}
+                className="text-sentix-text hover:text-white text-xs uppercase tracking-wider font-bold transition-colors"
+              >
                 Edit Profile
-              </a>
+              </button>
             </div>
           </div>
 
@@ -110,7 +117,12 @@ export function Dashboard() {
         <div className="mt-12">
           <div className="flex items-center justify-between mb-4 border-b border-sentix-border pb-2">
             <h2 className="text-sm font-bold text-sentix-text uppercase tracking-widest">Favorite Films</h2>
-            <a href="#" className="text-[10px] text-sentix-text hover:text-white uppercase tracking-wider font-bold">Edit</a>
+            <button 
+              onClick={() => setShowComingSoon({ isOpen: true, title: 'Edit Favorite Films' })}
+              className="text-[10px] text-sentix-text hover:text-white uppercase tracking-wider font-bold"
+            >
+              Edit
+            </button>
           </div>
           <div className="grid grid-cols-4 gap-2 md:gap-4 max-w-2xl">
             {MOCK_FAVORITES.map((movie) => (
@@ -161,7 +173,10 @@ export function Dashboard() {
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-white tracking-tight">Your Lists</h2>
-              <button className="bg-sentix-green text-sentix-bg px-4 py-2 rounded text-xs font-bold uppercase tracking-wider hover:bg-white transition-colors">
+              <button 
+                onClick={() => setShowComingSoon({ isOpen: true, title: 'Create New List' })}
+                className="bg-sentix-green text-sentix-bg px-4 py-2 rounded text-xs font-bold uppercase tracking-wider hover:bg-white transition-colors"
+              >
                 New List
               </button>
             </div>
@@ -203,6 +218,16 @@ export function Dashboard() {
           </div>
         )}
       </div>
+      <EditProfileModal 
+        isOpen={showEditProfile} 
+        onClose={() => setShowEditProfile(false)} 
+      />
+      
+      <ComingSoonModal 
+        isOpen={showComingSoon.isOpen}
+        onClose={() => setShowComingSoon({ isOpen: false, title: '' })}
+        title={showComingSoon.title}
+      />
     </div>
   );
 }
