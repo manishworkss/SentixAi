@@ -31,7 +31,7 @@ const MOCK_FAVORITES: TMDBMovie[] = [
   {
     id: 680,
     title: "Pulp Fiction",
-    poster_path: "/d5iIlFn5s0ImszYzBPbOYKQxEdY.jpg",
+    poster_path: "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg",
     backdrop_path: "",
     release_date: "1994",
     vote_average: 8.5,
@@ -40,7 +40,7 @@ const MOCK_FAVORITES: TMDBMovie[] = [
   {
     id: 157336,
     title: "Interstellar",
-    poster_path: "/gEU2QlsUUHXjNpeVD85a1NdKAgP.jpg",
+    poster_path: "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
     backdrop_path: "",
     release_date: "2014",
     vote_average: 8.4,
