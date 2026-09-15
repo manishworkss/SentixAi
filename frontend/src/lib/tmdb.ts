@@ -366,5 +366,30 @@ export const tmdb = {
       const start = (page - 1) * 20;
       return results.slice(start, start + 20);
     }
+  },
+
+  getMoviesByYear: async (year: number, page: number = 1): Promise<TMDBMovie[]> => {
+    if (!TMDB_API_KEY) {
+      const results = FALLBACK_MOVIES.filter(m => m.release_date.startsWith(year.toString()));
+      // If we don't have enough fallbacks for a year, just return some fallback movies
+      const fallbackSubset = results.length >= 4 ? results : FALLBACK_MOVIES;
+      const start = (page - 1) * 20;
+      return fallbackSubset.slice(start, start + 20);
+    }
+    
+    try {
+      // primary_release_year gets movies specifically released in that year
+      // sort_by=popularity.desc ensures we get the most popular ones
+      const res = await fetch(`${BASE_URL}/discover/movie?api_key=${TMDB_API_KEY}&language=en-US&primary_release_year=${year}&sort_by=popularity.desc&page=${page}`);
+      if (!res.ok) throw new Error('TMDB fetch failed');
+      const data = await res.json();
+      return data.results;
+    } catch (e) {
+      console.warn("TMDB API Error, using fallback data.");
+      const results = FALLBACK_MOVIES.filter(m => m.release_date.startsWith(year.toString()));
+      const fallbackSubset = results.length >= 4 ? results : FALLBACK_MOVIES;
+      const start = (page - 1) * 20;
+      return fallbackSubset.slice(start, start + 20);
+    }
   }
 };

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { tmdb, TMDB_IMAGE_BASE, TMDB_IMAGE_BASE_ORIGINAL } from '../lib/tmdb';
 import type { TMDBMovie } from '../lib/tmdb';
-import { Star, MessageSquare, Loader2, Activity, Bookmark, Edit2, Trash2, X } from 'lucide-react';
+import { Star, MessageSquare, Loader2, Activity, Bookmark, Edit2, Trash2, X, PlayCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { MovieAPI, AnalyticsAPI, ListAPI } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -290,7 +290,16 @@ export function MovieDetail() {
               <div className="bg-[#2c3440] rounded border border-sentix-border overflow-hidden">
                 <div className="bg-[#404c56] px-3 py-2 text-[10px] font-bold text-[#8c9fb1] uppercase tracking-widest flex justify-between items-center">
                   <span>Where to Watch</span>
-                  <span className="bg-[#14181c] px-2 py-0.5 rounded flex items-center gap-1"><div className="w-1.5 h-1.5 bg-white rounded-full"/> Trailer</span>
+                  <a 
+                    href={movie.videos?.results?.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer') 
+                      ? `https://www.youtube.com/watch?v=${movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key}` 
+                      : `https://www.youtube.com/results?search_query=${encodeURIComponent(movie.title + ' movie trailer')}`}
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="bg-[#14181c] hover:bg-white hover:text-black transition-colors px-2 py-0.5 rounded flex items-center gap-1 cursor-pointer"
+                  >
+                    <div className="w-1.5 h-1.5 bg-current rounded-full"/> Trailer
+                  </a>
                 </div>
                 <div className="p-3">
                   <p className="text-sm text-[#8c9fb1] font-medium">Not streaming.</p>
@@ -330,7 +339,7 @@ export function MovieDetail() {
           </motion.div>
 
           {/* Right Column (Details) */}
-          <motion.div variants={fadeUpVariants} className="flex-1 mt-4 md:mt-10">
+          <motion.div variants={fadeUpVariants} className="flex-1 min-w-0 mt-4 md:mt-10">
             <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-1 tracking-tight">
               {movie.title} <span className="text-[#8c9fb1] font-sans font-medium text-2xl md:text-3xl ml-1">{movie.release_date.split('-')[0]}</span>
             </h1>
@@ -395,15 +404,37 @@ export function MovieDetail() {
               <div className="mb-12">
                 <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
                   <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Trailer</h3>
+                  <a 
+                    href={`https://www.youtube.com/watch?v=${movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
+                    target="_blank"
+                    rel="noopener noreferrer" 
+                    className="text-[10px] font-bold uppercase tracking-widest text-sentix-green hover:text-white transition-colors"
+                  >
+                    Watch on YouTube
+                  </a>
                 </div>
-                <div className="aspect-video w-full rounded-xl overflow-hidden shadow-lg border border-[#2c3440]">
-                  <Player 
-                    url={`https://www.youtube.com/watch?v=${movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
-                    width="100%"
-                    height="100%"
-                    controls
-                  />
-                </div>
+                <a 
+                  href={`https://www.youtube.com/watch?v=${movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="aspect-video w-full rounded-xl overflow-hidden shadow-lg border border-[#2c3440] relative group block cursor-pointer bg-sentix-bg"
+                >
+                  {movie.backdrop_path ? (
+                    <img 
+                      src={movie.backdrop_path.startsWith('http') ? movie.backdrop_path : `${TMDB_IMAGE_BASE_ORIGINAL}${movie.backdrop_path}`}
+                      alt="Trailer backdrop"
+                      className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-[#14181c]" />
+                  )}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <PlayCircle className="w-16 h-16 text-white/80 group-hover:text-white transition-transform group-hover:scale-110 mb-3" strokeWidth={1.5} />
+                    <span className="text-white font-bold tracking-wide shadow-md px-4 py-2 bg-black/40 rounded-full backdrop-blur-sm border border-white/10 group-hover:border-white/30 transition-colors">
+                      Tap here to watch the trailer on YouTube
+                    </span>
+                  </div>
+                </a>
               </div>
             )}
 

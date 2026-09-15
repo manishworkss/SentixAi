@@ -92,8 +92,8 @@ function AppContent() {
         <Route path="/movie/:id" element={<MovieDetail />} />
         
         {/* List Routes */}
-        <Route path="/lists" element={<ProtectedRoute message="Please log in to access your lists."><Lists /></ProtectedRoute>} />
-        <Route path="/lists/:id" element={<ProtectedRoute message="Please log in to access your lists."><ListDetail /></ProtectedRoute>} />
+        <Route path="/lists" element={<Lists />} />
+        <Route path="/lists/:id" element={<ListDetail />} />
       </Route>
       
       {/* Auth Route (No Navbar) */}

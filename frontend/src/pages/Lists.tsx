@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ListAPI } from '../api';
-import { Plus, List as ListIcon, Loader2, X } from 'lucide-react';
+import { tmdb, TMDB_IMAGE_BASE } from '../lib/tmdb';
+import type { TMDBMovie } from '../lib/tmdb';
+import { Plus, List as ListIcon, Loader2, X, Heart, MessageCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,6 +17,78 @@ const itemVariants = {
   show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
 };
 
+// --- MOCK DATA FOR PUBLIC DISCOVERY ---
+const MOCK_FEATURED_LISTS = [
+  { id: 'f1', name: 'Top 500 Narrative Feature Films', creator: 'Official Lists', moviesCount: 500, isOfficial: true },
+  { id: 'f2', name: 'Most Fans on SentixAi', creator: 'Official Lists', moviesCount: 250, isOfficial: true },
+  { id: 'f3', name: 'One Million Watched Club', creator: 'Alexander', moviesCount: 142, isOfficial: false },
+];
+
+const MOCK_POPULAR_LISTS = [
+  { id: 'p1', name: "SentixAi's Top 500 Films", creator: 'Official Lists', moviesCount: 500, likes: '429K', comments: '34K', isOfficial: true },
+  { id: 'p2', name: 'Movies everyone should watch at least once', creator: 'fcbarcelona', moviesCount: 800, likes: '430K', comments: '2K', isOfficial: false },
+  { id: 'p3', name: 'Solidarity Cinema Archive', creator: 'Solidarity Cinema', moviesCount: 10723, likes: '32K', comments: '191', isOfficial: false },
+];
+
+const MOCK_RECENTLY_LIKED = [
+  { id: 'r1', name: 'HOOPTOBER The 13th', creator: 'jakariverj', moviesCount: 31, likes: '4', comments: '1', desc: 'First time joining the Hooptober challenge...' },
+  { id: 'r2', name: 'Chinese', creator: 'George Aron', moviesCount: 85, likes: '1.3K', comments: '7', desc: 'Filling in the gaps of my Chinese cinema knowledge' },
+  { id: 'r3', name: 'Serial Killers', creator: 'Marlonn Locatelli', moviesCount: 22, likes: '51', comments: '0', desc: '' },
+  { id: 'r4', name: 'Bordwell & Thompson\'s Film Art', creator: 'czechjulio', moviesCount: 479, likes: '56', comments: '2', desc: 'All the movies mentioned in Film Art: An Introduction' },
+];
+
+const MOCK_CREW_PICKS = [
+  { id: 'c1', name: 'Hooptober the 13th: The Final Chapter', creator: 'Cinemonster', moviesCount: 36 },
+  { id: 'c2', name: 'Telluride Film Festival 2026', creator: 'filmfestival', moviesCount: 36 },
+  { id: 'c3', name: 'Venice Film Festival 2026', creator: 'filmfestival', moviesCount: 148 },
+  { id: 'c4', name: 'TIFF 2026', creator: 'filmfestival', moviesCount: 217 },
+];
+
+// Reusable Stacked Poster Component
+const StackedPosters = ({ posters }: { posters: string[] }) => {
+  // Ensure we always try to render 5 slots. If not enough posters, just use empty bg.
+  const displayPosters = Array.from({ length: 5 }).map((_, i) => posters[i] || null);
+
+  return (
+    <div className="relative w-full aspect-[2/1] rounded-lg overflow-hidden flex border border-white/10 bg-[#14181c]">
+      {displayPosters.map((poster, index) => {
+        const isCenter = index === 2;
+        return (
+          <div 
+            key={index} 
+            className={`relative h-full ${isCenter ? 'flex-grow z-10 shadow-2xl' : 'w-[15%] z-0'}`}
+            style={{
+              zIndex: isCenter ? 10 : (index < 2 ? index : 4 - index),
+              boxShadow: isCenter ? '0 0 20px rgba(0,0,0,0.8)' : 'none'
+            }}
+          >
+            {poster ? (
+              <img 
+                src={`${TMDB_IMAGE_BASE}${poster}`} 
+                alt="poster" 
+                className="w-full h-full object-cover"
+                style={{
+                  filter: isCenter ? 'none' : 'brightness(0.6)'
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-[#1a2026]" />
+            )}
+            
+            {/* Dark gradient overlays for edge posters to blend them */}
+            {!isCenter && index < 2 && (
+              <div className="absolute inset-0 bg-gradient-to-l from-black/50 to-transparent mix-blend-multiply" />
+            )}
+            {!isCenter && index > 2 && (
+              <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent mix-blend-multiply" />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 export function Lists() {
   const [lists, setLists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +97,11 @@ export function Lists() {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
+  // Mock posters state
+  const [mockPosters, setMockPosters] = useState<string[]>([]);
+  
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
 
   const fetchLists = async () => {
     try {
@@ -31,14 +109,17 @@ export function Lists() {
       setLists(res || []);
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Fetch mock posters for public UI
+    tmdb.getPopularMovies().then(movies => {
+      setMockPosters(movies.map(m => m.poster_path).filter(Boolean) as string[]);
+    });
+
     if (currentUser) {
-      fetchLists();
+      fetchLists().finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
@@ -62,69 +143,215 @@ export function Lists() {
     }
   };
 
+  const handleStartListClick = () => {
+    if (currentUser) {
+      setShowModal(true);
+    } else {
+      navigate('/login?signup=true');
+    }
+  };
+
   if (loading) {
     return <div className="min-h-screen bg-sentix-bg flex items-center justify-center text-sentix-text"><Loader2 className="w-8 h-8 animate-spin" /></div>;
   }
 
+  // Helper to slice mock posters uniquely for different lists
+  const getPostersForList = (startIndex: number) => {
+    if (mockPosters.length === 0) return [];
+    return Array.from({length: 5}).map((_, i) => mockPosters[(startIndex + i) % mockPosters.length]);
+  };
+
   return (
-    <div className="w-full font-sans">
-      <main className="max-w-6xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-8 border-b border-sentix-border pb-4">
-          <div className="flex items-center space-x-3">
-            <ListIcon className="w-6 h-6 text-sentix-text" />
-            <h1 className="text-2xl font-bold text-white uppercase tracking-wider">Your Lists</h1>
-          </div>
+    <div className="w-full font-sans bg-sentix-bg min-h-screen text-sentix-text pb-20">
+      
+      {/* --- HERO SECTION --- */}
+      <section className="bg-[#14181c] border-b border-sentix-border py-12 px-4 relative overflow-hidden">
+        {/* Subtle background glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-full bg-sentix-cyan/5 blur-[100px] rounded-full pointer-events-none" />
+        
+        <div className="max-w-6xl mx-auto text-center relative z-10">
+          <h1 className="text-3xl md:text-5xl font-serif text-white mb-6">
+            Collect, curate, and share. <br className="hidden md:block" />
+            <span className="text-sentix-text">Lists are the perfect way to group films.</span>
+          </h1>
           <button 
-            onClick={() => setShowModal(true)}
-            className="bg-sentix-green text-sentix-bg px-4 py-2 rounded-md font-bold hover:bg-sentix-greenHover transition-colors flex items-center shadow-md"
+            onClick={handleStartListClick}
+            className="bg-sentix-green text-sentix-bg px-6 py-3 rounded-md font-bold hover:bg-sentix-greenHover transition-colors shadow-lg"
           >
-            <Plus className="w-4 h-4 mr-1" /> New List
+            Start your own list
+          </button>
+        </div>
+      </section>
+
+      <main className="max-w-6xl mx-auto px-4 mt-12 space-y-16">
+        
+        {/* --- USER'S LISTS (If Logged In) --- */}
+        {currentUser && (
+          <section>
+            <div className="flex items-center justify-between mb-6 border-b border-sentix-border pb-2">
+              <h2 className="text-sm font-bold text-sentix-text uppercase tracking-widest">Your Lists</h2>
+              <button 
+                onClick={() => setShowModal(true)}
+                className="text-xs text-white hover:text-sentix-green uppercase tracking-wider font-bold transition-colors flex items-center"
+              >
+                <Plus className="w-3 h-3 mr-1" /> New List
+              </button>
+            </div>
+            
+            {lists.length === 0 ? (
+              <div className="bg-[#14181c] p-8 rounded-xl border border-sentix-border text-center">
+                <p className="text-sentix-text mb-4">You haven't created any lists yet.</p>
+                <button onClick={() => setShowModal(true)} className="text-sentix-green hover:text-white font-bold transition-colors">Create one now</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {lists.map(list => (
+                  <Link 
+                    key={list.id}
+                    to={`/lists/${list.id}`} 
+                    className="block group"
+                  >
+                    <div className="bg-[#14181c] border border-sentix-border rounded-xl p-6 h-full hover:border-sentix-green transition-colors">
+                      <h3 className="text-xl font-bold text-white mb-2 group-hover:text-sentix-green transition-colors">{list.name}</h3>
+                      {list.description && <p className="text-sm text-sentix-text line-clamp-2 mb-4">{list.description}</p>}
+                      <div className="mt-4 pt-4 border-t border-sentix-border flex items-center text-xs font-bold text-sentix-cyan uppercase tracking-wider">
+                        {list._count?.movies || 0} Films
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {/* --- FEATURED LISTS --- */}
+        <section>
+          <div className="flex items-center justify-between mb-6 border-b border-sentix-border pb-2">
+            <h2 className="text-sm font-bold text-sentix-text uppercase tracking-widest">Featured Lists</h2>
+            <Link to="#" className="text-xs text-sentix-text hover:text-white uppercase tracking-wider transition-colors">All + Official</Link>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {MOCK_FEATURED_LISTS.map((list, idx) => (
+              <div key={list.id} className="group cursor-pointer">
+                <StackedPosters posters={getPostersForList(idx * 2)} />
+                <div className="mt-3">
+                  <h3 className="text-white font-bold text-lg group-hover:text-sentix-cyan transition-colors">{list.name}</h3>
+                  <div className="flex items-center text-xs mt-1">
+                    <div className={`w-4 h-4 rounded-full mr-2 bg-gradient-to-br ${list.isOfficial ? 'from-sentix-green to-sentix-cyan' : 'from-gray-600 to-gray-800'}`} />
+                    <span className="text-sentix-text mr-1">Created by</span>
+                    <span className="text-white font-bold">{list.creator}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* PROMO BANNER */}
+        <div className="w-full bg-[#1e2329] border border-sentix-border rounded-lg p-6 flex flex-col md:flex-row items-center justify-between shadow-inner">
+          <div className="mb-4 md:mb-0">
+            <h3 className="text-white font-black text-xl md:text-2xl tracking-tight">AD-FREE. QUESTION. AMAZE. AMAZE.</h3>
+            <p className="text-sm text-sentix-text mt-1">Get annual and all-time stats, filtering by your favorite streaming services, watchlist notifications, and more...</p>
+          </div>
+          <button className="bg-sentix-cyan text-sentix-bg font-black uppercase tracking-wider px-6 py-2 rounded shadow-lg hover:bg-white transition-colors shrink-0">
+            Upgrade to Pro
           </button>
         </div>
 
-        {lists.length === 0 ? (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-sentix-panel p-12 rounded-2xl border border-sentix-border text-center shadow-lg"
-          >
-            <ListIcon className="w-12 h-12 text-sentix-border mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-2">No lists yet</h3>
-            <p className="text-sentix-text mb-6">Create your first list to start tracking films.</p>
-            <button 
-              onClick={() => setShowModal(true)}
-              className="bg-sentix-green text-sentix-bg px-6 py-3 rounded-md font-bold hover:bg-sentix-greenHover transition-colors"
-            >
-              Start a List
-            </button>
-          </motion.div>
-        ) : (
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            animate="show"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
-            {lists.map(list => (
-              <motion.div key={list.id} variants={itemVariants}>
-                <Link 
-                  to={`/lists/${list.id}`} 
-                  className="block bg-sentix-panel border border-sentix-border p-6 rounded-2xl hover:border-sentix-green hover:shadow-[0_0_20px_rgba(0,224,84,0.1)] transition-all group h-full"
-                >
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-sentix-green transition-colors">{list.name}</h3>
-                  {list.description && <p className="text-sentix-text text-sm mb-4 line-clamp-2">{list.description}</p>}
-                  <div className="mt-auto pt-4 flex items-center justify-between border-t border-sentix-border/50">
-                    <div className="text-xs font-bold text-sentix-green uppercase tracking-wider">
-                      {list._count?.movies || 0} Films
+        {/* --- POPULAR & CREW PICKS LAYOUT --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          
+          {/* Left Column (Popular & Recently Liked) */}
+          <div className="lg:col-span-2 space-y-16">
+            
+            {/* POPULAR THIS WEEK */}
+            <section>
+              <div className="flex items-center justify-between mb-6 border-b border-sentix-border pb-2">
+                <h2 className="text-sm font-bold text-sentix-text uppercase tracking-widest">Popular This Week</h2>
+                <Link to="#" className="text-xs text-sentix-text hover:text-white uppercase tracking-wider transition-colors">More</Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {MOCK_POPULAR_LISTS.map((list, idx) => (
+                  <div key={list.id} className="group cursor-pointer">
+                    <StackedPosters posters={getPostersForList(idx * 3 + 5)} />
+                    <div className="mt-3">
+                      <h3 className="text-white font-bold text-[15px] leading-snug group-hover:text-sentix-cyan transition-colors">{list.name}</h3>
+                      <div className="flex items-center text-[11px] mt-1 text-sentix-text">
+                        <div className={`w-3 h-3 rounded-full mr-1.5 shrink-0 bg-gradient-to-br ${list.isOfficial ? 'from-sentix-green to-sentix-cyan' : 'from-gray-600 to-gray-800'}`} />
+                        <span className="font-bold text-white mr-2 truncate">{list.creator}</span>
+                        <span className="shrink-0">{list.moviesCount} films</span>
+                        <div className="flex items-center ml-2 shrink-0">
+                          <Heart className="w-3 h-3 mx-1" /> {list.likes}
+                          <MessageCircle className="w-3 h-3 ml-2 mr-1" /> {list.comments}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </Link>
-              </motion.div>
-            ))}
-          </motion.div>
-        )}
+                ))}
+              </div>
+            </section>
+
+            {/* RECENTLY LIKED */}
+            <section>
+              <div className="flex items-center justify-between mb-6 border-b border-sentix-border pb-2">
+                <h2 className="text-sm font-bold text-sentix-text uppercase tracking-widest">Recently Liked</h2>
+              </div>
+              <div className="space-y-6">
+                {MOCK_RECENTLY_LIKED.map((list, idx) => (
+                  <div key={list.id} className="flex gap-4 group cursor-pointer border-b border-white/5 pb-6 last:border-0">
+                    <div className="w-[180px] shrink-0">
+                      <StackedPosters posters={getPostersForList(idx * 4 + 2)} />
+                    </div>
+                    <div className="flex-grow">
+                      <h3 className="text-white font-bold text-lg group-hover:text-sentix-cyan transition-colors">{list.name}</h3>
+                      <div className="flex items-center text-xs mt-1 text-sentix-text mb-2">
+                        <div className="w-4 h-4 rounded-full mr-2 bg-gradient-to-br from-indigo-500 to-purple-500" />
+                        <span className="font-bold text-white mr-2">{list.creator}</span>
+                        <span className="mr-3">{list.moviesCount} films</span>
+                        <div className="flex items-center">
+                          <Heart className="w-3 h-3 mx-1" /> {list.likes}
+                          <MessageCircle className="w-3 h-3 ml-2 mr-1" /> {list.comments}
+                        </div>
+                      </div>
+                      {list.desc && (
+                        <p className="text-sm text-sentix-text">{list.desc}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          {/* Right Column (Crew Picks) */}
+          <div className="lg:col-span-1">
+            <section>
+              <div className="flex items-center justify-between mb-6 border-b border-sentix-border pb-2">
+                <h2 className="text-sm font-bold text-sentix-text uppercase tracking-widest">Crew Picks</h2>
+              </div>
+              <div className="space-y-4">
+                {MOCK_CREW_PICKS.map((list, idx) => (
+                  <div key={list.id} className="group cursor-pointer bg-[#14181c] p-3 rounded-lg border border-sentix-border hover:border-sentix-cyan transition-colors flex flex-col">
+                    <div className="w-full aspect-[3/1] mb-3 opacity-80 group-hover:opacity-100 transition-opacity">
+                      <StackedPosters posters={getPostersForList(idx * 5 + 7)} />
+                    </div>
+                    <h3 className="text-white font-bold text-sm leading-snug group-hover:text-sentix-cyan transition-colors line-clamp-2">{list.name}</h3>
+                    <div className="flex items-center text-[11px] mt-2 text-sentix-text">
+                      <div className="w-3 h-3 rounded-full mr-1.5 shrink-0 bg-gradient-to-br from-yellow-500 to-orange-500" />
+                      <span className="font-bold text-white mr-2 truncate">{list.creator}</span>
+                      <span className="shrink-0">{list.moviesCount} films</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          </div>
+          
+        </div>
       </main>
 
+      {/* --- CREATE LIST MODAL --- */}
       <AnimatePresence>
         {showModal && (
           <motion.div 

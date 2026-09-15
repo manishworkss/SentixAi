@@ -15,7 +15,7 @@ export function Navbar() {
   ];
 
   return (
-    <header className="bg-sentix-panel border-b border-sentix-border sticky top-0 z-50 shadow-md">
+    <header className="bg-sentix-bg sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-2">
           <img src="/logo.png" alt="SentixAI Logo" className="h-10 object-contain drop-shadow-lg" />
