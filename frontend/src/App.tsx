@@ -23,9 +23,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useSearchParams, useL
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Home } from './pages/Home';
 import { MovieDetail } from './pages/MovieDetail';
-import { AnalyticsDashboard } from './components/AnalyticsDashboard';
-import { MoviesExplorer } from './components/MoviesExplorer';
-import { MovieAnalytics } from './components/MovieAnalytics';
+import { Dashboard } from './pages/Dashboard';
 import { Lists } from './pages/Lists';
 import { ListDetail } from './pages/ListDetail';
 import { Films } from './pages/Films';
@@ -94,13 +92,13 @@ function AppContent() {
         {/* List Routes */}
         <Route path="/lists" element={<Lists />} />
         <Route path="/lists/:id" element={<ListDetail />} />
+        
+        {/* Dashboard / Profile Routes */}
+        <Route path="/dashboard" element={<ProtectedRoute message="Please log in to view your profile."><Dashboard /></ProtectedRoute>} />
       </Route>
       
       {/* Auth Route (No Navbar) */}
       <Route path="/login" element={!currentUser ? <LoginLayout /> : <Navigate to={location.state?.from || "/"} replace />} />
-      
-      {/* Admin / Dashboard Route (Sidebar) */}
-      <Route path="/dashboard" element={<ProtectedRoute><AdminRoute /></ProtectedRoute>} />
     </Routes>
   );
 }
@@ -127,11 +125,7 @@ function ProtectedRoute({ children, message = "Please log in to access this page
   return <>{children}</>;
 }
 
-function AdminRoute() {
-  const { logout } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  return <DashboardShell activeTab={activeTab} setActiveTab={setActiveTab} onLogout={logout} />;
-}
+
 
 function Logo({ variant = 'large', theme = 'light' }: { variant?: 'large' | 'small', theme?: 'light' | 'dark' }) {
   const isLarge = variant === 'large';
@@ -665,84 +659,5 @@ function LoginLayout() {
     </div>
   );
 }
-
-
-function DashboardShell({ activeTab, setActiveTab, onLogout }: { activeTab: string, setActiveTab: (tab: string) => void, onLogout: () => void }) {
-  const { currentUser } = useAuth();
-  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
-  const [selectedMovie, setSelectedMovie] = useState<string | null>(null);
-
-  return (
-    <div className={`flex h-screen ${Theme.bgApp}`}>
-      {/* Sidebar */}
-      <div className={`w-72 flex flex-col ${Theme.bgCard} border-r ${Theme.border} z-10 shrink-0`}>
-        <div className={`h-24 flex flex-col justify-center px-8 border-b ${Theme.borderLight}`}>
-          <Logo variant="small" theme="light" />
-        </div>
-
-        <div className="flex-1 overflow-y-auto py-6">
-          <div className="px-6 mb-3">
-            <span className="text-xs uppercase tracking-wider font-semibold text-slate-400">Main Menu</span>
-          </div>
-          <nav className="px-4 space-y-1">
-            <button
-              onClick={() => { setActiveTab('dashboard'); setSelectedMovie(null); }}
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === 'dashboard' ? `${Theme.primary} ${Theme.textInverse} shadow-md` : `${Theme.textSecondary} hover:bg-slate-50 hover:${Theme.textPrimary}`}`}
-            >
-              <BarChart3 className="mr-3 h-[18px] w-[18px]" />
-              Analytics
-            </button>
-            <button
-              onClick={() => { setActiveTab('movies'); setSelectedMovie(null); }}
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${activeTab === 'movies' ? `${Theme.primary} ${Theme.textInverse} shadow-md` : `${Theme.textSecondary} hover:bg-slate-50 hover:${Theme.textPrimary}`}`}
-            >
-              <Film className="mr-3 h-[18px] w-[18px]" />
-              Movies
-            </button>
-
-            <button
-              className={`w-full flex items-center px-4 py-3 text-sm font-medium rounded-xl transition-all duration-200 ${Theme.textSecondary} hover:bg-white/50 hover:${Theme.textPrimary}`}
-            >
-              <FileText className="mr-3 h-[18px] w-[18px]" />
-              Projects
-            </button>
-          </nav>
-        </div>
-
-        <div className="p-4 border-t border-slate-200">
-          <button className={`w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all ${Theme.textSecondary} hover:bg-white/50 hover:${Theme.textPrimary}`}>
-            <Settings className="mr-3 h-[18px] w-[18px]" />
-            Settings
-          </button>
-          <button
-            onClick={onLogout}
-            className="w-full mt-1 flex items-center px-4 py-2.5 text-sm font-medium rounded-xl transition-all text-red-500 hover:bg-red-50"
-          >
-            <LogOut className="mr-3 h-[18px] w-[18px]" />
-            Log out
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
-        
-        {/* Top Bar (Optional if we want standard header for legacy views, but new views have their own headers) */}
-
-        {/* Content Area */}
-        <main className="flex-1 overflow-y-auto">
-          {activeTab === 'dashboard' && <AnalyticsDashboard />}
-          {activeTab === 'movies' && !selectedMovie && <MoviesExplorer onSelectMovie={setSelectedMovie} />}
-          {activeTab === 'movies' && selectedMovie && <MovieAnalytics movieId={selectedMovie} onBack={() => setSelectedMovie(null)} />}
-
-
-        </main>
-      </div>
-    </div>
-  );
-}
-
-
-
 
 
