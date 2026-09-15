@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import { Router } from 'express';
 import { db } from '../utils/db';
 import { logger } from '../utils/logger';

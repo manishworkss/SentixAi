@@ -1,9 +1,10 @@
 import { db } from '../../utils/db';
 import { logger } from '../../utils/logger';
 import { TransformersProvider } from './TransformersProvider';
+import { SentimentProvider } from './SentimentProvider';
 
 export class SentimentService {
-  private provider = TransformersProvider.getInstance();
+  private provider: SentimentProvider = TransformersProvider.getInstance();
   private readonly providerName = 'python-ml-service';
 
   private isProcessing = false;
@@ -48,7 +49,9 @@ export class SentimentService {
       const results = await this.provider.analyzeBatch(texts);
       
       const aspectLabels = ["Action", "Romance", "Horror", "Comedy", "Sci-Fi", "Drama", "Story", "Acting", "Visuals", "Music"];
-      const aspectResults = await this.provider.analyzeAspects(texts, aspectLabels);
+      const aspectResults = this.provider.analyzeAspects 
+        ? await this.provider.analyzeAspects(texts, aspectLabels)
+        : [];
       
       // 3. Database Insertion Prep
       const insertData = results.map((result, index) => ({
@@ -136,7 +139,7 @@ export class SentimentService {
     logger.info('Starting background sentiment analysis...');
     
     // Run asynchronously
-    setImmediate(async () => {
+    setTimeout(async () => {
       try {
         let isRunning = true;
         while (isRunning) {

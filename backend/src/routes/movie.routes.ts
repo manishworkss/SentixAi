@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import { Router } from 'express';
 import { db } from '../utils/db';
 import { logger } from '../utils/logger';
@@ -277,6 +278,54 @@ router.post('/:id/reviews/bulk', async (req, res) => {
     res.json({ success: true, count: inserted.length });
   } catch (error: any) {
     logger.error({ error: error.message }, 'Failed to bulk insert reviews');
+    res.status(500).json({ success: false, message: 'Internal Server Error' });
+  }
+});
+
+// ─── GET /api/movies/:id/ratings-distribution ──────────────────────────────────────
+router.get('/:id/ratings-distribution', async (req, res) => {
+  try {
+    const movieId = req.params.id as string;
+    
+    const movie = await db.movie.findUnique({ where: { id: movieId } });
+    if (!movie) {
+      return res.status(404).json({ success: false, message: 'Movie not found' });
+    }
+
+    const reviews = await db.review.findMany({
+      where: { movieId, rating: { not: null } },
+      select: {
+        rating: true,
+        user: {
+          select: {
+            id: true,
+            name: true
+          }
+        }
+      }
+    });
+
+    const distribution: Record<number, { count: number, users: { id: string, name: string }[] }> = {};
+    for (let i = 1; i <= 10; i++) {
+      distribution[i] = { count: 0, users: [] };
+    }
+
+    reviews.forEach(r => {
+      const rating = r.rating as number;
+      if (rating >= 1 && rating <= 10) {
+        distribution[rating].count += 1;
+        if (r.user && r.user.name) {
+          // only add up to 20 users per bucket for performance
+          if (distribution[rating].users.length < 20) {
+            distribution[rating].users.push({ id: r.user.id, name: r.user.name });
+          }
+        }
+      }
+    });
+
+    res.json({ success: true, data: distribution });
+  } catch (error: any) {
+    logger.error({ error: error.message }, 'Failed to fetch ratings distribution');
     res.status(500).json({ success: false, message: 'Internal Server Error' });
   }
 });

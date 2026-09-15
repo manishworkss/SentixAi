@@ -1,3 +1,4 @@
+/// <reference path="../types/express.d.ts" />
 import { Router } from 'express';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';

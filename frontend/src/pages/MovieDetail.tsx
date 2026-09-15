@@ -7,6 +7,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { MovieAPI, AnalyticsAPI, ListAPI } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactPlayer from 'react-player';
+import { RatingHistogram } from '../components/RatingHistogram';
+
+const Player = ReactPlayer as any;
 
 const fadeUpVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -46,15 +49,27 @@ export function MovieDetail() {
   // Aspects State
   const [aspects, setAspects] = useState<any[]>([]);
   const [selectedAspect, setSelectedAspect] = useState<string | null>(null);
+  
+  // Letterboxd Layout State
+  const [ratingsDistribution, setRatingsDistribution] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<'CAST'|'CREW'|'GENRES'>('CAST');
 
   const { currentUser } = useAuth();
 
   const fetchInternalData = async (internalId: string) => {
     try {
-      const [revs, analytics] = await Promise.all([
+      const [revs, analytics, dist] = await Promise.all([
         MovieAPI.getMovieReviews(internalId),
-        AnalyticsAPI.getMovieAnalytics(internalId).catch(() => null)
+        AnalyticsAPI.getMovieAnalytics(internalId).catch(() => null),
+        MovieAPI.getMovieRatingsDistribution(internalId).catch(() => null)
       ]);
+      
+      if (dist && dist.data) {
+        setRatingsDistribution(dist.data);
+      } else if (dist) {
+        setRatingsDistribution(dist);
+      }
+      
       if (revs) {
         let currentReviews = revs.reviews || [];
         setReviews(currentReviews);
@@ -65,10 +80,16 @@ export function MovieDetail() {
             const tmdbRevs = await tmdb.getMovieReviews(Number(id));
             if (tmdbRevs && tmdbRevs.length > 0) {
               await MovieAPI.bulkAddReviews(internalId, tmdbRevs);
-              const freshRevs = await MovieAPI.getMovieReviews(internalId);
+              const [freshRevs, freshDist] = await Promise.all([
+                MovieAPI.getMovieReviews(internalId),
+                MovieAPI.getMovieRatingsDistribution(internalId).catch(() => null)
+              ]);
               if (freshRevs) {
                 setReviews(freshRevs.reviews || []);
                 setAspects(freshRevs.aspects || []);
+              }
+              if (freshDist) {
+                setRatingsDistribution(freshDist.data || freshDist);
               }
             }
           } catch(e) {
@@ -201,38 +222,49 @@ export function MovieDetail() {
     return <div className="min-h-screen bg-sentix-bg flex items-center justify-center text-white font-bold text-xl">Movie not found.</div>;
   }
 
+
+  // Helper for reviews
+  const sortedReviews = [...reviews];
+  const recentReviews = [...sortedReviews].sort((a, b) => new Date(b.reviewDate || b.createdAt).getTime() - new Date(a.reviewDate || a.createdAt).getTime());
+  const popularReviews = [...sortedReviews].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
+
+  const director = movie.credits?.crew?.find((c: any) => c.job === 'Director');
+  const cast = movie.credits?.cast?.slice(0, 15) || [];
+  const crew = movie.credits?.crew?.slice(0, 15) || [];
+
   return (
-    <div className="w-full font-sans pb-20 overflow-x-hidden">
+    <div className="w-full font-sans pb-20 overflow-x-hidden bg-[#14181c] min-h-screen">
       
-      {/* Backdrop */}
+      {/* Backdrop with Letterboxd style dark fade */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
-        className="w-full h-[50vh] md:h-[60vh] relative"
+        className="w-full h-[50vh] md:h-[60vh] relative flex justify-center"
       >
-        <div className="absolute inset-0 bg-gradient-to-t from-sentix-bg via-sentix-bg/60 to-transparent z-10"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#14181c] via-[#14181c]/80 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#14181c] via-transparent to-[#14181c] z-10" />
         {movie.backdrop_path && (
           <img 
             src={movie.backdrop_path.startsWith('http') ? movie.backdrop_path : `${TMDB_IMAGE_BASE_ORIGINAL}${movie.backdrop_path}`} 
             alt={movie.title}
-            className="w-full h-full object-cover object-top mix-blend-luminosity"
+            className="w-full max-w-[1400px] h-full object-cover object-top opacity-50 mask-image-b"
           />
         )}
       </motion.div>
 
       {/* Content */}
-      <main className="max-w-6xl mx-auto px-4 -mt-32 md:-mt-48 relative z-20">
+      <main className="max-w-5xl mx-auto px-4 -mt-32 md:-mt-64 relative z-20">
         <motion.div 
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="flex flex-col md:flex-row gap-8"
+          className="flex flex-col md:flex-row gap-8 lg:gap-12"
         >
           
-          {/* Poster Column */}
-          <motion.div variants={fadeUpVariants} className="w-48 md:w-64 flex-shrink-0 mx-auto md:mx-0">
-            <div className="rounded-xl overflow-hidden bg-sentix-panel shadow-2xl border border-sentix-border">
+          {/* Left Column (Poster & Actions) */}
+          <motion.div variants={fadeUpVariants} className="w-56 md:w-64 flex-shrink-0 mx-auto md:mx-0">
+            <div className="rounded border border-sentix-border/40 overflow-hidden bg-[#2c3440] shadow-2xl relative group">
               {movie.poster_path ? (
                 <img 
                   src={movie.poster_path.startsWith('http') ? movie.poster_path : `${TMDB_IMAGE_BASE}${movie.poster_path}`} 
@@ -241,247 +273,248 @@ export function MovieDetail() {
                 />
               ) : (
                 <div className="w-full aspect-[2/3] flex items-center justify-center text-center p-4">
-                  <span className="text-white font-semibold">{movie.title}</span>
+                  <span className="text-[#8c9fb1] font-semibold">{movie.title}</span>
                 </div>
               )}
+              {/* Hover overlay similar to Letterboxd */}
+              <div className="absolute inset-0 border-2 border-transparent group-hover:border-sentix-green/50 transition-colors pointer-events-none rounded" />
             </div>
             
-            <div className="mt-6 flex flex-col space-y-3">
-              <button 
-                onClick={() => {
-                  if (!currentUser) {
-                    window.location.href = `/login?returnUrl=/movie/${id}`;
-                    return;
-                  }
-                  setEditingReviewId(null);
-                  setReviewText('');
-                  setRating(0);
-                  setShowReviewModal(true);
-                }}
-                className="w-full bg-sentix-green hover:bg-sentix-greenHover text-sentix-bg py-3.5 rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(0,224,84,0.2)] hover:shadow-[0_0_20px_rgba(0,224,84,0.4)] flex items-center justify-center transform hover:-translate-y-0.5"
-              >
-                <MessageSquare className="w-5 h-5 mr-2" />
-                Write Review
-              </button>
-              <button 
-                onClick={handleOpenListModal}
-                className="w-full bg-sentix-panel hover:bg-sentix-border text-white border border-sentix-border py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center justify-center transform hover:-translate-y-0.5"
-              >
-                <Bookmark className="w-5 h-5 mr-2 text-sentix-text" />
-                Save to List
-              </button>
+            <div className="mt-4 flex items-center justify-center space-x-4 text-[#8c9fb1] text-xs font-bold border-b border-[#2c3440] pb-4">
+              <span className="flex items-center gap-1.5"><Star className="w-3.5 h-3.5 fill-current text-sentix-green" /> {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}</span>
+              <span className="flex items-center gap-1.5"><MessageSquare className="w-3.5 h-3.5" /> {reviews.length}</span>
+              <span className="flex items-center gap-1.5"><Bookmark className="w-3.5 h-3.5" /> Save</span>
+            </div>
+
+            <div className="mt-4 flex flex-col space-y-2">
+              <div className="bg-[#2c3440] rounded border border-sentix-border overflow-hidden">
+                <div className="bg-[#404c56] px-3 py-2 text-[10px] font-bold text-[#8c9fb1] uppercase tracking-widest flex justify-between items-center">
+                  <span>Where to Watch</span>
+                  <span className="bg-[#14181c] px-2 py-0.5 rounded flex items-center gap-1"><div className="w-1.5 h-1.5 bg-white rounded-full"/> Trailer</span>
+                </div>
+                <div className="p-3">
+                  <p className="text-sm text-[#8c9fb1] font-medium">Not streaming.</p>
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-[#404c56]">
+                    <span className="text-xs text-sentix-green cursor-pointer hover:text-white transition-colors">All services...</span>
+                    <span className="text-[10px] text-[#8c9fb1] uppercase tracking-widest">JustWatch</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button 
+                  onClick={() => {
+                    if (!currentUser) {
+                      window.location.href = `/login?returnUrl=/movie/${id}`;
+                      return;
+                    }
+                    setEditingReviewId(null);
+                    setReviewText('');
+                    setRating(0);
+                    setShowReviewModal(true);
+                  }}
+                  className="w-full bg-[#2c3440] hover:bg-sentix-green hover:text-white hover:border-sentix-green text-[#8c9fb1] border border-[#404c56] py-2.5 rounded font-bold transition-all flex flex-col items-center justify-center text-[11px] uppercase tracking-wider"
+                >
+                  <MessageSquare className="w-4 h-4 mb-1" />
+                  Review
+                </button>
+                <button 
+                  onClick={handleOpenListModal}
+                  className="w-full bg-[#2c3440] hover:bg-[#404c56] text-[#8c9fb1] hover:text-white border border-[#404c56] py-2.5 rounded font-bold transition-all flex flex-col items-center justify-center text-[11px] uppercase tracking-wider"
+                >
+                  <Bookmark className="w-4 h-4 mb-1" />
+                  Save
+                </button>
+              </div>
             </div>
           </motion.div>
 
-          {/* Details Column */}
-          <motion.div variants={fadeUpVariants} className="flex-1 mt-4 md:mt-10 text-center md:text-left">
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-2 tracking-tight drop-shadow-md">
-              {movie.title} <span className="text-sentix-text font-normal text-2xl md:text-3xl tracking-normal">{movie.release_date.split('-')[0]}</span>
+          {/* Right Column (Details) */}
+          <motion.div variants={fadeUpVariants} className="flex-1 mt-4 md:mt-10">
+            <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-1 tracking-tight">
+              {movie.title} <span className="text-[#8c9fb1] font-sans font-medium text-2xl md:text-3xl ml-1">{movie.release_date.split('-')[0]}</span>
             </h1>
             
-            <p className="text-lg leading-relaxed text-white/80 mb-8 max-w-3xl mx-auto md:mx-0">
-              {movie.overview}
-            </p>
-
-            {/* Trailer Section */}
-            {movie.videos?.results && movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer') && (
-              <div className="mb-12 max-w-3xl mx-auto md:mx-0">
-                <a 
-                  href={`https://www.youtube.com/watch?v=${movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group relative block w-full aspect-video rounded-2xl overflow-hidden border border-sentix-border shadow-2xl bg-black cursor-pointer transition-transform hover:scale-[1.02]"
-                >
-                  <img 
-                    src={`https://img.youtube.com/vi/${movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')?.key}/maxresdefault.jpg`}
-                    onError={(e) => {
-                      // Fallback to hqdefault if maxresdefault doesn't exist
-                      (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${movie.videos.results.find(v => v.site === 'YouTube' && v.type === 'Trailer')?.key}/hqdefault.jpg`;
-                    }}
-                    alt="Trailer Thumbnail"
-                    className="w-full h-full object-cover opacity-70 group-hover:opacity-50 transition-opacity"
-                  />
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-4">
-                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mb-4 shadow-[0_0_20px_rgba(220,38,38,0.6)] group-hover:scale-110 transition-transform">
-                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                    <h3 className="text-xl font-bold text-white text-center drop-shadow-md">Watch Trailer on YouTube</h3>
-                    <p className="text-sm text-gray-300 mt-2 text-center drop-shadow-md">Opens in a new tab</p>
-                  </div>
-                </a>
-              </div>
+            {director && (
+              <p className="text-[#8c9fb1] text-sm font-bold uppercase tracking-wider mb-6">
+                Directed by <span className="text-white hover:text-sentix-green cursor-pointer transition-colors">{director.name}</span>
+              </p>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-              {/* Traditional Rating */}
-              <div className="bg-sentix-panel p-6 rounded-2xl border border-sentix-border shadow-lg">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-sentix-text mb-4">Audience Rating</h3>
-                <div className="flex items-center justify-center md:justify-start text-white">
-                  <Star className="w-8 h-8 text-yellow-400 mr-3 fill-current" />
-                  <span className="font-black text-4xl tracking-tighter">
-                    {sentimentSummary && sentimentSummary.averageRating > 0 
-                      ? sentimentSummary.averageRating.toFixed(1) 
-                      : movie.vote_average.toFixed(1)}
-                  </span>
-                  <span className="text-sentix-text ml-2 text-xl font-medium">
-                    / {sentimentSummary && sentimentSummary.averageRating > 0 ? '5' : '10'}
-                  </span>
-                </div>
-                <p className="text-xs text-sentix-text mt-3 text-center md:text-left">Based on user star ratings</p>
-              </div>
-
-              {/* SentixAI Sentiment */}
-              <div className="bg-gradient-to-br from-sentix-panel to-sentix-bg p-6 rounded-2xl border border-sentix-cyan/30 relative overflow-hidden shadow-[0_0_20px_rgba(0,180,216,0.1)]">
-                <div className="absolute -right-4 -top-4 opacity-[0.03] text-white pointer-events-none">
-                  <Activity size={120} />
-                </div>
-                <h3 className="text-sm font-bold uppercase tracking-widest text-sentix-cyan mb-4 flex items-center justify-center md:justify-start">
-                  <Activity className="w-4 h-4 mr-2" /> SentixAI Sentiment
-                </h3>
-                
-                {sentimentSummary && (sentimentSummary.positiveCount > 0 || sentimentSummary.negativeCount > 0) ? (
-                  <div>
-                    <div className="flex items-end justify-center md:justify-start space-x-6 mb-4">
-                      <div className="flex items-baseline space-x-1">
-                        <span className="text-3xl font-black text-sentix-green">{sentimentSummary.positivePercentage}%</span>
-                        <span className="text-sm font-bold text-sentix-text uppercase tracking-wider">Pos</span>
-                      </div>
-                      <div className="flex items-baseline space-x-1">
-                        <span className="text-3xl font-black text-rose-500">{sentimentSummary.negativePercentage}%</span>
-                        <span className="text-sm font-bold text-sentix-text uppercase tracking-wider">Neg</span>
-                      </div>
-                    </div>
-                    {/* Sentiment Bar */}
-                    <div className="w-full h-2 rounded-full overflow-hidden flex bg-sentix-border">
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${sentimentSummary.positivePercentage}%` }}
-                        transition={{ duration: 1.5, ease: "easeOut" as const }}
-                        className="bg-sentix-green h-full"
-                      />
-                      <motion.div 
-                        initial={{ width: 0 }}
-                        animate={{ width: `${sentimentSummary.negativePercentage}%` }}
-                        transition={{ duration: 1.5, ease: "easeOut" as const, delay: 0.2 }}
-                        className="bg-rose-500 h-full"
-                      />
-                    </div>
-                    <p className="text-xs text-sentix-text mt-4 font-medium text-center md:text-left">
-                      Based on {sentimentSummary.positiveCount + sentimentSummary.negativeCount} AI-analyzed reviews
-                    </p>
-                  </div>
-                ) : (
-                  <div className="py-4 text-center md:text-left">
-                    <p className="text-sentix-text italic font-medium">Not enough reviews processed by AI yet.</p>
-                  </div>
-                )}
-              </div>
+            <div className="mt-8 mb-8 text-[#8c9fb1] leading-relaxed text-[15px] md:text-[16px] font-medium max-w-3xl">
+              {movie.overview}
             </div>
-
-            <h3 id="reviews-section" className="text-sm font-bold uppercase tracking-widest text-white border-b border-sentix-border pb-2 mb-6 text-center md:text-left">Top Rated Review</h3>
             
-            {/* Aspect Filters */}
-            {aspects && aspects.length > 0 && (
-              <div className="mb-6 p-5 bg-[#181d23] rounded-2xl border border-sentix-border shadow-md">
-                <h3 className="text-[11px] font-bold text-sentix-text uppercase tracking-widest mb-4">Highlighted Topics</h3>
-                <div className="flex flex-wrap gap-2.5">
-                  <button 
-                    onClick={() => setSelectedAspect(null)}
-                    className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center h-8 ${!selectedAspect ? 'text-white' : 'text-sentix-text hover:text-white'}`}
-                  >
-                    All Reviews
-                  </button>
-                  {aspects.map(a => (
-                    <button
-                      key={a.name}
-                      onClick={() => setSelectedAspect(a.name === selectedAspect ? null : a.name)}
-                      className={`px-3.5 py-1.5 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 h-8 border ${selectedAspect === a.name ? 'bg-white/10 border-white/20 text-white shadow-sm' : 'bg-transparent border-sentix-border text-sentix-text hover:border-sentix-text/40 hover:text-white/90'}`}
-                    >
-                      <span className="uppercase tracking-wide">{a.name} ({a.count})</span>
-                      {a.averageRating && (
-                        <span className="flex items-center gap-1.5 opacity-80">
-                          <span className="text-sentix-border">|</span>
-                          <span className="flex items-center gap-0.5"><Star className="w-2.5 h-2.5 fill-current" /> {a.averageRating}/10</span>
-                        </span>
-                      )}
-                    </button>
+            {/* Tabs for Cast, Crew, Genres */}
+            <div className="border-b border-sentix-border/40 mb-4 flex space-x-6 text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">
+              <button onClick={() => setActiveTab('CAST')} className={`pb-2 transition-colors hover:text-white ${activeTab === 'CAST' ? 'text-white border-b-2 border-sentix-green' : ''}`}>Cast</button>
+              <button onClick={() => setActiveTab('CREW')} className={`pb-2 transition-colors hover:text-white ${activeTab === 'CREW' ? 'text-white border-b-2 border-sentix-green' : ''}`}>Crew</button>
+              <button onClick={() => setActiveTab('GENRES')} className={`pb-2 transition-colors hover:text-white ${activeTab === 'GENRES' ? 'text-white border-b-2 border-sentix-green' : ''}`}>Genres</button>
+            </div>
+            
+            <div className="mb-10 min-h-[120px]">
+              {activeTab === 'CAST' && (
+                <div className="flex flex-wrap gap-2">
+                  {cast.map((member: any) => (
+                    <span key={member.id} className="bg-[#2c3440] hover:bg-[#404c56] text-[#8c9fb1] hover:text-white cursor-pointer transition-colors px-2.5 py-1 rounded text-xs font-medium">
+                      {member.name}
+                    </span>
+                  ))}
+                  {movie.credits?.cast && movie.credits.cast.length > 15 && (
+                    <span className="bg-transparent text-[#8c9fb1] hover:text-white cursor-pointer transition-colors px-2.5 py-1 rounded text-xs font-medium border border-[#404c56]">
+                      Show All...
+                    </span>
+                  )}
+                </div>
+              )}
+              {activeTab === 'CREW' && (
+                <div className="flex flex-wrap gap-2">
+                  {crew.map((member: any) => (
+                    <span key={`${member.id}-${member.job}`} className="bg-[#2c3440] hover:bg-[#404c56] text-[#8c9fb1] hover:text-white cursor-pointer transition-colors px-2.5 py-1 rounded text-xs font-medium">
+                      {member.name} <span className="opacity-50">({member.job})</span>
+                    </span>
                   ))}
                 </div>
+              )}
+              {activeTab === 'GENRES' && movie.genres && (
+                <div className="flex flex-wrap gap-2">
+                  {movie.genres.map((genre: any) => (
+                    <span key={genre.id} className="bg-[#2c3440] hover:bg-[#404c56] text-[#8c9fb1] hover:text-white cursor-pointer transition-colors px-2.5 py-1 rounded text-xs font-medium">
+                      {genre.name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Ratings Histogram Component */}
+            <RatingHistogram distribution={ratingsDistribution} averageRating={sentimentSummary?.averageRating || movie.vote_average} />
+
+            {/* Trailer Section */}
+            {movie.videos && movie.videos.results && movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer') && (
+              <div className="mb-12">
+                <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Trailer</h3>
+                </div>
+                <div className="aspect-video w-full rounded-xl overflow-hidden shadow-lg border border-[#2c3440]">
+                  <Player 
+                    url={`https://www.youtube.com/watch?v=${movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
+                    width="100%"
+                    height="100%"
+                    controls
+                  />
+                </div>
               </div>
             )}
 
-            <div className="space-y-4">
-              {reviews.length > 0 ? (
-                (selectedAspect ? reviews.filter((r: any) => r.aspectSentiments?.some((as: any) => as.aspect.name === selectedAspect)) : reviews).map((r: any) => (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    key={r.id} 
-                    className="bg-sentix-panel p-5 rounded-2xl border border-sentix-border/60 hover:border-sentix-border transition-colors group"
-                  >
-                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4 pb-4 border-b border-sentix-border/40">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-sentix-bg border border-sentix-border flex items-center justify-center overflow-hidden shrink-0">
-                          {r.user ? (
-                            <span className="text-sentix-primary font-bold text-lg">{r.user.name.charAt(0).toUpperCase()}</span>
-                          ) : (
-                            <span className="text-sentix-text font-bold text-sm">TMDB</span>
-                          )}
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-white text-[15px]">{r.user ? r.user.name : 'TMDB User'}</span>
-                            <span className="text-[11px] text-sentix-text font-medium bg-sentix-bg px-2 py-0.5 rounded border border-sentix-border">
-                              {new Date(r.reviewDate || r.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          {r.rating && (
-                            <div className="flex items-center text-sentix-green mt-1">
-                              {Array.from({ length: 5 }).map((_, idx) => (
-                                <Star key={idx} className={`w-3.5 h-3.5 ${idx < (r.rating / 2) ? 'fill-current' : 'text-sentix-border'}`} />
-                              ))}
-                              <span className="text-[10px] font-bold ml-1.5 opacity-80">{r.rating}/10</span>
-                            </div>
-                          )}
-                        </div>
+
+            {/* Popular Reviews Section */}
+            <div className="mb-12">
+              <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Popular Reviews</h3>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c9fb1] hover:text-white cursor-pointer">More</span>
+              </div>
+              
+              <div className="space-y-4">
+                {popularReviews.length > 0 ? popularReviews.map((r: any) => (
+                  <div key={r.id} className="py-4 border-b border-[#2c3440] last:border-0 group">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-[#2c3440] flex items-center justify-center overflow-hidden shrink-0">
+                        {r.user ? (
+                          <span className="text-[#8c9fb1] font-bold text-sm">{r.user.name.charAt(0).toUpperCase()}</span>
+                        ) : (
+                          <span className="text-[#8c9fb1] font-bold text-[10px]">TMDB</span>
+                        )}
                       </div>
-                      
-                      <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-                        {r.aspectSentiments?.map((as: any) => (
-                          <div key={as.id} className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                            as.sentiment === 'POSITIVE' ? 'bg-emerald-400/10 text-emerald-400 border border-emerald-400/20' : 
-                            as.sentiment === 'NEGATIVE' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' : 
-                            'bg-amber-400/10 text-amber-400 border border-amber-400/20'
-                          }`}>
-                            {as.aspect.name}
-                          </div>
-                        ))}
-                        
-                        {currentUser && r.user?.firebaseUid === currentUser.uid && (
-                          <div className="flex items-center space-x-1 pl-2 ml-1 border-l border-sentix-border">
-                            <button onClick={() => handleEditReview(r)} className="text-sentix-text hover:text-white bg-sentix-bg p-1 rounded border border-sentix-border transition-colors" title="Edit">
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button onClick={() => handleDeleteReview(r.id)} className="text-sentix-text hover:text-rose-500 hover:bg-rose-500/10 hover:border-rose-500/30 bg-sentix-bg p-1 rounded border border-sentix-border transition-colors" title="Delete">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#8c9fb1] group-hover:text-white transition-colors text-sm">Review by <span className="text-white">{r.user ? r.user.name : 'TMDB User'}</span></span>
+                        {r.rating && (
+                          <div className="flex items-center text-sentix-green">
+                            {Array.from({ length: 5 }).map((_, idx) => (
+                              <Star key={idx} className={`w-3 h-3 ${idx < Math.round(r.rating / 2) ? 'fill-current' : 'text-[#2c3440] fill-transparent'}`} />
+                            ))}
                           </div>
                         )}
                       </div>
                     </div>
-                    <p className="text-[14px] leading-relaxed text-white/80 whitespace-pre-wrap font-medium">{r.reviewText}</p>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="bg-sentix-panel p-10 rounded-2xl border border-sentix-border text-center shadow-md">
-                  <MessageSquare className="w-12 h-12 text-sentix-border mx-auto mb-4" />
-                  <p className="text-white font-bold text-lg">No reviews yet.</p>
-                  <p className="text-sm text-sentix-text mt-1">Be the first to share your thoughts!</p>
-                </div>
-              )}
+                    <p className="text-[14px] leading-relaxed text-[#8c9fb1] group-hover:text-white/90 transition-colors whitespace-pre-wrap font-serif break-words">
+                      {r.reviewText}
+                    </p>
+                  </div>
+                )) : (
+                  <p className="text-sm text-[#8c9fb1]">No popular reviews yet.</p>
+                )}
+              </div>
             </div>
+
+            {/* Recent Reviews Section */}
+            <div className="mb-12">
+              <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
+                <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Recent Reviews</h3>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c9fb1] hover:text-white cursor-pointer">More</span>
+              </div>
+              
+              <div className="space-y-4">
+                {recentReviews.length > 0 ? recentReviews.slice(0, 5).map((r: any) => (
+                  <div key={r.id} className="py-4 border-b border-[#2c3440] last:border-0 group">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-8 h-8 rounded-full bg-[#2c3440] flex items-center justify-center overflow-hidden shrink-0">
+                        {r.user ? (
+                          <span className="text-[#8c9fb1] font-bold text-sm">{r.user.name.charAt(0).toUpperCase()}</span>
+                        ) : (
+                          <span className="text-[#8c9fb1] font-bold text-[10px]">TMDB</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-[#8c9fb1] group-hover:text-white transition-colors text-sm">Review by <span className="text-white">{r.user ? r.user.name : 'TMDB User'}</span></span>
+                        {r.rating && (
+                          <div className="flex items-center text-sentix-green">
+                            {Array.from({ length: 5 }).map((_, idx) => (
+                              <Star key={idx} className={`w-3 h-3 ${idx < Math.round(r.rating / 2) ? 'fill-current' : 'text-[#2c3440] fill-transparent'}`} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-[14px] leading-relaxed text-[#8c9fb1] group-hover:text-white/90 transition-colors whitespace-pre-wrap font-serif break-words">
+                      {r.reviewText}
+                    </p>
+                  </div>
+                )) : (
+                  <p className="text-sm text-[#8c9fb1]">No recent reviews yet.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Similar Films Carousel */}
+            {movie.similar && movie.similar.results && movie.similar.results.length > 0 && (
+              <div className="mb-12">
+                <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
+                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Similar Films</h3>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c9fb1] hover:text-white cursor-pointer">All</span>
+                </div>
+                <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-4 custom-scrollbar">
+                  {movie.similar.results.map((sim: any) => (
+                    <Link to={`/movie/${sim.id}`} key={sim.id} className="w-24 sm:w-28 flex-shrink-0 group">
+                      <div className="rounded border border-sentix-border/40 overflow-hidden bg-[#2c3440] relative">
+                        {sim.poster_path ? (
+                          <img 
+                            src={`${TMDB_IMAGE_BASE}${sim.poster_path}`} 
+                            alt={sim.title}
+                            className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+                          />
+                        ) : (
+                          <div className="w-full aspect-[2/3] flex items-center justify-center text-center p-2">
+                            <span className="text-[#8c9fb1] text-[10px] font-semibold">{sim.title}</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 border-2 border-transparent group-hover:border-sentix-green/50 transition-colors pointer-events-none rounded" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
           </motion.div>
         </motion.div>
@@ -600,14 +633,14 @@ export function MovieDetail() {
               
               {loadingLists ? (
                 <div className="flex justify-center py-8"><Loader2 className="w-8 h-8 animate-spin text-sentix-cyan" /></div>
-              ) : userLists.length === 0 ? (
+              ) : lists.length === 0 ? (
                 <div className="text-center py-8 text-sentix-text bg-sentix-bg rounded-xl border border-sentix-border">
                   <p className="mb-4">You don't have any lists yet.</p>
                   <Link to="/lists" className="text-sentix-green font-bold hover:underline">Create a List</Link>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
-                  {userLists.map(list => (
+                  {lists.map((list: any) => (
                     <button 
                       key={list.id}
                       onClick={() => handleAddToList(list.id)}

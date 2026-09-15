@@ -16,6 +16,14 @@ export interface TMDBMovie {
       type: string;
     }[];
   };
+  credits?: {
+    cast: { id: number; name: string; character: string; profile_path: string | null }[];
+    crew: { id: number; name: string; job: string; profile_path: string | null }[];
+  };
+  similar?: {
+    results: TMDBMovie[];
+  };
+  genres?: { id: number; name: string }[];
 }
 
 // Fallback data with 10 popular real movies
@@ -320,7 +328,7 @@ export const tmdb = {
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US&append_to_response=videos`);
+      const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US&append_to_response=videos,credits,similar`);
       if (!res.ok) throw new Error('TMDB fetch failed');
       return await res.json();
     } catch (e) {

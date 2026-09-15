@@ -16,4 +16,9 @@ export interface SentimentProvider {
    * Useful for providers that support batching (like Transformers).
    */
   analyzeBatch(texts: string[]): Promise<SentimentResult[]>;
+
+  /**
+   * Analyzes aspects in an array of strings given labels.
+   */
+  analyzeAspects?(texts: string[], labels: string[]): Promise<any[]>;
 }
