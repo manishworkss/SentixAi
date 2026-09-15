@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { UserAvatar } from './UserAvatar';
 
 export function Navbar() {
   const { currentUser, logout } = useAuth();
@@ -50,10 +51,13 @@ export function Navbar() {
           
           {currentUser ? (
             <div className="flex items-center space-x-4 ml-6 border-l border-sentix-border pl-6">
-              <Link to="/dashboard" className="text-white hover:text-sentix-cyan transition-colors">
-                {currentUser.displayName || currentUser.email?.split('@')[0]}
+              <Link to="/dashboard" className="flex items-center space-x-2 group">
+                <UserAvatar user={currentUser} size={32} className="group-hover:ring-2 ring-sentix-cyan transition-all" />
+                <span className="text-white group-hover:text-sentix-cyan transition-colors hidden sm:block">
+                  {currentUser.displayName || currentUser.email?.split('@')[0] || currentUser.phoneNumber}
+                </span>
               </Link>
-              <button onClick={logout} className="text-sentix-text hover:text-red-500 transition-colors flex items-center" title="Log Out">
+              <button onClick={logout} className="text-sentix-text hover:text-red-500 transition-colors flex items-center ml-2" title="Log Out">
                 <LogOut className="w-5 h-5" />
               </button>
             </div>
