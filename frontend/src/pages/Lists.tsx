@@ -45,13 +45,13 @@ const MOCK_CREW_PICKS = [
 ];
 
 // Reusable Stacked Poster Component
-const StackedPosters = ({ posters }: { posters: string[] }) => {
+const StackedPosters = ({ movies }: { movies: TMDBMovie[] }) => {
   // Ensure we always try to render 5 slots. If not enough posters, just use empty bg.
-  const displayPosters = Array.from({ length: 5 }).map((_, i) => posters[i] || null);
+  const displayMovies = Array.from({ length: 5 }).map((_, i) => movies[i] || null);
 
   return (
     <div className="relative w-full aspect-[2/1] rounded-lg overflow-hidden flex border border-white/10 bg-[#14181c]">
-      {displayPosters.map((poster, index) => {
+      {displayMovies.map((movie, index) => {
         const isCenter = index === 2;
         return (
           <div 
@@ -62,25 +62,32 @@ const StackedPosters = ({ posters }: { posters: string[] }) => {
               boxShadow: isCenter ? '0 0 20px rgba(0,0,0,0.8)' : 'none'
             }}
           >
-            {poster ? (
-              <img 
-                src={`${TMDB_IMAGE_BASE}${poster}`} 
-                alt="poster" 
-                className="w-full h-full object-cover"
-                style={{
-                  filter: isCenter ? 'none' : 'brightness(0.6)'
-                }}
-              />
+            {movie ? (
+              <Link 
+                to={`/movie/${movie.id}`}
+                onClick={(e) => e.stopPropagation()} 
+                className="block w-full h-full cursor-pointer transition-transform hover:scale-105"
+                title={movie.title}
+              >
+                <img 
+                  src={`${TMDB_IMAGE_BASE}${movie.poster_path}`} 
+                  alt={movie.title} 
+                  className="w-full h-full object-cover"
+                  style={{
+                    filter: isCenter ? 'none' : 'brightness(0.6)'
+                  }}
+                />
+              </Link>
             ) : (
               <div className="w-full h-full bg-[#1a2026]" />
             )}
             
             {/* Dark gradient overlays for edge posters to blend them */}
             {!isCenter && index < 2 && (
-              <div className="absolute inset-0 bg-gradient-to-l from-black/50 to-transparent mix-blend-multiply" />
+              <div className="absolute inset-0 bg-gradient-to-l from-black/50 to-transparent mix-blend-multiply pointer-events-none" />
             )}
             {!isCenter && index > 2 && (
-              <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent mix-blend-multiply" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent mix-blend-multiply pointer-events-none" />
             )}
           </div>
         );
@@ -97,11 +104,9 @@ export function Lists() {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
-  // Mock posters state
-  const [mockPosters, setMockPosters] = useState<string[]>([]);
-  
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  const [mockMovies, setMockMovies] = useState<TMDBMovie[]>([]);
 
   const fetchLists = async () => {
     try {
@@ -113,9 +118,9 @@ export function Lists() {
   };
 
   useEffect(() => {
-    // Fetch mock posters for public UI
+    // Fetch mock movies for public UI
     tmdb.getPopularMovies().then(movies => {
-      setMockPosters(movies.map(m => m.poster_path).filter(Boolean) as string[]);
+      setMockMovies(movies);
     });
 
     if (currentUser) {
@@ -156,9 +161,15 @@ export function Lists() {
   }
 
   // Helper to slice mock posters uniquely for different lists
-  const getPostersForList = (startIndex: number) => {
-    if (mockPosters.length === 0) return [];
-    return Array.from({length: 5}).map((_, i) => mockPosters[(startIndex + i) % mockPosters.length]);
+  const getMoviesForList = (startIndex: number) => {
+    if (mockMovies.length === 0) return [];
+    const len = mockMovies.length;
+    // ensure we don't go out of bounds by wrapping
+    const movies = [];
+    for (let i = 0; i < 5; i++) {
+      movies.push(mockMovies[(startIndex + i) % len]);
+    }
+    return movies;
   };
 
   return (
@@ -233,8 +244,8 @@ export function Lists() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {MOCK_FEATURED_LISTS.map((list, idx) => (
-              <div key={list.id} className="group cursor-pointer">
-                <StackedPosters posters={getPostersForList(idx * 2)} />
+              <div key={list.id} className="group cursor-pointer block">
+                <StackedPosters movies={getMoviesForList(idx * 2)} />
                 <div className="mt-3">
                   <h3 className="text-white font-bold text-lg group-hover:text-sentix-cyan transition-colors">{list.name}</h3>
                   <div className="flex items-center text-xs mt-1">
@@ -273,18 +284,18 @@ export function Lists() {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {MOCK_POPULAR_LISTS.map((list, idx) => (
-                  <div key={list.id} className="group cursor-pointer">
-                    <StackedPosters posters={getPostersForList(idx * 3 + 5)} />
+                  <div key={list.id} className="group cursor-pointer block">
+                    <StackedPosters movies={getMoviesForList(idx * 3 + 5)} />
                     <div className="mt-3">
                       <h3 className="text-white font-bold text-[15px] leading-snug group-hover:text-sentix-cyan transition-colors">{list.name}</h3>
                       <div className="flex items-center text-[11px] mt-1 text-sentix-text">
-                        <div className={`w-3 h-3 rounded-full mr-1.5 shrink-0 bg-gradient-to-br ${list.isOfficial ? 'from-sentix-green to-sentix-cyan' : 'from-gray-600 to-gray-800'}`} />
-                        <span className="font-bold text-white mr-2 truncate">{list.creator}</span>
-                        <span className="shrink-0">{list.moviesCount} films</span>
-                        <div className="flex items-center ml-2 shrink-0">
-                          <Heart className="w-3 h-3 mx-1" /> {list.likes}
-                          <MessageCircle className="w-3 h-3 ml-2 mr-1" /> {list.comments}
-                        </div>
+                        <div className={`w-3.5 h-3.5 rounded-full mr-1.5 bg-gradient-to-br ${list.isOfficial ? 'from-sentix-green to-sentix-cyan' : 'from-gray-600 to-gray-800'}`} />
+                        <span className="mr-1">Created by</span>
+                        <span className="text-white font-bold mr-2">{list.creator}</span>
+                        <Heart className="w-3 h-3 text-sentix-text mr-1" />
+                        <span className="mr-2">{list.likes}</span>
+                        <MessageCircle className="w-3 h-3 text-sentix-text mr-1" />
+                        <span>{list.comments}</span>
                       </div>
                     </div>
                   </div>
@@ -299,20 +310,19 @@ export function Lists() {
               </div>
               <div className="space-y-6">
                 {MOCK_RECENTLY_LIKED.map((list, idx) => (
-                  <div key={list.id} className="flex gap-4 group cursor-pointer border-b border-white/5 pb-6 last:border-0">
+                  <div key={list.id} className="flex gap-4 group cursor-pointer border-b border-white/5 pb-6 last:border-0 block">
                     <div className="w-[180px] shrink-0">
-                      <StackedPosters posters={getPostersForList(idx * 4 + 2)} />
+                      <StackedPosters movies={getMoviesForList(idx * 4 + 2)} />
                     </div>
                     <div className="flex-grow">
                       <h3 className="text-white font-bold text-lg group-hover:text-sentix-cyan transition-colors">{list.name}</h3>
-                      <div className="flex items-center text-xs mt-1 text-sentix-text mb-2">
-                        <div className="w-4 h-4 rounded-full mr-2 bg-gradient-to-br from-indigo-500 to-purple-500" />
-                        <span className="font-bold text-white mr-2">{list.creator}</span>
-                        <span className="mr-3">{list.moviesCount} films</span>
-                        <div className="flex items-center">
-                          <Heart className="w-3 h-3 mx-1" /> {list.likes}
-                          <MessageCircle className="w-3 h-3 ml-2 mr-1" /> {list.comments}
-                        </div>
+                      <div className="flex items-center text-xs mt-1 mb-2 text-sentix-text">
+                        <div className={`w-4 h-4 rounded-full mr-2 bg-gradient-to-br from-gray-600 to-gray-800`} />
+                        <span className="text-white font-bold mr-3">{list.creator}</span>
+                        <Heart className="w-3 h-3 mr-1" />
+                        <span className="mr-3">{list.likes}</span>
+                        <MessageCircle className="w-3 h-3 mr-1" />
+                        <span>{list.comments}</span>
                       </div>
                       {list.desc && (
                         <p className="text-sm text-sentix-text">{list.desc}</p>
@@ -332,15 +342,15 @@ export function Lists() {
               </div>
               <div className="space-y-4">
                 {MOCK_CREW_PICKS.map((list, idx) => (
-                  <div key={list.id} className="group cursor-pointer bg-[#14181c] p-3 rounded-lg border border-sentix-border hover:border-sentix-cyan transition-colors flex flex-col">
+                  <div key={list.id} className="group cursor-pointer bg-[#14181c] p-3 rounded-lg border border-sentix-border hover:border-sentix-cyan transition-colors flex flex-col block">
                     <div className="w-full aspect-[3/1] mb-3 opacity-80 group-hover:opacity-100 transition-opacity">
-                      <StackedPosters posters={getPostersForList(idx * 5 + 7)} />
+                      <StackedPosters movies={getMoviesForList(idx * 5 + 7)} />
                     </div>
                     <h3 className="text-white font-bold text-sm leading-snug group-hover:text-sentix-cyan transition-colors line-clamp-2">{list.name}</h3>
                     <div className="flex items-center text-[11px] mt-2 text-sentix-text">
-                      <div className="w-3 h-3 rounded-full mr-1.5 shrink-0 bg-gradient-to-br from-yellow-500 to-orange-500" />
-                      <span className="font-bold text-white mr-2 truncate">{list.creator}</span>
-                      <span className="shrink-0">{list.moviesCount} films</span>
+                      <div className={`w-3.5 h-3.5 rounded-full mr-1.5 bg-gradient-to-br from-gray-600 to-gray-800`} />
+                      <span className="text-white font-bold mr-2">{list.creator}</span>
+                      <span>{list.moviesCount} films</span>
                     </div>
                   </div>
                 ))}
