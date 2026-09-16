@@ -12,14 +12,45 @@ const containerVariants = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.1
+      staggerChildren: 0.15
     }
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
+const dynamicItemVariants = {
+  hidden: (i: number) => {
+    const directions = [
+      { x: -100, y: -100 }, // top-left
+      { x: 100, y: -100 },  // top-right
+      { x: -100, y: 100 },  // bottom-left
+      { x: 100, y: 100 },   // bottom-right
+      { x: 0, y: 150 },     // bottom
+      { x: 0, y: -150 },    // top
+      { x: 150, y: 0 },     // right
+      { x: -150, y: 0 }     // left
+    ];
+    const dir = directions[i % directions.length];
+    return {
+      opacity: 0,
+      x: dir.x,
+      y: dir.y,
+      scale: 0.5,
+      rotate: i % 3 === 0 ? 15 : i % 2 === 0 ? -15 : 0 // dramatic tilts
+    };
+  },
+  show: { 
+    opacity: 1, 
+    x: 0, 
+    y: 0, 
+    scale: 1, 
+    rotate: 0, 
+    transition: { 
+      type: "spring", 
+      stiffness: 80, 
+      damping: 12,
+      mass: 1.2
+    } 
+  }
 };
 
 export function Home() {
@@ -138,37 +169,7 @@ export function Home() {
 
             </div>
 
-            {/* Bottom Row: Spotlight */}
-            <motion.div
-              initial={{ y: 30, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.8 }}
-              className="mt-16 w-full max-w-[320px]"
-            >
-              <div className="bg-[#1c2228]/80 backdrop-blur-2xl border border-white/10 rounded-3xl p-5 shadow-2xl relative overflow-hidden group">
-                <div className="absolute inset-0 bg-gradient-to-br from-sentix-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <h4 className="text-white font-bold text-[15px] mb-3 relative z-10">Community Spotlight</h4>
-                <p className="text-sentix-text text-[13px] leading-relaxed mb-5 relative z-10">
-                  Real-time review. <span className="text-[#3b82f6]">@manishwrelias</span> inold film owers. She's criastess thoma soout choince..Soavs tamight of the resules...
-                </p>
-                <div className="flex justify-between items-center relative z-10">
-                  <div className="flex items-center space-x-3">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=manish" alt="User" className="w-9 h-9 rounded-full bg-[#14181c] border border-sentix-border" />
-                    <div>
-                      <div className="text-white text-xs font-bold">manishwork</div>
-                      <div className="text-sentix-text text-[10px]">@manishworks</div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-0.5 text-yellow-500">
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <Star className="w-3.5 h-3.5 text-[#404c56]" />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
+
 
           </div>
         </section>
@@ -176,6 +177,71 @@ export function Home() {
 
       {/* Main Content Sections */}
       <main className="max-w-6xl mx-auto px-4 space-y-16 mt-8">
+
+        {/* Community Spotlight (Full Width) */}
+        <section>
+          <div className="flex items-center space-x-2 mb-8 border-b border-sentix-border pb-3">
+            <Star className="w-5 h-5 text-sentix-green" />
+            <h2 className="text-sentix-text uppercase tracking-widest text-sm font-semibold">Community Spotlight</h2>
+          </div>
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+            className="w-full"
+          >
+            <div className="flex space-x-6 overflow-x-auto pb-6 custom-scrollbar snap-x">
+              {[
+                {
+                  id: 1, username: "manishwork", handle: "@manishworks", avatar: "manish", rating: 4, movie: "Dune: Part Two",
+                  review: "An absolute masterpiece. The cinematography in the third act left me completely speechless. A must watch for any sci-fi fan."
+                },
+                {
+                  id: 2, username: "alexreviews", handle: "@alex_films", avatar: "alex", rating: 4, movie: "Oppenheimer",
+                  review: "Solid performances across the board, but the pacing felt a bit sluggish in the middle. Still, the ending tied it all together."
+                },
+                {
+                  id: 3, username: "cinemajunkie", handle: "@cinejunkie99", avatar: "cine", rating: 5, movie: "Spider-Man: Across the Spider-Verse",
+                  review: "I went in with low expectations and was completely blown away. The soundtrack alone is worth the price of admission!"
+                },
+                {
+                  id: 4, username: "sarah_watches", handle: "@sarahwatches", avatar: "sarah", rating: 5, movie: "Past Lives",
+                  review: "A hauntingly beautiful film. The raw emotion conveyed by the lead actors is something I'll be thinking about for weeks."
+                },
+                {
+                  id: 5, username: "horrorfanatic", handle: "@horrorfan", avatar: "horror", rating: 4, movie: "Talk to Me",
+                  review: "Genuinely terrifying. It didn't rely on cheap jump scares, but rather a slow-building dread that sticks with you."
+                },
+                {
+                  id: 6, username: "classic_lover", handle: "@classicfilms", avatar: "classic", rating: 5, movie: "The Thing",
+                  review: "Rewatched this for the 10th time and it still holds up perfectly. The practical effects are unmatched even today."
+                }
+              ].map((spotlight) => (
+                <div key={spotlight.id} className="bg-sentix-panel border border-sentix-border rounded-3xl p-6 shadow-xl relative overflow-hidden group min-w-[320px] w-[320px] md:min-w-[380px] md:w-[380px] shrink-0 snap-start hover:border-sentix-border/80 transition-all">
+                  <div className="absolute inset-0 bg-gradient-to-br from-sentix-green/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="text-sentix-green text-[11px] font-bold uppercase tracking-widest mb-3 relative z-10">{spotlight.movie}</div>
+                  <p className="text-white text-[14px] leading-relaxed mb-6 relative z-10 line-clamp-4 font-serif">
+                    "{spotlight.review}"
+                  </p>
+                  <div className="flex justify-between items-center relative z-10 mt-auto">
+                    <div className="flex items-center space-x-3">
+                      <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${spotlight.avatar}`} alt="User" className="w-10 h-10 rounded-full bg-[#14181c] border border-sentix-border" />
+                      <div>
+                        <div className="text-white text-xs font-bold">{spotlight.username}</div>
+                        <div className="text-sentix-text text-[10px]">{spotlight.handle}</div>
+                      </div>
+                    </div>
+                    <div className="flex space-x-0.5 text-yellow-500">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star key={i} className={`w-3.5 h-3.5 ${i < spotlight.rating ? 'fill-current' : 'text-[#404c56]'}`} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </section>
 
         {/* Popular Films This Week */}
         <section>
@@ -190,8 +256,8 @@ export function Home() {
             animate="show"
             className="columns-1 md:columns-2 lg:columns-4 gap-6 space-y-6"
           >
-            {popularThisWeek.map((movie) => (
-              <motion.div key={movie.id} variants={itemVariants} className="break-inside-avoid">
+            {popularThisWeek.map((movie, index) => (
+              <motion.div key={movie.id} custom={index} variants={dynamicItemVariants} className="break-inside-avoid">
                 <JournalMovieCard movie={movie} />
               </motion.div>
             ))}
@@ -211,8 +277,8 @@ export function Home() {
             animate="show"
             className="columns-1 md:columns-2 lg:columns-4 gap-6 space-y-6"
           >
-            {popular2026.map((movie) => (
-              <motion.div key={movie.id} variants={itemVariants} className="break-inside-avoid">
+            {popular2026.map((movie, index) => (
+              <motion.div key={movie.id} custom={index} variants={dynamicItemVariants} className="break-inside-avoid">
                 <JournalMovieCard movie={movie} />
               </motion.div>
             ))}
@@ -232,8 +298,8 @@ export function Home() {
             animate="show"
             className="columns-1 md:columns-2 lg:columns-4 gap-6 space-y-6"
           >
-            {popular2025.map((movie) => (
-              <motion.div key={movie.id} variants={itemVariants} className="break-inside-avoid">
+            {popular2025.map((movie, index) => (
+              <motion.div key={movie.id} custom={index} variants={dynamicItemVariants} className="break-inside-avoid">
                 <JournalMovieCard movie={movie} />
               </motion.div>
             ))}

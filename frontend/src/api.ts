@@ -58,6 +58,8 @@ export const MovieAPI = {
   semanticSearch: (query: string) => fetchWithAuth(`/movies/semantic-search?q=${encodeURIComponent(query)}`),
   getMovie: (id: string) => fetchWithAuth(`/movies/${id}`),
   getMovieRatingsDistribution: (id: string) => fetchWithAuth(`/movies/${id}/ratings-distribution`),
+  getAiInsights: (id: string) => fetchWithAuth(`/movies/${id}/ai-insights`),
+  analyzeDraft: (text: string) => fetchWithAuth(`/movies/analyze-draft`, { method: 'POST', body: JSON.stringify({ text }) }),
   getMovieReviews: (id: string, page = 1) => fetchWithAuth(`/movies/${id}/reviews?page=${page}&limit=20`),
   syncMovie: (movieData: any) => fetchWithAuth(`/movies/sync`, { method: 'POST', body: JSON.stringify(movieData) }),
   bulkAddReviews: (id: string, reviews: any[]) => fetchWithAuth(`/movies/${id}/reviews/bulk`, { method: 'POST', body: JSON.stringify({ reviews }) }),
@@ -93,4 +95,10 @@ export const ListAPI = {
     fetchWithAuth(`/lists/${listId}/movies`, { method: 'POST', body: JSON.stringify({ movieId }) }),
   removeMovieFromList: (listId: string, movieId: string) => 
     fetchWithAuth(`/lists/${listId}/movies/${movieId}`, { method: 'DELETE' })
+};
+
+export const UserAPI = {
+  getCurrentUser: () => fetchWithAuth('/users/me'),
+  updateUserProfile: (data: { name?: string; gender?: string; phone?: string; email?: string }) => 
+    fetchWithAuth('/users/me', { method: 'PATCH', body: JSON.stringify(data) })
 };

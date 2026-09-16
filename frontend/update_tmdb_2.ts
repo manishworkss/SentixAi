@@ -188,7 +188,7 @@ const newMovies = `
   }
 ];`;
 
-content = content.replace('];\n\nexport const TMDB_IMAGE_BASE', \`,\n\${newMovies}\n\nexport const TMDB_IMAGE_BASE\`);
+content = content.replace('];\n\nexport const TMDB_IMAGE_BASE', `,\n${newMovies}\n\nexport const TMDB_IMAGE_BASE`);
 
 // RegExp replacements to be bulletproof
 content = content.replace(

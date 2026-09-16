@@ -178,7 +178,7 @@ export function Reviews() {
                     <div className="flex items-center space-x-4">
                       {review.movie?.posterUrl ? (
                         <Link to={`/movie/${review.movie.id}`} className="shrink-0">
-                          <img src={review.movie.posterUrl} alt={review.movie.title} className="w-16 h-24 object-cover rounded-lg shadow-md hover:ring-2 hover:ring-sentix-cyan transition-all" loading="lazy" />
+                          <img src={review.movie.posterUrl.startsWith('http') ? review.movie.posterUrl : `https://image.tmdb.org/t/p/w342${review.movie.posterUrl}`} alt={review.movie.title} className="w-16 h-24 object-cover rounded-lg shadow-md hover:ring-2 hover:ring-sentix-cyan transition-all" loading="lazy" />
                         </Link>
                       ) : (
                         <div className="w-16 h-24 bg-sentix-bg border border-sentix-border rounded-lg flex items-center justify-center shrink-0">

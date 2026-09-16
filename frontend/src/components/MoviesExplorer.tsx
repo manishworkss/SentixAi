@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { tmdb, type TMDBMovie } from '../lib/tmdb';
 import { motion } from 'framer-motion';
@@ -11,13 +11,44 @@ const containerVariants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
+    transition: { staggerChildren: 0.15 }
   }
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  show: { opacity: 1, scale: 1, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
+const dynamicItemVariants = {
+  hidden: (i: number) => {
+    const directions = [
+      { x: -100, y: -100 }, // top-left
+      { x: 100, y: -100 },  // top-right
+      { x: -100, y: 100 },  // bottom-left
+      { x: 100, y: 100 },   // bottom-right
+      { x: 0, y: 150 },     // bottom
+      { x: 0, y: -150 },    // top
+      { x: 150, y: 0 },     // right
+      { x: -150, y: 0 }     // left
+    ];
+    const dir = directions[i % directions.length];
+    return {
+      opacity: 0,
+      x: dir.x,
+      y: dir.y,
+      scale: 0.5,
+      rotate: i % 3 === 0 ? 15 : i % 2 === 0 ? -15 : 0 // dramatic tilts
+    };
+  },
+  show: { 
+    opacity: 1, 
+    x: 0, 
+    y: 0, 
+    scale: 1, 
+    rotate: 0, 
+    transition: { 
+      type: "spring", 
+      stiffness: 80, 
+      damping: 12,
+      mass: 1.2
+    } 
+  }
 };
 
 export function MoviesExplorer({ onSelectMovie }: { onSelectMovie?: (id: string) => void }) {
@@ -30,6 +61,8 @@ export function MoviesExplorer({ onSelectMovie }: { onSelectMovie?: (id: string)
   const [hasMore, setHasMore] = useState(true);
   const [isSemantic, setIsSemantic] = useState(false);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [hasClickedLoadMore, setHasClickedLoadMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const fetchMovies = async (searchQuery: string, pageNum: number) => {
     setLoading(true);
@@ -114,16 +147,45 @@ export function MoviesExplorer({ onSelectMovie }: { onSelectMovie?: (id: string)
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       setPage(1);
+      setHasClickedLoadMore(false);
       fetchMovies(query, 1);
     }, 400); // 400ms debounce
     return () => clearTimeout(delayDebounceFn);
   }, [query]);
 
-  const handleLoadMore = () => {
-    if (loading || !hasMore) return;
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchMovies(query, nextPage);
+  // Infinite Scroll Observer
+  useEffect(() => {
+    if (!hasClickedLoadMore || loading || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setLoading(true); // Prevent multiple triggers
+          setTimeout(() => {
+            const nextPage = page + 1;
+            setPage(nextPage);
+            fetchMovies(query, nextPage);
+          }, 1200); // 1.2s delay for the cool animation effect
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (loadMoreRef.current) {
+      observer.observe(loadMoreRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [hasClickedLoadMore, loading, hasMore, page, query, isSemantic]);
+
+  const handleFirstLoadMore = () => {
+    setHasClickedLoadMore(true);
+    setLoading(true);
+    setTimeout(() => {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchMovies(query, nextPage);
+    }, 800); // slight delay on click too
   };
 
   return (
@@ -164,6 +226,7 @@ export function MoviesExplorer({ onSelectMovie }: { onSelectMovie?: (id: string)
             }
             setIsSemantic(!isSemantic); 
             setPage(1); 
+            setHasClickedLoadMore(false);
             fetchMovies(query, 1); 
           }}
           className={`px-4 py-2 rounded-full font-bold text-sm transition-colors border ${isSemantic ? 'bg-sentix-cyan/20 border-sentix-cyan text-sentix-cyan shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-sentix-panel border-sentix-border text-sentix-text hover:text-white hover:border-gray-500'}`}
@@ -225,23 +288,71 @@ export function MoviesExplorer({ onSelectMovie }: { onSelectMovie?: (id: string)
             animate="show"
             className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
           >
-            {movies.map((movie) => (
-              <motion.div key={movie.id} variants={itemVariants}>
+            {movies.map((movie, index) => (
+              <motion.div key={movie.id} custom={index} variants={dynamicItemVariants}>
                 <MovieCard movie={movie} />
               </motion.div>
             ))}
           </motion.div>
           
           {hasMore && movies.length > 0 && (
-            <div className="flex justify-center pt-8">
-              <button 
-                onClick={handleLoadMore}
-                disabled={loading}
-                className="px-8 py-3 bg-sentix-panel border border-sentix-border text-white font-bold rounded-xl shadow-md hover:border-sentix-cyan hover:text-sentix-cyan transition-colors disabled:opacity-50 flex items-center"
-              >
-                {loading && page > 1 ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
-                {loading && page > 1 ? 'Loading...' : 'Load More Movies'}
-              </button>
+            <div className="flex justify-center pt-8 pb-12" ref={loadMoreRef}>
+              {!hasClickedLoadMore ? (
+                <button 
+                  onClick={handleFirstLoadMore}
+                  disabled={loading}
+                  className="px-8 py-3.5 bg-gradient-to-r from-sentix-panel to-[#2c3440] border border-sentix-cyan/40 text-white font-bold rounded-full shadow-[0_0_15px_rgba(34,211,238,0.15)] hover:shadow-[0_0_25px_rgba(34,211,238,0.3)] hover:border-sentix-cyan transition-all disabled:opacity-50 flex items-center group transform hover:scale-105 active:scale-95"
+                >
+                  {loading && page > 1 ? <Loader2 className="w-5 h-5 animate-spin mr-2 text-sentix-cyan" /> : null}
+                  {loading && page > 1 ? 'Loading...' : 'Want more movies? Click here ✨'}
+                </button>
+              ) : (
+                loading && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className="flex flex-col items-center gap-6 my-8"
+                  >
+                    <div className="relative w-24 h-24 flex items-center justify-center">
+                      {/* Outer rotating ring */}
+                      <motion.div 
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                        className="absolute inset-0 rounded-full border-[1.5px] border-dashed border-sentix-cyan/30"
+                      />
+                      {/* Middle counter-rotating ring */}
+                      <motion.div 
+                        animate={{ rotate: -360, scale: [0.9, 1.1, 0.9] }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute inset-2 rounded-full border-2 border-transparent border-t-purple-500/80 border-b-sentix-cyan/80"
+                      />
+                      {/* Inner pulsing core */}
+                      <motion.div 
+                        animate={{ scale: [0.7, 1.3, 0.7], opacity: [0.4, 1, 0.4] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-6 h-6 rounded-full bg-sentix-cyan shadow-[0_0_30px_rgba(34,211,238,1)]"
+                      />
+                      {/* Scanning vertical laser line */}
+                      <motion.div
+                        animate={{ y: [-45, 45, -45] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute w-full h-[2px] bg-sentix-cyan/90 shadow-[0_0_15px_rgba(34,211,238,1)]"
+                      />
+                    </div>
+                    <div className="flex flex-col items-center gap-1">
+                      <motion.span 
+                        animate={{ opacity: [0.3, 1, 0.3] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="text-sentix-cyan font-black tracking-[0.4em] text-[11px] uppercase drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]"
+                      >
+                        Deep Scan Active
+                      </motion.span>
+                      <span className="text-gray-500 text-[9px] uppercase tracking-widest">Retrieving Neural Patterns...</span>
+                    </div>
+                  </motion.div>
+                )
+              )}
             </div>
           )}
         </>

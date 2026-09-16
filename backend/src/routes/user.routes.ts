@@ -17,11 +17,55 @@ router.get('/me', requireAuth, (req, res) => {
     data: {
       id: req.dbUser.id,
       email: req.dbUser.email,
+      phone: req.dbUser.phone,
+      gender: req.dbUser.gender,
       name: req.dbUser.name,
       role: req.dbUser.role,
       status: req.dbUser.status,
     }
   });
+});
+
+// Update Current User
+router.patch('/me', requireAuth, async (req, res) => {
+  if (!req.dbUser) {
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  }
+
+  try {
+    const { name, gender, phone, email } = req.body;
+    
+    // We only update fields that are provided
+    const dataToUpdate: any = {};
+    if (name !== undefined) dataToUpdate.name = name;
+    if (gender !== undefined) dataToUpdate.gender = gender;
+    if (phone !== undefined) dataToUpdate.phone = phone;
+    if (email !== undefined) dataToUpdate.email = email;
+
+    const updatedUser = await db.user.update({
+      where: { id: req.dbUser.id },
+      data: dataToUpdate
+    });
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully',
+      data: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+        gender: updatedUser.gender,
+        name: updatedUser.name,
+        role: updatedUser.role,
+        status: updatedUser.status,
+      }
+    });
+  } catch (error: any) {
+    if (error.code === 'P2002') {
+      return res.status(400).json({ success: false, message: 'Email or phone already in use by another account.' });
+    }
+    res.status(500).json({ success: false, message: 'Failed to update profile' });
+  }
 });
 
 // Step 9: Admin User Management

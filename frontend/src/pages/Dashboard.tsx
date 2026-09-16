@@ -4,7 +4,7 @@ import { UserAvatar } from '../components/UserAvatar';
 import { StackedPosters } from '../components/StackedPosters';
 import { EditProfileModal } from '../components/EditProfileModal';
 import { ComingSoonModal } from '../components/ComingSoonModal';
-import { Calendar, Film, Heart, List as ListIcon, Star } from 'lucide-react';
+import { Calendar, List as ListIcon, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { TMDBMovie } from '../lib/tmdb';
 

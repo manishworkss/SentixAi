@@ -23,7 +23,14 @@ export interface TMDBMovie {
   similar?: {
     results: TMDBMovie[];
   };
+  recommendations?: {
+    results: TMDBMovie[];
+  };
   genres?: { id: number; name: string }[];
+  status?: string;
+  original_language?: string;
+  budget?: number;
+  revenue?: number;
 }
 
 // Fallback data with 10 popular real movies
@@ -328,7 +335,7 @@ export const tmdb = {
     }
 
     try {
-      const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US&append_to_response=videos,credits,similar`);
+      const res = await fetch(`${BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US&append_to_response=videos,credits,similar,recommendations`);
       if (!res.ok) throw new Error('TMDB fetch failed');
       return await res.json();
     } catch (e) {
@@ -390,6 +397,24 @@ export const tmdb = {
       const fallbackSubset = results.length >= 4 ? results : FALLBACK_MOVIES;
       const start = (page - 1) * 20;
       return fallbackSubset.slice(start, start + 20);
+    }
+  },
+
+  getTopRatedMovies: async (page: number = 1): Promise<TMDBMovie[]> => {
+    if (!TMDB_API_KEY) {
+      const start = (page - 1) * 20;
+      return FALLBACK_MOVIES.slice(start, start + 20);
+    }
+    
+    try {
+      const res = await fetch(`${BASE_URL}/movie/top_rated?api_key=${TMDB_API_KEY}&language=en-US&page=${page}`);
+      if (!res.ok) throw new Error('TMDB fetch failed');
+      const data = await res.json();
+      return data.results;
+    } catch (e) {
+      console.warn("TMDB API Error, using fallback data.");
+      const start = (page - 1) * 20;
+      return FALLBACK_MOVIES.slice(start, start + 20);
     }
   }
 };

@@ -8,17 +8,36 @@ import { MovieAPI, AnalyticsAPI, ListAPI } from '../api';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactPlayer from 'react-player';
 import { RatingHistogram } from '../components/RatingHistogram';
+import { AInsightDashboard } from '../components/AInsightDashboard';
 
 const Player = ReactPlayer as any;
 
-const fadeUpVariants = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: "easeOut" as const } }
-};
-
 const staggerContainer = {
   hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.1, delayChildren: 0.2 } }
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.15, delayChildren: 0.1 }
+  }
+};
+
+const fadeUpVariants = {
+  hidden: { opacity: 0, y: 40 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80, damping: 20 } }
+};
+
+const fadeDownVariants = {
+  hidden: { opacity: 0, y: -40 },
+  show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 80, damping: 20 } }
+};
+
+const fadeLeftVariants = {
+  hidden: { opacity: 0, x: -40 },
+  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 80, damping: 20 } }
+};
+
+const fadeRightVariants = {
+  hidden: { opacity: 0, x: 40 },
+  show: { opacity: 1, x: 0, transition: { type: "spring", stiffness: 80, damping: 20 } }
 };
 
 export function MovieDetail() {
@@ -40,9 +59,19 @@ export function MovieDetail() {
   // Edit Review State
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
 
+  // AI Review Assistant State
+  const [draftAnalysis, setDraftAnalysis] = useState<any>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [aiSuggestedRating, setAiSuggestedRating] = useState<number | null>(null);
+
   // Lists State
   const [showListModal, setShowListModal] = useState(false);
   const [lists, setLists] = useState<any[]>([]);
+  const [topMovies, setTopMovies] = useState<TMDBMovie[]>([]);
+
+  useEffect(() => {
+    tmdb.getTopRatedMovies().then(res => setTopMovies(res));
+  }, []);
   const [loadingLists, setLoadingLists] = useState(false);
   const [newListTitle, setNewListTitle] = useState('');
 
@@ -53,6 +82,8 @@ export function MovieDetail() {
   // Letterboxd Layout State
   const [ratingsDistribution, setRatingsDistribution] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'CAST'|'CREW'|'GENRES'>('CAST');
+  const [showAllCast, setShowAllCast] = useState(false);
+  const [showAllCrew, setShowAllCrew] = useState(false);
 
   const { currentUser } = useAuth();
 
@@ -131,6 +162,48 @@ export function MovieDetail() {
       });
     }
   }, [id]);
+
+  // AI Review Assistant Debounce Effect
+  useEffect(() => {
+    if (!showReviewModal || reviewText.trim().length < 15) {
+      setDraftAnalysis(null);
+      setAiSuggestedRating(null);
+      return;
+    }
+    
+    const delayDebounceFn = setTimeout(async () => {
+      setIsAnalyzing(true);
+      try {
+        const result = await MovieAPI.analyzeDraft(reviewText);
+        setDraftAnalysis(result);
+        
+        // Auto-suggest rating based on sentiment score
+        if (result?.sentiment) {
+           let suggested = 5;
+           if (result.sentiment.label === 'POSITIVE') {
+             suggested = Math.round(5 + (result.sentiment.score * 5)); // 5 to 10
+           } else if (result.sentiment.label === 'NEGATIVE') {
+             suggested = Math.round(5 - (result.sentiment.score * 4)); // 1 to 5
+           }
+           const finalRating = Math.max(1, Math.min(10, suggested));
+           // Convert 1-10 to 1-5 for the UI
+           const starRating = Math.max(1, Math.round(finalRating / 2));
+           setAiSuggestedRating(starRating);
+           
+           // If user hasn't touched rating, gently auto-apply it
+           if (rating === 0) {
+             setRating(starRating);
+           }
+        }
+      } catch (e) {
+        console.error("AI Analysis failed", e);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    }, 1000); // 1 second debounce
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [reviewText, showReviewModal]);
 
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -229,8 +302,8 @@ export function MovieDetail() {
   const popularReviews = [...sortedReviews].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5);
 
   const director = movie.credits?.crew?.find((c: any) => c.job === 'Director');
-  const cast = movie.credits?.cast?.slice(0, 15) || [];
-  const crew = movie.credits?.crew?.slice(0, 15) || [];
+  const cast = showAllCast ? (movie.credits?.cast || []) : (movie.credits?.cast?.slice(0, 7) || []);
+  const crew = showAllCrew ? (movie.credits?.crew || []) : (movie.credits?.crew?.slice(0, 7) || []);
 
   return (
     <div className="w-full font-sans pb-20 overflow-x-hidden bg-[#14181c] min-h-screen">
@@ -263,7 +336,7 @@ export function MovieDetail() {
         >
           
           {/* Left Column (Poster & Actions) */}
-          <motion.div variants={fadeUpVariants} className="w-56 md:w-64 flex-shrink-0 mx-auto md:mx-0">
+          <motion.div variants={fadeLeftVariants} className="w-56 md:w-64 flex-shrink-0 mx-auto md:mx-0">
             <div className="rounded border border-sentix-border/40 overflow-hidden bg-[#2c3440] shadow-2xl relative group">
               {movie.poster_path ? (
                 <img 
@@ -336,23 +409,149 @@ export function MovieDetail() {
                 </button>
               </div>
             </div>
+
+            {/* Ratings Histogram Component (Sidebar) */}
+            <div className="mt-8">
+              <RatingHistogram distribution={ratingsDistribution} averageRating={sentimentSummary?.averageRating || movie.vote_average} />
+            </div>
+
+            {/* Movie Metadata (Sidebar) */}
+            <div className="mt-8 border border-white/30 rounded-lg overflow-hidden bg-transparent mb-8">
+              <div className="flex flex-col divide-y divide-white/30">
+                {movie.status && (
+                  <div className="p-3 px-4">
+                    <span className="block text-[10px] font-bold text-[#8c9fb1] uppercase tracking-widest mb-1">Status</span>
+                    <span className="text-[13px] font-medium text-white">{movie.status}</span>
+                  </div>
+                )}
+                {movie.original_language && (
+                  <div className="p-3 px-4">
+                    <span className="block text-[10px] font-bold text-[#8c9fb1] uppercase tracking-widest mb-1">Original Language</span>
+                    <span className="text-[13px] font-medium text-white uppercase">{movie.original_language}</span>
+                  </div>
+                )}
+                {!!movie.budget && (
+                  <div className="p-3 px-4">
+                    <span className="block text-[10px] font-bold text-[#8c9fb1] uppercase tracking-widest mb-1">Budget</span>
+                    <span className="text-[13px] font-medium text-white">
+                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(movie.budget)}
+                    </span>
+                  </div>
+                )}
+                {!!movie.revenue && (
+                  <div className="p-3 px-4">
+                    <span className="block text-[10px] font-bold text-[#8c9fb1] uppercase tracking-widest mb-1">Revenue</span>
+                    <span className="text-[13px] font-medium text-white">
+                      {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(movie.revenue)}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Similar Films (Sidebar) */}
+            {movie.similar && movie.similar.results && movie.similar.results.length > 0 && (
+              <div className="mt-8 mb-8">
+                <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-3">
+                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Similar Films</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {movie.similar.results.slice(0, 6).map((sim: any) => (
+                    <Link to={`/movie/${sim.id}`} key={sim.id} className="w-full aspect-[2/3] group relative">
+                      <div className="w-full h-full rounded border border-sentix-border/40 overflow-hidden bg-[#2c3440] relative">
+                        {sim.poster_path ? (
+                          <img 
+                            src={`${TMDB_IMAGE_BASE}${sim.poster_path}`} 
+                            alt={sim.title}
+                            className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-center p-1">
+                            <span className="text-[#8c9fb1] text-[8px] font-semibold line-clamp-3">{sim.title}</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 border border-transparent group-hover:border-sentix-green/50 transition-colors pointer-events-none rounded" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Suggested For You (Sidebar) */}
+            {movie.recommendations && movie.recommendations.results && movie.recommendations.results.length > 0 && (
+              <div className="mt-8 mb-8">
+                <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-3">
+                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Suggested for You</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {movie.recommendations.results.slice(0, 6).map((rec: any) => (
+                    <Link to={`/movie/${rec.id}`} key={rec.id} className="w-full aspect-[2/3] group relative">
+                      <div className="w-full h-full rounded border border-sentix-border/40 overflow-hidden bg-[#2c3440] relative">
+                        {rec.poster_path ? (
+                          <img 
+                            src={`${TMDB_IMAGE_BASE}${rec.poster_path}`} 
+                            alt={rec.title}
+                            className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-center p-1">
+                            <span className="text-[#8c9fb1] text-[8px] font-semibold line-clamp-3">{rec.title}</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 border border-transparent group-hover:border-sentix-green/50 transition-colors pointer-events-none rounded" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Top Movies (Sidebar) */}
+            {topMovies.length > 0 && (
+              <div className="mt-8 mb-8">
+                <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-3">
+                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Top Movies</h3>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {topMovies.slice(0, 6).map((top: any) => (
+                    <Link to={`/movie/${top.id}`} key={top.id} className="w-full aspect-[2/3] group relative">
+                      <div className="w-full h-full rounded border border-sentix-border/40 overflow-hidden bg-[#2c3440] relative">
+                        {top.poster_path ? (
+                          <img 
+                            src={`${TMDB_IMAGE_BASE}${top.poster_path}`} 
+                            alt={top.title}
+                            className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-center p-1">
+                            <span className="text-[#8c9fb1] text-[8px] font-semibold line-clamp-3">{top.title}</span>
+                          </div>
+                        )}
+                        <div className="absolute inset-0 border border-transparent group-hover:border-sentix-green/50 transition-colors pointer-events-none rounded" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
 
           {/* Right Column (Details) */}
-          <motion.div variants={fadeUpVariants} className="flex-1 min-w-0 mt-4 md:mt-10">
-            <h1 className="text-3xl md:text-4xl font-serif font-bold text-white mb-1 tracking-tight">
+          <motion.div variants={fadeRightVariants} className="flex-1 min-w-0 mt-4 md:mt-10">
+            <motion.h1 variants={fadeDownVariants} className="text-3xl md:text-4xl font-serif font-bold text-white mb-1 tracking-tight">
               {movie.title} <span className="text-[#8c9fb1] font-sans font-medium text-2xl md:text-3xl ml-1">{movie.release_date.split('-')[0]}</span>
-            </h1>
+            </motion.h1>
             
             {director && (
-              <p className="text-[#8c9fb1] text-sm font-bold uppercase tracking-wider mb-6">
+              <motion.p variants={fadeLeftVariants} className="text-[#8c9fb1] text-sm font-bold uppercase tracking-wider mb-6">
                 Directed by <span className="text-white hover:text-sentix-green cursor-pointer transition-colors">{director.name}</span>
-              </p>
+              </motion.p>
             )}
 
-            <div className="mt-8 mb-8 text-[#8c9fb1] leading-relaxed text-[15px] md:text-[16px] font-medium max-w-3xl">
+            <motion.div variants={fadeUpVariants} className="mt-8 mb-8 text-[#8c9fb1] leading-relaxed text-[15px] md:text-[16px] font-medium max-w-3xl">
               {movie.overview}
-            </div>
+            </motion.div>
             
             {/* Tabs for Cast, Crew, Genres */}
             <div className="border-b border-sentix-border/40 mb-4 flex space-x-6 text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">
@@ -363,26 +562,79 @@ export function MovieDetail() {
             
             <div className="mb-10 min-h-[120px]">
               {activeTab === 'CAST' && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
                   {cast.map((member: any) => (
-                    <span key={member.id} className="bg-[#2c3440] hover:bg-[#404c56] text-[#8c9fb1] hover:text-white cursor-pointer transition-colors px-2.5 py-1 rounded text-xs font-medium">
-                      {member.name}
-                    </span>
+                    <a 
+                      key={member.id} 
+                      href={`https://www.google.com/search?q=${encodeURIComponent(member.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-[130px] flex-shrink-0 bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow group block"
+                    >
+                      {member.profile_path ? (
+                        <img 
+                          src={`${TMDB_IMAGE_BASE}${member.profile_path}`} 
+                          alt={member.name} 
+                          className="w-full h-[160px] object-cover group-hover:opacity-90 transition-opacity"
+                        />
+                      ) : (
+                        <div className="w-full h-[160px] bg-gradient-to-br from-[#2c3440] to-[#1a1f26] flex items-center justify-center text-[#8c9fb1] border-b border-sentix-border/30">
+                          <span className="font-serif text-4xl font-bold opacity-30">
+                            {member.name ? member.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() : '?'}
+                          </span>
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <p className="font-bold text-black text-[13px] leading-tight mb-1 truncate">{member.name}</p>
+                        <p className="text-gray-600 text-[11px] leading-tight line-clamp-2">{member.character}</p>
+                      </div>
+                    </a>
                   ))}
-                  {movie.credits?.cast && movie.credits.cast.length > 15 && (
-                    <span className="bg-transparent text-[#8c9fb1] hover:text-white cursor-pointer transition-colors px-2.5 py-1 rounded text-xs font-medium border border-[#404c56]">
-                      Show All...
-                    </span>
+                  {!showAllCast && movie.credits?.cast && movie.credits.cast.length > 7 && (
+                    <div className="w-[130px] flex-shrink-0 flex items-center justify-center">
+                      <button onClick={() => setShowAllCast(true)} className="bg-[#2c3440] text-[#8c9fb1] hover:text-white hover:bg-[#404c56] cursor-pointer transition-colors px-4 py-2 rounded text-xs font-bold border border-[#404c56] uppercase tracking-wider">
+                        Show All
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
               {activeTab === 'CREW' && (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar">
                   {crew.map((member: any) => (
-                    <span key={`${member.id}-${member.job}`} className="bg-[#2c3440] hover:bg-[#404c56] text-[#8c9fb1] hover:text-white cursor-pointer transition-colors px-2.5 py-1 rounded text-xs font-medium">
-                      {member.name} <span className="opacity-50">({member.job})</span>
-                    </span>
+                    <a 
+                      key={`${member.id}-${member.job}`} 
+                      href={`https://www.google.com/search?q=${encodeURIComponent(member.name)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-[130px] flex-shrink-0 bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow group block"
+                    >
+                      {member.profile_path ? (
+                        <img 
+                          src={`${TMDB_IMAGE_BASE}${member.profile_path}`} 
+                          alt={member.name} 
+                          className="w-full h-[160px] object-cover group-hover:opacity-90 transition-opacity"
+                        />
+                      ) : (
+                        <div className="w-full h-[160px] bg-gradient-to-br from-[#2c3440] to-[#1a1f26] flex items-center justify-center text-[#8c9fb1] border-b border-sentix-border/30">
+                          <span className="font-serif text-4xl font-bold opacity-30">
+                            {member.name ? member.name.split(' ').map((n: string) => n[0]).slice(0, 2).join('').toUpperCase() : '?'}
+                          </span>
+                        </div>
+                      )}
+                      <div className="p-3">
+                        <p className="font-bold text-black text-[13px] leading-tight mb-1 truncate">{member.name}</p>
+                        <p className="text-gray-600 text-[11px] leading-tight line-clamp-2">{member.job}</p>
+                      </div>
+                    </a>
                   ))}
+                  {!showAllCrew && movie.credits?.crew && movie.credits.crew.length > 7 && (
+                    <div className="w-[130px] flex-shrink-0 flex items-center justify-center">
+                      <button onClick={() => setShowAllCrew(true)} className="bg-[#2c3440] text-[#8c9fb1] hover:text-white hover:bg-[#404c56] cursor-pointer transition-colors px-4 py-2 rounded text-xs font-bold border border-[#404c56] uppercase tracking-wider">
+                        Show All
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
               {activeTab === 'GENRES' && movie.genres && (
@@ -396,51 +648,13 @@ export function MovieDetail() {
               )}
             </div>
 
-            {/* Ratings Histogram Component */}
-            <RatingHistogram distribution={ratingsDistribution} averageRating={sentimentSummary?.averageRating || movie.vote_average} />
-
-            {/* Trailer Section */}
-            {movie.videos && movie.videos.results && movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer') && (
-              <div className="mb-12">
-                <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
-                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Trailer</h3>
-                  <a 
-                    href={`https://www.youtube.com/watch?v=${movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
-                    target="_blank"
-                    rel="noopener noreferrer" 
-                    className="text-[10px] font-bold uppercase tracking-widest text-sentix-green hover:text-white transition-colors"
-                  >
-                    Watch on YouTube
-                  </a>
-                </div>
-                <a 
-                  href={`https://www.youtube.com/watch?v=${movie.videos.results.find((v: any) => v.site === 'YouTube' && v.type === 'Trailer')?.key}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="aspect-video w-full rounded-xl overflow-hidden shadow-lg border border-[#2c3440] relative group block cursor-pointer bg-sentix-bg"
-                >
-                  {movie.backdrop_path ? (
-                    <img 
-                      src={movie.backdrop_path.startsWith('http') ? movie.backdrop_path : `${TMDB_IMAGE_BASE_ORIGINAL}${movie.backdrop_path}`}
-                      alt="Trailer backdrop"
-                      className="w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-[#14181c]" />
-                  )}
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <PlayCircle className="w-16 h-16 text-white/80 group-hover:text-white transition-transform group-hover:scale-110 mb-3" strokeWidth={1.5} />
-                    <span className="text-white font-bold tracking-wide shadow-md px-4 py-2 bg-black/40 rounded-full backdrop-blur-sm border border-white/10 group-hover:border-white/30 transition-colors">
-                      Tap here to watch the trailer on YouTube
-                    </span>
-                  </div>
-                </a>
-              </div>
-            )}
-
+            {/* Sentix AI Deep Review (Replaces Trailer) */}
+            <motion.div variants={fadeRightVariants}>
+              {internalMovieId && <AInsightDashboard movieId={internalMovieId} />}
+            </motion.div>
 
             {/* Popular Reviews Section */}
-            <div className="mb-12">
+            <motion.div variants={fadeUpVariants} className="mb-12">
               <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
                 <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Popular Reviews</h3>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c9fb1] hover:text-white cursor-pointer">More</span>
@@ -476,10 +690,10 @@ export function MovieDetail() {
                   <p className="text-sm text-[#8c9fb1]">No popular reviews yet.</p>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Recent Reviews Section */}
-            <div className="mb-12">
+            <motion.div variants={fadeUpVariants} className="mb-12">
               <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
                 <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Recent Reviews</h3>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c9fb1] hover:text-white cursor-pointer">More</span>
@@ -515,38 +729,7 @@ export function MovieDetail() {
                   <p className="text-sm text-[#8c9fb1]">No recent reviews yet.</p>
                 )}
               </div>
-            </div>
-
-            {/* Similar Films Carousel */}
-            {movie.similar && movie.similar.results && movie.similar.results.length > 0 && (
-              <div className="mb-12">
-                <div className="flex justify-between items-end border-b border-sentix-border/40 pb-2 mb-4">
-                  <h3 className="text-[11px] font-bold uppercase tracking-widest text-[#8c9fb1]">Similar Films</h3>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#8c9fb1] hover:text-white cursor-pointer">All</span>
-                </div>
-                <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-4 custom-scrollbar">
-                  {movie.similar.results.map((sim: any) => (
-                    <Link to={`/movie/${sim.id}`} key={sim.id} className="w-24 sm:w-28 flex-shrink-0 group">
-                      <div className="rounded border border-sentix-border/40 overflow-hidden bg-[#2c3440] relative">
-                        {sim.poster_path ? (
-                          <img 
-                            src={`${TMDB_IMAGE_BASE}${sim.poster_path}`} 
-                            alt={sim.title}
-                            className="w-full h-full object-cover group-hover:opacity-80 transition-opacity"
-                          />
-                        ) : (
-                          <div className="w-full aspect-[2/3] flex items-center justify-center text-center p-2">
-                            <span className="text-[#8c9fb1] text-[10px] font-semibold">{sim.title}</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 border-2 border-transparent group-hover:border-sentix-green/50 transition-colors pointer-events-none rounded" />
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
+            </motion.div>
           </motion.div>
         </motion.div>
       </main>
@@ -608,7 +791,7 @@ export function MovieDetail() {
                   </div>
                 </div>
 
-                <div className="mb-6 flex-1">
+                <div className="mb-6 flex-1 flex flex-col">
                   <label className="block text-xs font-bold text-sentix-text uppercase tracking-wider mb-3">Review</label>
                   <textarea
                     value={reviewText}
@@ -616,6 +799,35 @@ export function MovieDetail() {
                     placeholder="Add a review..."
                     className="w-full h-40 bg-sentix-bg border border-sentix-border rounded-xl p-4 text-white placeholder:text-sentix-border focus:outline-none focus:border-sentix-green focus:ring-1 focus:ring-sentix-green transition-all resize-none text-[15px] leading-relaxed shadow-inner"
                   ></textarea>
+                  
+                  {/* AI Assistant Insight Box */}
+                  <div className="mt-3 min-h-[60px]">
+                    {isAnalyzing ? (
+                      <div className="flex items-center space-x-2 text-sentix-cyan text-sm animate-pulse">
+                        <Activity className="w-4 h-4" />
+                        <span>Sentix AI is analyzing your thoughts...</span>
+                      </div>
+                    ) : draftAnalysis ? (
+                      <div className={`p-3 rounded-xl border flex items-start space-x-3 text-sm transition-all ${draftAnalysis.sentiment.label === 'POSITIVE' ? 'bg-green-500/10 border-green-500/30 text-green-400' : draftAnalysis.sentiment.label === 'NEGATIVE' ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-blue-500/10 border-blue-500/30 text-blue-400'}`}>
+                        <Activity className="w-5 h-5 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="font-bold">
+                            AI Insight: {draftAnalysis.sentiment.label.charAt(0) + draftAnalysis.sentiment.label.slice(1).toLowerCase()} tone detected.
+                          </p>
+                          {draftAnalysis.aspects?.length > 0 && (
+                            <p className="mt-1 opacity-90">
+                              You're talking about: {draftAnalysis.aspects.map((a: any) => a.name).join(', ')}.
+                            </p>
+                          )}
+                          {aiSuggestedRating && rating === 0 && (
+                            <p className="mt-1 text-white font-medium text-xs opacity-80">
+                              Auto-applied {aiSuggestedRating} stars based on tone.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
 
                 <div className="flex justify-end pt-4 border-t border-sentix-border mt-auto">

@@ -27,8 +27,8 @@ export const RatingHistogram: React.FC<Props> = ({ distribution, averageRating }
   const bars = Array.from({ length: 10 }, (_, i) => {
     const ratingValue = i + 1;
     const data = distribution[ratingValue] || { count: 0, users: [] };
-    // Calculate height percentage (min 5% if count > 0, max 100%)
-    const heightPercent = data.count > 0 ? Math.max(5, (data.count / maxCount) * 100) : 0;
+    // Calculate height percentage (min 8% for visibility even if 0, max 100%)
+    const heightPercent = data.count > 0 ? Math.max(8, (data.count / maxCount) * 100) : 8;
     
     return {
       ratingValue,
@@ -40,60 +40,61 @@ export const RatingHistogram: React.FC<Props> = ({ distribution, averageRating }
   });
 
   return (
-    <div className="flex flex-col mb-8 bg-[#14181c] border border-sentix-border p-4 rounded-xl">
-      <div className="flex items-center justify-between mb-4 border-b border-sentix-border/40 pb-2">
-        <h3 className="text-[11px] font-bold uppercase tracking-widest text-sentix-text">Ratings</h3>
+    <div className="flex flex-col w-full">
+      {/* Header */}
+      <div className="flex items-center justify-between pb-2 border-b border-[#2c3440]">
+        <h3 className="text-[10px] font-bold uppercase tracking-widest text-[#8c9fb1]">Ratings</h3>
         {averageRating && (
-          <div className="flex items-center text-xl text-white">
-            <span className="font-light mr-2">{averageRating.toFixed(1)}</span>
-            <div className="flex text-sentix-green">
-              {Array.from({ length: 5 }).map((_, idx) => (
-                <Star 
-                  key={idx} 
-                  className={`w-3.5 h-3.5 ${idx < Math.round(averageRating / 2) ? 'fill-current' : 'text-sentix-border fill-transparent'}`} 
-                />
-              ))}
-            </div>
+          <div className="text-[10px] font-bold text-[#8c9fb1] uppercase tracking-widest">
+            {averageRating.toFixed(1)} <span className="text-[#8c9fb1] text-[9px]">/10</span>
           </div>
         )}
       </div>
 
-      <div className="flex items-end justify-between h-20 gap-0.5 group">
-        {bars.map((bar) => (
-          <div 
-            key={bar.ratingValue} 
-            className="flex-1 flex flex-col justify-end items-center h-full relative cursor-pointer"
-            onClick={() => {
-              if (bar.count > 0) setSelectedRating(bar.ratingValue);
-            }}
-          >
-            {/* Tooltip on hover */}
-            <div className="absolute -top-8 bg-[#2c3440] text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 hidden md:block border border-sentix-border">
-              {bar.count} ratings ({bar.starEquivalent} ★)
-            </div>
+      {/* Histogram */}
+      <div className="pt-6 pb-2">
+        <div className="flex items-end h-[50px] gap-[2px] justify-center group relative w-full px-2">
+          {/* Baseline */}
+          <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-[#2c3440]" />
+          
+          {bars.map((bar) => {
+            const isGreen = averageRating ? bar.ratingValue <= Math.round(averageRating) : false;
             
-            {/* The Bar */}
-            <motion.div 
-              initial={{ height: 0 }}
-              animate={{ height: `${bar.heightPercent}%` }}
-              transition={{ type: "spring", stiffness: 100, damping: 20, delay: bar.ratingValue * 0.05 }}
-              className={`w-full max-w-[14px] rounded-t-sm transition-colors ${
-                bar.count > 0 
-                  ? 'bg-[#404c56] hover:bg-sentix-green' 
-                  : 'bg-transparent'
-              }`}
-            />
-            {/* The base line */}
-            <div className={`w-full h-[1px] mt-0.5 ${bar.count > 0 ? 'bg-[#404c56]' : 'bg-transparent'}`} />
-          </div>
-        ))}
-      </div>
-      
-      {/* 5 stars mapped below the bars */}
-      <div className="flex justify-between mt-1 text-[#404c56] px-1">
-        {Array.from({ length: 5 }).map((_, idx) => (
-          <Star key={idx} className="w-2.5 h-2.5 fill-current" />
-        ))}
+            return (
+              <div 
+                key={bar.ratingValue} 
+                className="flex-1 flex flex-col justify-end items-center h-full relative cursor-pointer group/bar z-10"
+                onClick={() => {
+                  if (bar.count > 0) setSelectedRating(bar.ratingValue);
+                }}
+              >
+                {/* Tooltip on hover */}
+                <div className="absolute -top-9 bg-[#2c3440] text-white text-[10px] font-bold px-2 py-1 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none hidden md:block shadow-lg after:content-[''] after:absolute after:top-full after:left-1/2 after:-translate-x-1/2 after:border-4 after:border-transparent after:border-t-[#2c3440]">
+                  {bar.count} ratings ({bar.starEquivalent} ★)
+                </div>
+                
+                {/* The Bar */}
+                <motion.div 
+                  initial={{ height: 0 }}
+                  animate={{ height: `${bar.heightPercent}%` }}
+                  transition={{ type: "spring", stiffness: 100, damping: 20, delay: bar.ratingValue * 0.05 }}
+                  className={`w-full max-w-[16px] rounded-t-sm transition-colors ${
+                    isGreen 
+                      ? 'bg-[#00e054]' 
+                      : (bar.count > 0 ? 'bg-[#404c56] group-hover/bar:bg-[#00e054]' : 'bg-[#2c3440] group-hover/bar:bg-[#00e054]')
+                  }`}
+                />
+                
+                {/* Active state base highlight */}
+                {bar.count > 0 && (
+                  <div className={`w-full h-[1px] absolute bottom-0 transition-colors ${
+                    isGreen ? 'bg-[#00e054]' : 'bg-[#404c56] group-hover/bar:bg-[#00e054]'
+                  }`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Users Modal for Selected Rating */}

@@ -56,7 +56,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
       dbUser = await db.user.create({
         data: {
           firebaseUid: uid,
-          email: email || '',
+          email: email || null,
           name: name || null,
         }
       });
@@ -103,7 +103,7 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
       dbUser = await db.user.create({
         data: {
           firebaseUid: uid,
-          email: email || '',
+          email: email || null,
           name: name || null,
         }
       });

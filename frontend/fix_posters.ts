@@ -6,7 +6,7 @@ let content = fs.readFileSync(TMDB_PATH, 'utf-8');
 
 async function getItunesPoster(title: string): Promise<string | null> {
   try {
-    const res = await fetch(\`https://itunes.apple.com/search?term=\${encodeURIComponent(title)}+movie&entity=movie\`);
+    const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(title)}+movie&entity=movie`);
     const data = await res.json();
     if (data.results && data.results.length > 0) {
       return data.results[0].artworkUrl100.replace('100x100bb', '600x600bb');
@@ -35,7 +35,7 @@ async function run() {
       } else {
         // Fallback to Wikipedia or OMDB if possible, or just a placeholder image
         console.log('Could not find', title);
-        content = content.replace(posterUrl, \`https://via.placeholder.com/600x900/1a1a2e/00d2ff?text=\${encodeURIComponent(title)}\`);
+        content = content.replace(posterUrl, `https://via.placeholder.com/600x900/1a1a2e/00d2ff?text=${encodeURIComponent(title)}`);
       }
     }
   }

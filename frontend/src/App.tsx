@@ -35,6 +35,7 @@ import { motion } from 'framer-motion';
 
 // ─── CENTRALIZED THEME CONFIGURATION ───────────────────────────
 // Modify these values to globally change the look of the app.
+// eslint-disable-next-line react-refresh/only-export-components
 export const Theme = {
   fontFamily: "font-sans",
   
