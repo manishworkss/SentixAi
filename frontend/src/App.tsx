@@ -29,6 +29,7 @@ import { ListDetail } from './pages/ListDetail';
 import { Films } from './pages/Films';
 import { Reviews } from './pages/Reviews';
 import { Navbar } from './components/Navbar';
+import { EditProfile } from './pages/EditProfile';
 import { Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -96,6 +97,7 @@ function AppContent() {
         
         {/* Dashboard / Profile Routes */}
         <Route path="/dashboard" element={<ProtectedRoute message="Please log in to view your profile."><Dashboard /></ProtectedRoute>} />
+        <Route path="/edit-profile" element={<ProtectedRoute message="Please log in to edit your profile."><EditProfile /></ProtectedRoute>} />
       </Route>
       
       {/* Auth Route (No Navbar) */}

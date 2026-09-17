@@ -395,6 +395,10 @@ router.post('/:id/reviews', requireAuth, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Review text is required' });
     }
 
+    if (reviewText.trim().length < 100) {
+      return res.status(400).json({ success: false, message: 'Content is too short (minimum is 100 characters)' });
+    }
+
     const movie = await db.movie.findUnique({ where: { id: movieId } });
     if (!movie) {
       return res.status(404).json({ success: false, message: 'Movie not found' });
@@ -411,9 +415,11 @@ router.post('/:id/reviews', requireAuth, async (req, res) => {
       }
     });
 
-    // Ensure background processor picks up the new review
+    // Ensure background processor picks up the new review after 30 seconds
     const { SentimentService } = require('../services/ai/SentimentService');
-    new SentimentService().startBackgroundProcessing();
+    setTimeout(() => {
+      new SentimentService().startBackgroundProcessing();
+    }, 30000);
 
     res.json({ success: true, data: review });
   } catch (error: any) {
@@ -658,6 +664,15 @@ router.put('/:id/reviews/:reviewId', requireAuth, async (req, res) => {
     if (review.userId !== userId) return res.status(403).json({ success: false, message: 'Forbidden: You can only edit your own reviews' });
     if (review.movieId !== movieId) return res.status(400).json({ success: false, message: 'Review does not belong to this movie' });
 
+    if (reviewText !== undefined) {
+      if (typeof reviewText !== 'string' || reviewText.trim() === '') {
+        return res.status(400).json({ success: false, message: 'Review text cannot be empty' });
+      }
+      if (reviewText.trim().length < 100) {
+        return res.status(400).json({ success: false, message: 'Content is too short (minimum is 100 characters)' });
+      }
+    }
+
     const updatedReview = await db.review.update({
       where: { id: reviewId },
       data: {
@@ -670,7 +685,9 @@ router.put('/:id/reviews/:reviewId', requireAuth, async (req, res) => {
     // We can delete the old sentiment first so it gets regenerated
     await db.sentimentAnalysis.deleteMany({ where: { reviewId } });
     const { SentimentService } = require('../services/ai/SentimentService');
-    new SentimentService().startBackgroundProcessing();
+    setTimeout(() => {
+      new SentimentService().startBackgroundProcessing();
+    }, 30000);
 
     res.json({ success: true, data: updatedReview });
   } catch (error: any) {

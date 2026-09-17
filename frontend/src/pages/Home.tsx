@@ -5,9 +5,10 @@ import { Link } from 'react-router-dom';
 import { TrendingUp, CalendarDays, ChevronLeft, ChevronRight, Heart, Star } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { JournalMovieCard } from '../components/JournalMovieCard';
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -17,7 +18,7 @@ const containerVariants = {
   }
 };
 
-const dynamicItemVariants = {
+const dynamicItemVariants: Variants = {
   hidden: (i: number) => {
     const directions = [
       { x: -100, y: -100 }, // top-left
@@ -38,18 +39,18 @@ const dynamicItemVariants = {
       rotate: i % 3 === 0 ? 15 : i % 2 === 0 ? -15 : 0 // dramatic tilts
     };
   },
-  show: { 
-    opacity: 1, 
-    x: 0, 
-    y: 0, 
-    scale: 1, 
-    rotate: 0, 
-    transition: { 
-      type: "spring", 
-      stiffness: 80, 
+  show: {
+    opacity: 1,
+    x: 0,
+    y: 0,
+    scale: 1,
+    rotate: 0,
+    transition: {
+      type: "spring",
+      stiffness: 80,
       damping: 12,
       mass: 1.2
-    } 
+    }
   }
 };
 

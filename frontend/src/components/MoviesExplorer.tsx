@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Loader2 } from 'lucide-react';
 import { tmdb, type TMDBMovie } from '../lib/tmdb';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { MovieCard } from './MovieCard';
 import { MovieAPI } from '../api';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   show: {
     opacity: 1,
@@ -15,7 +15,7 @@ const containerVariants = {
   }
 };
 
-const dynamicItemVariants = {
+const dynamicItemVariants: Variants = {
   hidden: (i: number) => {
     const directions = [
       { x: -100, y: -100 }, // top-left

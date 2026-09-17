@@ -60,6 +60,16 @@ export function Reviews() {
     return () => clearTimeout(timer);
   }, [activeTab, searchTitle, sentimentFilter, currentUser]);
 
+  useEffect(() => {
+    const hasUnanalyzed = reviews.some((r: any) => !r.sentiments || r.sentiments.length === 0);
+    if (hasUnanalyzed) {
+      const interval = setInterval(() => {
+        fetchReviews();
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [reviews]);
+
   const handleDelete = async (movieId: string, reviewId: string) => {
     if (!window.confirm("Are you sure you want to delete this review?")) return;
     try {
@@ -71,6 +81,10 @@ export function Reviews() {
   };
 
   const handleEditSave = async (movieId: string, reviewId: string) => {
+    if (editReviewText.trim().length < 100) {
+      alert("Content is too short (minimum is 100 characters)");
+      return;
+    }
     try {
       await MovieAPI.updateReview(movieId, reviewId, editReviewText, editRating);
       setEditingReviewId(null);
@@ -250,7 +264,14 @@ export function Reviews() {
                         </div>
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap">{review.reviewText}</p>
+                      <>
+                        {sentiment === 'UNANALYZED' && (
+                          <div className="bg-[#fff9e6] text-[#856404] border border-[#ffeeba] px-4 py-2.5 rounded-md mb-3 text-sm font-semibold shadow-sm">
+                            This review is currently pending approval.
+                          </div>
+                        )}
+                        <p className="whitespace-pre-wrap">{review.reviewText}</p>
+                      </>
                     )}
                   </div>
                 </motion.div>

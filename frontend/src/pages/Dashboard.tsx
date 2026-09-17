@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { UserAvatar } from '../components/UserAvatar';
 import { StackedPosters } from '../components/StackedPosters';
-import { EditProfileModal } from '../components/EditProfileModal';
 import { ComingSoonModal } from '../components/ComingSoonModal';
 import { Calendar, List as ListIcon, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import type { TMDBMovie } from '../lib/tmdb';
 
 // Mock Favorite Movies
@@ -150,7 +150,6 @@ const MOCK_FAVORITES: TMDBMovie[] = [
 export function Dashboard() {
   const { currentUser } = useAuth();
   const [activeTab, setActiveTab] = useState<'reviews' | 'lists' | 'watchlist'>('lists');
-  const [showEditProfile, setShowEditProfile] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState({ isOpen: false, title: '' });
 
   // Stats mock
@@ -178,12 +177,12 @@ export function Dashboard() {
               {currentUser?.email && (
                 <p className="text-sentix-text text-sm mb-2">{currentUser.email}</p>
               )}
-              <button 
-                onClick={() => setShowEditProfile(true)}
-                className="text-sentix-text hover:text-white text-xs uppercase tracking-wider font-bold transition-colors"
+              <Link 
+                to="/edit-profile"
+                className="text-sentix-text hover:text-white text-xs uppercase tracking-wider font-bold transition-colors inline-block mt-2"
               >
                 Edit Profile
-              </button>
+              </Link>
             </div>
           </div>
 
@@ -317,11 +316,6 @@ export function Dashboard() {
           </div>
         )}
       </div>
-      <EditProfileModal 
-        isOpen={showEditProfile} 
-        onClose={() => setShowEditProfile(false)} 
-      />
-      
       <ComingSoonModal 
         isOpen={showComingSoon.isOpen}
         onClose={() => setShowComingSoon({ isOpen: false, title: '' })}

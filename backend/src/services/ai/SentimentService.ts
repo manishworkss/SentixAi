@@ -1,11 +1,11 @@
 import { db } from '../../utils/db';
 import { logger } from '../../utils/logger';
-import { TransformersProvider } from './TransformersProvider';
+import { GroqProvider } from './GroqProvider';
 import { SentimentProvider } from './SentimentProvider';
 
 export class SentimentService {
-  private provider: SentimentProvider = TransformersProvider.getInstance();
-  private readonly providerName = 'python-ml-service';
+  private provider: SentimentProvider = GroqProvider.getInstance();
+  private readonly providerName = 'groq-llama3';
 
   private isProcessing = false;
 
@@ -13,7 +13,7 @@ export class SentimentService {
    * Processes a limited batch of reviews that have not yet been analyzed by the current provider.
    * @param limit The maximum number of reviews to fetch and analyze in this pass.
    */
-  public async processPendingReviews(limit: number = 50): Promise<{ processed: number, success: number, error: number }> {
+  public async processPendingReviews(limit: number = 5): Promise<{ processed: number, success: number, error: number }> {
     logger.info(`Fetching up to ${limit} pending reviews for sentiment analysis...`);
     
     // 1. Unprocessed Review Discovery
@@ -28,6 +28,9 @@ export class SentimentService {
       select: {
         id: true,
         reviewText: true
+      },
+      orderBy: {
+        createdAt: 'desc'
       },
       take: limit
     });
@@ -129,7 +132,7 @@ export class SentimentService {
    * Runs non-blockingly.
    * @returns true if started, false if already running
    */
-  public startBackgroundProcessing(batchSize: number = 50): boolean {
+  public startBackgroundProcessing(batchSize: number = 5): boolean {
     if (this.isProcessing) {
       logger.info('Sentiment processing is already running. Ignoring start request.');
       return false;
@@ -150,9 +153,15 @@ export class SentimentService {
             isRunning = false;
             break;
           }
+
+          if (result.error > 0) {
+            logger.warn('Encountered errors during sentiment processing. Pausing background loop to prevent rate limit spirals.');
+            isRunning = false;
+            break;
+          }
           
           // Yield the event loop to allow other HTTP requests to be handled
-          await new Promise(resolve => setTimeout(resolve, 100));
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       } catch (error: any) {
         logger.error({ error: error.message }, 'Fatal error in background sentiment processing loop. Halting.');

@@ -39,6 +39,23 @@ async function ingestCsv() {
     movieIds.push(movie.id);
   }
 
+  // Create or get the synthetic users for authors
+  const authorUserIds: Record<string, string> = {};
+  for (const author of AUTHORS) {
+    let user = await prisma.user.findFirst({ where: { firebaseUid: `csv_${author}` } });
+    if (!user) {
+      user = await prisma.user.create({
+        data: {
+          firebaseUid: `csv_${author}`,
+          name: author,
+          email: `${author.toLowerCase()}@sentix.local`,
+          role: "USER"
+        }
+      });
+    }
+    authorUserIds[author] = user.id;
+  }
+
   const csvFilePath = path.join(__dirname, '../../../../data/IMDB Dataset.csv');
   
   const reviews: any[] = [];
@@ -48,8 +65,8 @@ async function ingestCsv() {
     fs.createReadStream(csvFilePath)
       .pipe(csv())
       .on('data', (row) => {
-        // Limit to 500 reviews for performance
-        if (count >= 500) return;
+        // Limit to 20000 reviews for performance
+        if (count >= 20000) return;
         
         const reviewText = row.review.replace(/<br \/>/g, '\n');
         const sentiment = row.sentiment; // 'positive' or 'negative'
@@ -68,9 +85,11 @@ async function ingestCsv() {
         // Use externalReviewId to store the author since Review schema doesn't have an author field
         const author = AUTHORS[Math.floor(Math.random() * AUTHORS.length)];
         const externalReviewId = `csv_${author}_${count}`;
+        const userId = authorUserIds[author];
         
         reviews.push({
           movieId: randomMovieId,
+          userId,
           externalReviewId,
           reviewText,
           rating,
@@ -82,17 +101,15 @@ async function ingestCsv() {
       .on('end', async () => {
         console.log(`Parsed ${reviews.length} reviews. Inserting into DB...`);
         try {
-          for (const review of reviews) {
-            await prisma.review.upsert({
-              where: {
-                source_externalReviewId: {
-                  source: review.source,
-                  externalReviewId: review.externalReviewId
-                }
-              },
-              update: {},
-              create: review
+          // Process in batches of 1000
+          const batchSize = 1000;
+          for (let i = 0; i < reviews.length; i += batchSize) {
+            const batch = reviews.slice(i, i + batchSize);
+            await prisma.review.createMany({
+              data: batch,
+              skipDuplicates: true
             });
+            console.log(`Inserted batch ${Math.floor(i / batchSize) + 1} / ${Math.ceil(reviews.length / batchSize)}...`);
           }
           console.log("Ingestion complete!");
           resolve(true);
